@@ -1,0 +1,44 @@
+<ion-header></ion-header>
+
+<ion-content>
+  <div class="splash-bg" [style.background-image]="backgroundImage" id="backgound-image"></div>
+  <div class="splash-info">
+    <div class="splash-logo"></div>
+    <div class="splash-intro">
+      <form (submit)="login()">
+        <ion-list style="margin-bottom:1px;">
+          <ion-item>
+            <ion-label floating><span translate="email"></span></ion-label>
+            <ion-input type="email" [(ngModel)]="account.username" autocomplete="username" name="email"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label floating><span translate="password"></span></ion-label>
+            <ion-input type="password" [(ngModel)]="account.password" autocomplete="current-password" name="password">
+            </ion-input>
+          </ion-item>
+        </ion-list>
+
+        <div padding>
+          <ion-spinner *ngIf="busy" name="ios"></ion-spinner>
+          <button ion-button color="primary" type="submit" [disabled]="busy || dbError" block>
+            <span translate="loginButton"></span>
+          </button>
+          <div style="height:14px"></div>
+          <a href="#" [class.disabled]="account.username.length <= 0" tappable
+            (click)="$event.preventDefault();resetPassword()">
+            <span translate="forgotPassword"></span>
+          </a>
+          <div style="height:10px"></div>
+          <a href="#" tappable (click)="$event.preventDefault();signup()">
+            <span translate="noClaesID"></span><i class="fal fa-fw fa-angle-right"></i>
+          </a>
+          <div style="height:10px"></div>
+          <p>
+            <span translate="version"></span>
+            <span>{{ appVersion }}</span>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>

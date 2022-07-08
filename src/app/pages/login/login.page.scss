@@ -1,0 +1,35 @@
+:host {
+  .splash-bg {
+    position: relative;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-position: center center;
+    background-size: contain;
+    height: 35vh;
+    max-height: 360px;
+    z-index: 1
+  }
+
+  .splash-info {
+    position: relative;
+    z-index: 2;
+    margin-top: -64px;
+    text-align: center
+  }
+
+  .splash-logo {
+    margin: auto;
+    background-image: url('../assets/img/claes-distribution-2017.svg');
+    background-color: white;
+    background-size: 100%;
+    width: 128px;
+    height: 128px;
+    border-radius: 24px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2)
+  }
+
+  .splash-intro {
+    margin-top: 1em;
+    font-size: 16px
+  }
+}
