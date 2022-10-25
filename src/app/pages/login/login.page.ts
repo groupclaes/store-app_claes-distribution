@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 
 @Component({
   selector: 'app-login',
@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginPage implements OnInit {
-  private _loading: HTMLIonLoadingElement;
+  private _loading: HTMLIonLoadingElement
   public account = {
     username: '',
     password: ''
@@ -23,7 +23,7 @@ export class LoginPage implements OnInit {
   }
 
   ionViewDidEnter() {
-    const credential = this.user.getStoredCredential();
+    const credential = this.user.getStoredCredential()
     if (credential) {
       this.account = credential
       this.ref.markForCheck()
@@ -33,8 +33,8 @@ export class LoginPage implements OnInit {
     this.ref.markForCheck()
 
     const timer = setTimeout(() => {
-      // console.error('There was an error loading the database...');
-      this.toast(this.translateService.instant('dbLoadError'));
+      // console.error('There was an error loading the database...')
+      this.toast(this.translateService.instant('dbLoadError'))
       this.busy = false
       this.dbError = true
       this.ref.markForCheck()
@@ -48,7 +48,7 @@ export class LoginPage implements OnInit {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
 }
