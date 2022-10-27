@@ -3,7 +3,16 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  version: '1.2.0-1',
+  default_language: 'nl-BE',
+  supported_languages: [
+    'nl-BE',
+    'fr-BE'
+  ],
+  api_url: 'https://api.groupclaes.be/test/distribution',
+  pcm_url: 'https://pcm.groupclaes.be/test',
+  database_name: 'distribution-test'
 }
 
 /*
