@@ -80,7 +80,12 @@ export class DepartmentDetailPage implements OnInit {
     try {
       const acceptDelete = await this.showDeleteConfirmation()
       if (acceptDelete) {
-        alert('hi')
+        const req = await this.api.delete(`departments/${this.department.id}`, {
+          userCode: this.user.activeUser.userCode
+        }).toPromise()
+        if (req) {
+          await this.departmentsRepository.delete(this.department.id)
+        }
       }
     } catch (err) {
       this.logger.error('DepartmentDetailPage.delete() error', err)
@@ -95,14 +100,14 @@ export class DepartmentDetailPage implements OnInit {
     const promise = new Promise<boolean>(resolve => resolveH = resolve)
     try {
       const alert = await this.alertCtrl.create({
-        header: 'Are you sure you want to delete this department?',
+        header: this.translate.instant('departmentDeletionWarning'),
         buttons: [
           {
-            text: 'Yes',
+            text: this.translate.instant('yes'),
             role: 'submit',
             handler: () => resolveH(true)
           }, {
-            text: 'No',
+            text: this.translate.instant('no'),
             role: 'cancel',
             handler: () => resolveH(false)
           }

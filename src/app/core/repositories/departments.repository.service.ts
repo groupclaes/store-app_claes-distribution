@@ -36,6 +36,21 @@ export class DepartmentsRepositoryService {
     })
   }
 
+  delete(id: number): Promise<boolean> {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const result = await db.run(
+        `DELETE FROM departments WHERE id = ?;
+         DELETE FROM departmentProducts WHERE department = ?`,
+        [
+          id,
+          id
+        ]
+      )
+
+      return result.changes && result.changes.changes > 0
+    })
+  }
+
   getDetail(id: number, culture: string = 'nl-BE'): Promise<IDepartmentDetailT> {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
 

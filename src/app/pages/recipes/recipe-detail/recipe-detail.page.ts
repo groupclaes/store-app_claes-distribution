@@ -63,12 +63,10 @@ export class RecipeDetailPage implements OnInit {
     try {
       // create loader in future versions
       const req = await this.api.post(`app/recipes/mail/${this.recipe.guid}`, this.user.credential, {
-        params: {
-          customer: this.user.activeUser.id,
-          address: this.user.activeUser.address,
-          message: '',
-          culture: this.culture
-        }
+        customer: this.user.activeUser.id,
+        address: this.user.activeUser.address,
+        message: '',
+        culture: this.culture
       }).toPromise()
       if (req) {
         const alert = await this.alertCtrl.create({

@@ -110,9 +110,7 @@ export class ReportsPage implements OnInit {
           role: 'destructive',
           handler: () => {
             this.api.delete(`reports/${report.TaskId}`, {
-              params: {
-                userCode: this.user.userinfo.userCode
-              }
+              userCode: this.user.userinfo.userCode
             }).subscribe((resp) => {
               // this.statistics.reportDelete(this.user.userinfo.userId, report.TaskId)
               this.loadReportList()

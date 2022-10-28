@@ -388,5 +388,8 @@
   "closed": "Gesloten",
   "usageManuals": "Gebruiksfiches",
   "openhoursstore": "Openingsuren winkel",
-  "localData": "Locale gegevens worden gebruikt"
+  "localData": "Locale gegevens worden gebruikt",
+  "deparmtentCreatenew": "Naam afdeling: ",
+  "deparmtentChangeName": "Geef een nieuwe naam op voor de afdeling: ",
+  "departmentDeletionWarning": "Als je een afdeling verwijdert, worden ook alle gekoppelde producten verwijderd, weet je het zeker?"
 }

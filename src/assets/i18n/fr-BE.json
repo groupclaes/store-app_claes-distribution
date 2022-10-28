@@ -356,5 +356,9 @@
   "piecepricedisclaimer": "Prix par pièce indicatifs, prix de facture toujours par",
   "closed": "Fermeé",
   "usageManuals": "Fiche d'utilisation",
-  "openhoursstore": "Heures d'ouverture de la boutique"
+  "openhoursstore": "Heures d'ouverture de la boutique",
+  "localData": "Locale gegevens worden gebruikt",
+  "deparmtentCreatenew": "Nom de la division : ",
+  "deparmtentChangeName": "Entrer un nouveau nom pour la division : ",
+  "departmentDeletionWarning": "Si vous supprimez une division, les produits liés sont également supprimés, êtes-vous sûr ?"
 }
