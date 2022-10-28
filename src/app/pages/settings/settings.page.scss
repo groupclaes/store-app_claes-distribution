@@ -1,0 +1,23 @@
+:host {
+  div.product-attributes {
+    display: grid;
+    grid-gap: .4em;
+    grid-template-columns: repeat(4, 1fr);
+
+    div.toggle-button {
+      margin: .35em 0;
+      cursor: pointer;
+
+      span {
+        display: block;
+        text-align: center;
+        border-radius: 6px;
+        border-width: 2px;
+        border-style: solid;
+        padding: .2em 0;
+        min-width: 30px;
+      }
+    }
+  }
+
+}

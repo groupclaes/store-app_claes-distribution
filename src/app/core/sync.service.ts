@@ -100,31 +100,46 @@ export class SyncService {
 
       this.logger.log('SyncService.FullSync() -- await promises')
 
-      const results = await Promise.all([
+      // We used to do a single full sync (running all calls at the same time)
+      // But this concurrency is not handled well in the 'new' Capacitor SQLite library, so we changed this to be in 4 steps
+
+      const step1 = await Promise.all([
         this.syncProducts(credential, culture, forceSync),
-        this.syncPrices(credential, culture, forceSync),
         this.syncPackingUnits(credential, culture, forceSync),
-        this.syncFavorites(credential, culture, forceSync),
-        this.syncProductExceptions(credential, culture, forceSync),
         this.syncAttributes(credential, culture, forceSync),
-        this.syncCategoryAttributes(credential, culture, forceSync),
         this.syncProductRelations(credential, culture, forceSync),
+        this.syncCategories(credential, culture, forceSync),
+        this.syncCategoryAttributes(credential, culture, forceSync)
+      ])
+
+      const step2 = await Promise.all([
+        this.syncFavorites(credential, culture, forceSync),
+        this.syncPrices(credential, culture, forceSync),
+        this.syncProductExceptions(credential, culture, forceSync),
+        this.syncProductTaxes(credential, culture, forceSync),
+        this.syncShippingCosts(credential, culture, forceSync),
+        this.syncProductDescriptionCustomers(credential, culture, forceSync),
+        this.syncNews(credential, culture, forceSync)
+      ])
+
+      const step3 = await Promise.all([
         this.syncReports(credential, culture, forceSync),
         this.syncRecipes(credential, culture, forceSync),
         this.syncDatasheets(credential, culture, forceSync),
         this.syncUsageManuals(credential, culture, forceSync),
-        this.syncDepartments(credential, culture, forceSync),
-        this.syncCategories(credential, culture, forceSync),
-        this.syncNotes(credential, culture, forceSync),
-        this.syncProductTaxes(credential, culture, forceSync),
-        this.syncShippingCosts(credential, culture, forceSync),
+        this.syncRecipesModule(credential, culture, forceSync)
+      ])
+
+      const step4 = await Promise.all([
         this.syncContacts(credential, culture, forceSync),
         this.syncDeliverySchedules(credential, culture, forceSync),
         this.syncCustomers(credential, culture, forceSync),
-        this.syncProductDescriptionCustomers(credential, culture, forceSync),
-        this.syncRecipesModule(credential, culture, forceSync),
-        this.syncNews(credential, culture, forceSync)
+        this.syncNotes(credential, culture, forceSync)
       ])
+
+      await this.syncDepartments(credential, culture, forceSync)
+
+      const results = step1.concat(step2, step3, step4)
 
       this.logger.log('SyncService.FullSync() -- promises completed')
 
@@ -135,9 +150,9 @@ export class SyncService {
 
       await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
         this.logger.log('CREATE TABLE IF NOT EXISTS customers')
-        await db.execute('CREATE TABLE IF NOT EXISTS customers (id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))')
+        await db.execute('CREATE TABLE IF NOT EXISTS customers (id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
         this.logger.log('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
-        await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING NOT NULL)')
+        await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)', false)
       })
 
       await this.updateDataIntegrityChecksum('lastSync', 'distribution-checksum-sha')
@@ -860,9 +875,7 @@ export class SyncService {
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.departments.forEach(async (department: $TSFixMe) => {
-            sqlStatements = []
-
+          for (let department of response.departments) {
             sqlStatements.push({
               statement: 'INSERT INTO departments VALUES (?, ?, ?)',
               values: [
@@ -871,15 +884,15 @@ export class SyncService {
                 department.alias
               ]
             })
-            department.products.forEach((product: number) => {
+            for (let product of department.products) {
               sqlStatements.push({
                 statement: 'INSERT INTO departmentProducts VALUES (?, ?)',
                 values: [department.id, product]
               })
-            })
+            }
+          }
 
-            await db.executeSet(sqlStatements)
-          })
+          await db.executeSet(sqlStatements)
 
           this.logger.log('inserted departments', response.checksumSha)
           await this.updateDataIntegrityChecksum('departments', response.checksumSha)
@@ -906,9 +919,11 @@ export class SyncService {
 
       if (response && response.categories && response.categories.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-          await db.execute('DROP TABLE IF EXISTS categories')
+          console.log('categories', response.categories, await db.getTableList())
+          const dropResult = await db.execute('DROP TABLE IF EXISTS categories')
+          console.log('categories drop', dropResult)
 
-          await db.execute('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER NOT NULL, nameNl STRING, nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER, nameNl STRING, nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
 
           this.logger.log('dropped categories')
 
@@ -934,7 +949,7 @@ export class SyncService {
           })
 
           await db.executeSet(sqlStatements)
-          this.logger.log('inserted categories', response.checksumSha)
+          this.logger.log('inserted categories', response.categories.length, response.checksumSha)
           await this.updateDataIntegrityChecksum('categories', response.checksumSha)
         })
       } else {
@@ -943,6 +958,7 @@ export class SyncService {
 
       return true
     } catch (err) {
+      console.log(err)
     }
   }
 
@@ -1285,7 +1301,7 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productDescriptionCustomers')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING NOT NULL)')
+          await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)')
 
           this.logger.log('dropped productDescriptionCustomers')
 
@@ -1551,6 +1567,7 @@ export class SyncService {
         exceptions = defaultExceptions[0].list.toString().split(',')
         const temp = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
 
+        exceptions = []
         if (hasAddressExceptions) {
           this.logger.warn('This user has additional addressExceptions')
           exceptions = exceptions.concat(addressExceptions[0].list.toString().split(','))

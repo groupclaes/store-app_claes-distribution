@@ -1,46 +1,43 @@
-<ion-header></ion-header>
+<ion-header [translucent]="true"></ion-header>
 
-<ion-content>
+<ion-content [fullscreen]="true">
   <div class="splash-bg" [style.background-image]="backgroundImage" id="backgound-image"></div>
   <div class="splash-info">
     <div class="splash-logo"></div>
-    <div class="splash-intro">
-      <form (submit)="login()">
-        <ion-list style="margin-bottom:1px;">
-          <ion-item>
+    <div class="splash-intro" *ngIf="accountForm">
+      <form [formGroup]="accountForm" (submit)="login()">
+        <ion-list style="margin-bottom:1px">
+          <ion-item lines="full">
             <ion-label position="floating"><span translate="email"></span></ion-label>
-            <ion-input type="email" [(ngModel)]="account.username" autocomplete="username" name="email"></ion-input>
+            <ion-input type="email" formControlName="username" autocomplete="username" name="email"></ion-input>
           </ion-item>
-          <ion-item>
+          <ion-item lines="full">
             <ion-label position="floating"><span translate="password"></span></ion-label>
-            <ion-input type="password" [(ngModel)]="account.password" autocomplete="current-password" name="password">
+            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password">
             </ion-input>
           </ion-item>
         </ion-list>
-
         <div class="pt-4 px-4">
           <div class="pb-4" *ngIf="busy">
             <i class="fal fa-2x fa-fw fa-spinner fa-spin"></i>
           </div>
-          <ion-button color="primary" expand="block" type="submit" [disabled]="busy || dbError">
-            <span translate="loginButton"></span>
+          <ion-button color="primary" expand="block" type="submit" [disabled]="busy || dbError" translate="loginButton">
           </ion-button>
-          <div style="height:14px"></div>
-          <a href="#" [class.disabled]="account.username.length <= 0" tappable
-            (click)="$event.preventDefault();resetPassword()">
-            <span translate="forgotPassword"></span>
-          </a>
-          <div style="height:10px"></div>
-          <a href="#" tappable (click)="$event.preventDefault();signup()">
-            <span translate="noClaesID"></span><i class="fal fa-fw fa-angle-right"></i>
-          </a>
-          <div style="height:10px"></div>
-          <p>
-            <span translate="version"></span>
-            <span>{{ appVersion }}</span>
-          </p>
         </div>
       </form>
+
+      <div class="pt-4 px-4">
+        <div style="display:flex;flex-flow:column">
+          <ion-button color="primary" tappable (click)="resetPassword()" translate="forgotPassword">
+          </ion-button>
+          <ion-button color="primary" tappable (click)="signup()" translate="noClaesID">
+          </ion-button>
+        </div>
+        <p>
+          <span translate="version"></span>
+          <span>{{ appVersion }}</span>
+        </p>
+      </div>
     </div>
   </div>
 </ion-content>

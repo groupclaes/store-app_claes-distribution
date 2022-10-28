@@ -1,8 +1,8 @@
-import { AppCredential, ServerCustomer, UserService } from './../../core/user.service'
+import { AppCredential, ServerCustomer, UserService } from '../../core/user.service'
 import { environment } from './../../../environments/environment'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'
-import { LoadingController, NavController, ToastController } from '@ionic/angular'
+import { LoadingController, NavController, Platform, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { HttpErrorResponse } from '@angular/common/http'
 import { SyncService } from 'src/app/core/sync.service'
@@ -10,6 +10,9 @@ import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositori
 import { StorageProvider } from 'src/app/core/storage-provider.service'
 import { CartsRepositoryService } from 'src/app/core/repositories/carts.repository.service'
 import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/current-exceptions.repository.service'
+import { FormGroup, FormBuilder, Validators } from '@angular/forms'
+import { SettingsService } from 'src/app/core/settings.service'
+import { take } from 'rxjs/operators'
 
 @Component({
   selector: 'app-login',
@@ -19,10 +22,7 @@ import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/cu
 })
 export class LoginPage implements OnInit {
   private _loading: HTMLIonLoadingElement
-  public account = {
-    username: '',
-    password: ''
-  }
+  accountForm: FormGroup
   busy = false
   dbError = false
 
@@ -33,22 +33,30 @@ export class LoginPage implements OnInit {
     private toastCtrl: ToastController,
     private navCtrl: NavController,
     private user: UserService,
+    private fb: FormBuilder,
     private loadingCtrl: LoadingController,
     private sync: SyncService,
     private storage: StorageProvider,
+    private settings: SettingsService,
+    private platform: Platform,
     private checksumRepository: DataIntegrityChecksumsRepositoryService,
     private cartsRepository: CartsRepositoryService,
     private exceptionsRepository: CurrentExceptionsRepositoryService
   ) { }
 
   ngOnInit() {
+    this.accountForm = this.fb.group({
+      username: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]]
+    })
   }
 
   ionViewDidEnter() {
     const credential = this.user.storedCredential
     if (credential) {
-      this.account = credential
-      this.ref.markForCheck()
+      this.accountForm.setValue(credential)
+    } else {
+      this.accountForm.setValue({ username: '', password: '' })
     }
 
     this.busy = true
@@ -62,21 +70,27 @@ export class LoginPage implements OnInit {
       this.ref.markForCheck()
     }, 10000)
 
-    this.sync.Initialize().then((dbOk) => {
+    this.sync.Initialize().then(async (dbOk) => {
       this.busy = !dbOk
       clearTimeout(timer)
       this.ref.markForCheck()
+
+      /* Automatically sign in if credentials are found in storage and application is initialized */
+      if (this.accountForm.valid) {
+        await this.sleep(600)
+        await this.login()
+      }
     })
   }
 
   async login() {
-    if (this.busy) return
+    if (this.busy || this.accountForm.invalid) return
 
     this.busy = true
     this.ref.markForCheck()
     const oldCredential = this.user.storedCredential
 
-    this.user.login(this.account).subscribe(async (customer: ServerCustomer) => {
+    this.user.login(this.accountForm.value).subscribe(async (customer: ServerCustomer) => {
       // await this.cart.init(this.account, this.user.userinfo.userId)
       if (customer) {
         // Check if we need to sync
@@ -138,7 +152,7 @@ export class LoginPage implements OnInit {
             this.ref.markForCheck()
 
             if (prepare) {
-              // this.navCtrl.navigateForward('')
+              this.navCtrl.navigateForward(await this.defaultPage)
             } else {
               this.toast(this.translate.instant('unknownError'))
             }
@@ -152,7 +166,7 @@ export class LoginPage implements OnInit {
             await this.exceptionsRepository.delete()
             this._loading.dismiss()
             this.ref.markForCheck()
-            this.navCtrl.navigateForward('')
+            this.navCtrl.navigateForward(await this.defaultPage)
           }
         } else {
           this.toast(this.translate.instant('localData'))
@@ -194,12 +208,12 @@ export class LoginPage implements OnInit {
             this.ref.markForCheck()
 
             if (prepare) {
-              // this.navCtrl.navigateForward('')
+              this.navCtrl.navigateForward(await this.defaultPage)
             } else {
               this.toast(this.translate.instant('unknownError'))
             }
           } else {
-            this.navCtrl.navigateForward('')
+            this.navCtrl.navigateForward(await this.defaultPage)
           }
         }
       } else {
@@ -234,7 +248,7 @@ export class LoginPage implements OnInit {
             this._loading.dismiss()
             this.ref.markForCheck()
           }
-          this.navCtrl.navigateForward('')
+          this.navCtrl.navigateForward(await this.defaultPage)
         } else if (error.status === 404 || error.status === 401) {
           this.toast(this.translate.instant('loginError'))
         } else {
@@ -256,7 +270,7 @@ export class LoginPage implements OnInit {
     if (!oldCredential) {
       return true
     }
-    if (this.account.username !== oldCredential.username) {
+    if (this.accountForm.value.username !== oldCredential.username) {
       return true
     }
 
@@ -276,7 +290,7 @@ export class LoginPage implements OnInit {
     this.busy = true
     this.ref.markForCheck()
 
-    this.user.resetPassword(this.account).subscribe(_ => {
+    this.user.resetPassword(this.accountForm.value).subscribe(_ => {
       this.toast(this.translate.instant('passwordResetOk'))
     }, () => {
       this.toast(this.translate.instant('passwordResetError'))
@@ -299,13 +313,24 @@ export class LoginPage implements OnInit {
     await toast.present()
   }
 
+  get defaultPage(): Promise<string> {
+    return this.settings.DisplayDefaultPage.pipe<string>(take(1)).toPromise()
+  }
+
   get backgroundImage() {
+    let size = 'small'
+    if (this.platform.width() >= 1366) {
+      size = 'large'
+    } else if (this.platform.width() >= 768) {
+      size = 'medium'
+    }
+
     switch (this.translate.currentLang) {
       case 'nl':
-        return this.sanitizer.bypassSecurityTrustStyle(`url('https://pcm.groupclaes.be/v3/content/dis/website/banner-image?size=large')`)
+        return this.sanitizer.bypassSecurityTrustStyle(`url('${environment.pcm_url}/content/dis/website/banner-image?size=${size}')`)
 
       default:
-        return this.sanitizer.bypassSecurityTrustStyle(`url('https://pcm.groupclaes.be/v3/content/dis/website/banner-image/100/fr?size=large')`)
+        return this.sanitizer.bypassSecurityTrustStyle(`url('${environment.pcm_url}/content/dis/website/banner-image/100/fr?size=${size}')`)
     }
   }
 

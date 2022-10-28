@@ -1,0 +1,38 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+      <ion-back-button [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <span>{{ department.alias | capitalize }}</span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable size="small" class="icon-only" (click)="delete()">
+        <i class="fal fa-fw fa-trash"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="loading" padding>
+    <div style="text-align:center">
+      <ion-spinner mode="ios"></ion-spinner>
+    </div>
+  </div>
+
+  <ion-list *ngIf="!loading">
+    <ion-item lines="full" button *ngFor="let product of department.products" tappable [routerLink]="['/products', product.id]">
+      <div *ngIf="displayThumbnail" slot="start">
+        <!-- <product-thumbnail [itemnum]="product.itemnum" [size]="42"></product-thumbnail> -->
+      </div>
+      <ion-label>
+        {{ product.name }}
+      </ion-label>
+      <div slot="end" class="product-unit">
+        {{ product.unit }}
+      </div>
+    </ion-item>
+  </ion-list>
+</ion-content>

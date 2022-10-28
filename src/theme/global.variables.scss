@@ -1,3 +1,91 @@
 $logo-hig: #75A78E;
 $logo-med: #1E815F;
 $logo-low: #00633A;
+
+input[type=button],
+button,
+.button:not(.ion-activatable) {
+  padding: 0 20px;
+  border-radius: 9999px;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: center;
+  background-color: var(--primary-color-contrast);
+  color: var(--text-default);
+  transition: 80ms ease-in-out all;
+  margin: 0;
+  min-width: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  line-height: 1
+}
+
+input[type=button]:hover,
+button:hover,
+.button:hover:not(.ion-activatable) {
+  color: #fff;
+  background-color: #999
+}
+
+input[type=button][color=primary],
+button[color=primary],
+.button[color=primary]:not(.ion-activatable) {
+  background-color: #a1a2a9;
+  color: #fff
+}
+
+input[type=button][color=primary]:hover,
+button[color=primary]:hover,
+.button[color=primary]:hover:not(.ion-activatable) {
+  background-color: #5d6770
+}
+
+input[type=button][color=light],
+button[color=light],
+.button[color=light]:not(.ion-activatable) {
+  background-color: #94a3b0;
+  color: #fff
+}
+
+input[type=button][color=light]:hover,
+button[color=light]:hover,
+.button[color=light]:hover:not(.ion-activatable) {
+  background-color: #364f63
+}
+
+input[type=button][color=accent],
+button[color=accent],
+.button[color=accent] {
+  background-color: #bfd3e3;
+  color: #fff
+}
+
+input[type=button][color=accent]:hover,
+button[color=accent]:hover,
+.button[color=accent]:hover:not(.ion-activatable) {
+  background-color: #7db8e8
+}
+
+input[type=button][color=warn],
+button[color=warn],
+.button[color=warn]:not(.ion-activatable) {
+  background-color: #f44336;
+  color: #fff
+}
+
+input[type=button][color=warn]:hover,
+button[color=warn]:hover,
+.button[color=warn]:hover:not(.ion-activatable) {
+  background-color: #a82f2f
+}
+
+input[type=button][disabled],
+button[disabled],
+.button[disabled]:not(.ion-activatable) {
+  background-color: var(--muted-color-disabled);
+  pointer-events: none
+}

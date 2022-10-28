@@ -221,3 +221,18 @@ $font-path: "../assets/fonts";
   padding-left: 1rem;
   padding-right: 1rem
 }
+
+a[disabled] {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: .6
+}
+
+.capitalize-text {
+  display: inline-block;
+  text-transform: lowercase;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}

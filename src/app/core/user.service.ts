@@ -75,7 +75,7 @@ export class UserService {
   logout() {
     // this.statistics.logout(this._user.userId)
     this._user = null
-    this._credential.password = null
+    this._credential.password = ''
     this.storage.set('credential', this._credential)
   }
 

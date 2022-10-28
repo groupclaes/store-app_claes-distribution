@@ -19,7 +19,7 @@ export class SettingsService {
     this.logger.log('SettingsService -- constructor()')
 
     this._syncInterval = new BehaviorSubject(43200000); // 12hours
-    this._displayDefaultPage = new BehaviorSubject('CategoriesPage')
+    this._displayDefaultPage = new BehaviorSubject('/categories')
     this._displayDefaultFilters = new BehaviorSubject({
       new: false,
       promo: false,
@@ -44,7 +44,7 @@ export class SettingsService {
     if (displayDefaultPage) {
       this._displayDefaultPage.next(displayDefaultPage)
     } else {
-      this.storage.set('app-displaydefaultpage', 'CategoriesPage')
+      this.storage.set('app-displaydefaultpage', '/categories')
     }
 
     const displayDefaultFilters: $TSFixMe = this.storage.get('app-displaydefaultfilters')

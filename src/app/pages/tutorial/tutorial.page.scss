@@ -1,0 +1,147 @@
+:host {
+  p {
+    padding: 0 40px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #272727;
+
+    b {
+      color: #000000;
+    }
+  }
+
+  $background: #ececec;
+  $text: #272727;
+  $item-background: #fff;
+  $control-background: #fff;
+  $under-background: #8b8b8b;
+  $item-border-color: #e2e3e5;
+
+  $background-color: transparent;
+  $blue: #409cff; // 86AEF8  0070f5
+  $red: #ff4036; // EB655F  f53126
+  $orange: #ff9500; // fcff58  f58b00
+  $green: #28cd41; // 74A483  1ec337
+
+  div.product-attributes {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    width: 90%;
+    max-width: 420px;
+    font-size: 16px;
+    margin: 0 auto;
+
+    &.five-cols {
+      grid-template-columns: auto auto auto auto 1fr;
+    }
+
+    >span {
+      display: inline-block;
+      height: 22px;
+      font-size: 14px;
+      margin-top: 3px;
+      vertical-align: middle;
+    }
+
+    div:not(.badge) {
+      text-align: left;
+      line-height: 22px;
+    }
+  }
+
+  div.badge {
+    display: inline-block;
+    text-align: center;
+    margin-right: 4px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 11px;
+    font-weight: bold;
+
+    span {
+      display: inline-block;
+      border-radius: 6px;
+      border-width: 1.5px;
+      border-style: solid;
+      cursor: default;
+      padding: 0 2px;
+      min-width: 38px;
+    }
+
+    &.new-toggle {
+      span.active {
+        border-color: $blue;
+        background-color: $blue;
+        color: $control-background;
+      }
+
+      span.default {
+        border-color: $blue;
+        background-color: white;
+        color: $blue;
+      }
+
+      span.inactive {
+        background-color: $background-color;
+        color: $item-border-color;
+      }
+    }
+
+    &.promo-toggle {
+      span.active {
+        border-color: $red;
+        background-color: $red;
+        color: $control-background;
+      }
+
+      span.default {
+        border-color: $red;
+        background-color: white;
+        color: $red;
+      }
+
+      span.inactive {
+        background-color: $background-color;
+        color: $item-border-color;
+      }
+    }
+
+    &.favorite-toggle {
+      span.active {
+        border-color: $orange;
+        background-color: $orange;
+        color: $control-background;
+      }
+
+      span.default {
+        border-color: $orange;
+        background-color: white;
+        color: $orange;
+      }
+
+      span.inactive {
+        background-color: $background-color;
+        color: $item-border-color;
+      }
+    }
+
+    &.order-toggle {
+      span.active {
+        border-color: $green;
+        background-color: $green;
+        color: $control-background;
+      }
+
+      span.default {
+        border-color: $green;
+        background-color: white;
+        color: $green;
+      }
+
+      span.inactive {
+        background-color: $background-color;
+        color: $item-border-color;
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title translate="newsPage">
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable class="icon-only" routerLink="/cart">
+        <i class="fal fa-fw fa-shopping-cart"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="loading" padding>
+    <div style="text-align:center">
+      <ion-spinner mode="ios"></ion-spinner>
+    </div>
+  </div>
+  <div class="news-list news-container" *ngIf="!loading">
+    <ion-card *ngFor="let newsItem of news">
+      <ion-card-header>
+        <ion-card-title>{{ newsItem.title }}</ion-card-title>
+        <ion-card-subtitle>{{ newsItem.date | date:'d MMMM yyyy':undefined:culture }}</ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content [innerHtml]="safe(newsItem.content)">
+      </ion-card-content>
+
+      <!-- <ion-button fill="clear">Action 1</ion-button>
+      <ion-button fill="clear">Action 2</ion-button> -->
+    </ion-card>
+    <!-- <div padding class="news-item news-block" *ngFor="let newsItem of news">
+      <div class="news-title" [innerText]="newsItem.title"></div>
+      <div class="news-content" [innerHtml]="safe(newsItem.content)"></div>
+      <span [innerText]="newsItem.date | date "></span>
+      <div class="news-attachments">
+        <ion-list>
+          <ion-item button tappable *ngFor="let product of newsItem.products" [routerLink]="['/products', product.id]">
+            <div *ngIf="displayThumbnail" item-start>
+              <product-thumbnail [itemnum]="product.itemnum" [size]="32"></product-thumbnail>
+            </div>
+            <div class="item-details-grid">
+              <div class="product-name">{{ product.name }}</div>
+              <div class="product-unit">{{ product.unit }}</div>
+            </div>
+          </ion-item>
+        </ion-list>
+      </div>
+    </div> -->
+  </div>
+</ion-content>

@@ -1,0 +1,34 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+      <ion-back-button [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ recipe.name }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list *ngIf="!loading">
+    <ion-item lines="full" button *ngFor="let product of recipe.products" tappable
+      [routerLink]="['/products', product.id]">
+      <div *ngIf="displayThumbnail" slot="start">
+        <!-- <product-thumbnail [itemnum]="product.itemnum" [size]="42"></product-thumbnail> -->
+      </div>
+      <ion-label>
+        {{ product.name }}
+      </ion-label>
+      <div slot="end" class="product-unit">
+        {{ product.unit }}
+      </div>
+    </ion-item>
+  </ion-list>
+  <ion-list>
+    <ion-button expand="block" tappable (click)="open()">
+      <span translate="showRecipe"></span>
+    </ion-button>
+    <ion-button expand="block" tappable (click)="mail()">
+      <span translate="mailRecipe"></span>
+    </ion-button>
+  </ion-list>
+</ion-content>

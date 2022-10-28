@@ -1,0 +1,77 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+      <ion-back-button *ngIf="currentCategory" [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <span>
+        {{ ( currentCategory === null ? 'categoriesPage' : currentCategory.name ) | translate | capitalize }}
+      </span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable size="small" class="icon-only" routerLink="/cart">
+        <i class="fal fa-fw fa-shopping-cart"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar color="primary" *ngIf="false">
+    <ion-segment [(ngModel)]="displaymode" color="light">
+      <ion-segment-button value="display-list">
+        <i class="fal fa-fw fa-list"></i>
+      </ion-segment-button>
+      <ion-segment-button value="display-grid">
+        <i class="fal fa-fw fa-th"></i>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list *ngFor="let assortmentGroup of assortmentGroups">
+    <ion-list-header lines="full">
+      <h3 [innerText]="assortmentGroup.name | capitalize"></h3>
+    </ion-list-header>
+    <ion-item lines="full" button *ngFor="let category of assortmentGroup.categories"
+      [attr.disabled]="category.products <= 0" tappable (click)="navigatePage(category)">
+      <ion-label>{{ category.name | capitalize }}</ion-label>
+      <span slot="end">
+        {{ category.products }}
+      </span>
+    </ion-item>
+    <br>
+  </ion-list>
+  <ion-list *ngIf="currentCategory">
+    <ion-item lines="full" button tappable (click)="navigateToPage(currentCategory)">
+      <span translate="showProducts"></span>
+    </ion-item>
+  </ion-list>
+  <div *ngIf="loading" padding>
+    <div style="text-align:center">
+      <ion-spinner mode="ios"></ion-spinner>
+    </div>
+  </div>
+  <!-- <div *ngIf="!loading && categories.length <= 0">
+    <ion-item>
+      <span translate="noResults"></span>
+    </ion-item>
+  </div> -->
+  <!-- <ion-list *ngIf="displaymode === 'display-list'">
+    <ion-item detail-push *ngFor="let category of categories" [attr.disabled]="category.products <= 0"
+      tappable (click)="navigatePage(category)">
+      <span>{{ category.name | capitalize }}</span>
+      <span item-end>{{ category.products }}</span>
+    </ion-item>
+  </ion-list> -->
+  <!-- <div class="categories-grid" *ngIf="displaymode === 'display-grid'">
+    <ion-card *ngFor="let category of categories" tappable (click)="navigatePage(category)">
+      <img style="height:220px;object-fit:cover"
+        src="https://pcm.groupclaes.be/v3/content/dis/mobileapp/thumbnail-categories/{{ category.id }}" />
+      <ion-card-content>
+        <ion-card-title>
+          <span>{{ category.name | capitalize }}</span>
+        </ion-card-title>
+      </ion-card-content>
+    </ion-card>
+  </div> -->
+</ion-content>

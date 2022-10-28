@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
 
 @Injectable({
@@ -9,7 +9,17 @@ export class CurrentExceptionsRepositoryService {
 
   constructor(private _db: DatabaseService) { }
 
-  delete() {
+  get(): Promise<ICurrentException[]> {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const result = await db.query(
+        'SELECT * FROM currentExceptions'
+      )
+
+      return result.values as ICurrentException[]
+    })
+  }
+
+  delete(): Promise<Changes> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
         'DELETE FROM currentExceptions'
@@ -18,4 +28,8 @@ export class CurrentExceptionsRepositoryService {
       return result.changes
     })
   }
+}
+
+export interface ICurrentException {
+  productId: number
 }
