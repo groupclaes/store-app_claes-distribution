@@ -73,6 +73,7 @@ export class SettingsPage implements OnInit, OnDestroy {
   }
 
   changeSyncInterval($event: any) {
+    console.log($event)
     this.settings.setSyncInterval($event.detail.value)
   }
 
@@ -112,12 +113,11 @@ export class SettingsPage implements OnInit, OnDestroy {
   }
 
   changeThumbnail($event: any) {
-    this.settings.setDisplayThumbnail($event.detail.value)
+    this.settings.setDisplayThumbnail($event.detail.checked)
     this.ref.markForCheck()
   }
 
   changeTheme($event: any) {
-    console.log($event)
     this.settings.setActiveTheme($event.detail.value)
     this.ref.markForCheck()
   }

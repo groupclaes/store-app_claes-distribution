@@ -1,4 +1,5 @@
 import { Component } from '@angular/core'
+import { CartService } from 'src/app/core/cart.service'
 
 @Component({
   selector: 'app-home',
@@ -7,6 +8,13 @@ import { Component } from '@angular/core'
 })
 export class HomePage {
 
-  constructor() {}
+  constructor(
+    private cart: CartService
+  ) {}
 
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) params.push(this.cart.active.id)
+    return params
+  }
 }

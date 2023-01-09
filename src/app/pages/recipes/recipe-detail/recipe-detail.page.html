@@ -9,12 +9,19 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ recipe.name }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
   <ion-list *ngIf="!loading">
     <ion-item lines="full" button *ngFor="let product of recipe.products" tappable
       [routerLink]="['/products', product.id]">
-      <div *ngIf="displayThumbnail" slot="start">
-        <!-- <product-thumbnail [itemnum]="product.itemnum" [size]="42"></product-thumbnail> -->
-      </div>
+      <ion-avatar *ngIf="displayThumbnail" slot="start">
+        <ion-img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
+          [style]="'background-color:#' + product.color" width="32" height="32"></ion-img>
+      </ion-avatar>
       <ion-label>
         {{ product.name }}
       </ion-label>

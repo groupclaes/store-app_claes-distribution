@@ -19,7 +19,7 @@
         </ion-list>
         <div class="pt-4 px-4">
           <div class="pb-4" *ngIf="busy">
-            <i class="fal fa-2x fa-fw fa-spinner fa-spin"></i>
+            <ion-spinner mode="ios"></ion-spinner>
           </div>
           <ion-button color="primary" expand="block" type="submit" [disabled]="busy || dbError" translate="loginButton">
           </ion-button>

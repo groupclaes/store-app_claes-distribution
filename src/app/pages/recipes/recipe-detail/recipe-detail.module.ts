@@ -5,12 +5,14 @@ import { IonicModule } from '@ionic/angular'
 import { RecipeDetailPage } from './recipe-detail.page'
 import { TranslateModule } from '@ngx-translate/core'
 import { RouterModule } from '@angular/router'
+import { CoreModule } from 'src/app/core/core.module'
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    CoreModule,
     TranslateModule.forChild(),
     RouterModule.forChild([{
       path: '', component: RecipeDetailPage

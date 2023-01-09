@@ -10,7 +10,7 @@
       </span>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable size="small" class="icon-only" routerLink="/cart">
+      <ion-button tappable size="small" class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
     </ion-buttons>
@@ -28,8 +28,16 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">
+        {{ ( currentCategory === null ? 'categoriesPage' : currentCategory.name ) | translate | capitalize }}
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+
   <ion-list *ngFor="let assortmentGroup of assortmentGroups">
-    <ion-list-header lines="full">
+    <ion-list-header lines="full" *ngIf="!currentCategory">
       <h3 [innerText]="assortmentGroup.name | capitalize"></h3>
     </ion-list-header>
     <ion-item lines="full" button *ngFor="let category of assortmentGroup.categories"

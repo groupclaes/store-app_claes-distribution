@@ -6,19 +6,28 @@
     <ion-title translate="departmentsPage">
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable size="small" class="icon-only" (click)="create()">
+      <ion-button tappable size="small" class="icon-only" (click)="showCreateInput()">
         <i class="fal fa-fw fa-plus"></i>
       </ion-button>
-      <ion-button tappable size="small" class="icon-only" routerLink="/cart">
+      <ion-button tappable size="small" class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-searchbar *ngIf="!departments" [placeholder]="'searchInput' | translate" (ionInput)="filterDepartments($event)">
-  </ion-searchbar>
+  <!-- <ion-toolbar *ngIf="departments">
+    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000"
+      [placeholder]="'searchInput' | translate" (ionInput)="filterDepartments($event)">
+    </ion-searchbar>
+  </ion-toolbar> -->
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large" translate="departmentsPage"></ion-title>
+    </ion-toolbar>
+  </ion-header>
+
   <div *ngIf="loading" padding>
     <div style="text-align:center">
       <ion-spinner mode="ios"></ion-spinner>

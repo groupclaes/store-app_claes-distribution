@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { DomSanitizer } from '@angular/platform-browser'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
-import { ApiService } from 'src/app/core/api.service'
+import { CartService } from 'src/app/core/cart.service'
 import { NewsRepositoryService } from 'src/app/core/repositories/news.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
@@ -25,6 +25,7 @@ export class NewsPage implements OnInit {
     private translate: TranslateService,
     private logger: LoggingProvider,
     private newsRepository: NewsRepositoryService,
+    private cart: CartService,
     settings: SettingsService
   ) {
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
@@ -34,17 +35,17 @@ export class NewsPage implements OnInit {
   }
 
   ngOnInit() {
-    this.loadNews()
+    this.load()
   }
 
-  async loadNews() {
+  async load() {
     try {
       this.loading = true
       this.ref.markForCheck()
 
       const news = await this.newsRepository.get(
         this.user.activeUser.id,
-        this.user.activeUser.addressId,
+        this.user.activeUser.address,
         this.culture
       )
 
@@ -87,5 +88,11 @@ export class NewsPage implements OnInit {
 
   get culture(): string {
     return this.translate.currentLang
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) params.push(this.cart.active.id)
+    return params
   }
 }

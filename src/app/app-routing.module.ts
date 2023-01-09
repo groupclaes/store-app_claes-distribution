@@ -54,6 +54,30 @@ const routes: Routes = [
   {
     path: 'departments/:id',
     loadChildren: () => import('./pages/departments/department-detail/department-detail.module').then(m => m.DepartmentDetailPageModule)
+  },
+  {
+    path: 'products',
+    loadChildren: () => import('./pages/products/products.module').then(m => m.ProductsPageModule)
+  },
+  {
+    path: 'products/:id',
+    loadChildren: () => import('./pages/products/product-detail/product-detail.module').then(m => m.ProductDetailPageModule)
+  },
+  {
+    path: 'sync',
+    loadChildren: () => import('./pages/sync/sync.module').then(m => m.SyncPageModule)
+  },
+  {
+    path: 'carts',
+    loadChildren: () => import('./pages/carts/carts.module').then(m => m.CartsPageModule)
+  },
+  {
+    path: 'carts/history',
+    loadChildren: () => import('./pages/carts/cart-history/cart-history.module').then(m => m.CartHistoryPageModule)
+  },
+  {
+    path: 'carts/:id',
+    loadChildren: () => import('./pages/carts/cart-detail/cart-detail.module').then(m => m.CartDetailPageModule)
   }
 ]
 

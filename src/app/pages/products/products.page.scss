@@ -1,0 +1,242 @@
+:host {
+  div.add-to-cart {
+    width: 72px;
+
+    input {
+      border-width: 1px;
+      border-style: solid;
+      border-radius: .25rem;
+      font-size: 14px;
+      width: 100%;
+      padding: .5rem .5rem;
+      outline: none;
+    }
+  }
+
+  div.filters-toolbar {
+    margin: 0 .5em;
+    display: table;
+    border-spacing: 10px;
+    border-collapse: separate;
+
+    div.toggle-button {
+      display: table-cell;
+      margin-right: .4em;
+
+      &[disabled="true"] {
+        pointer-events: none;
+        opacity: 0.6;
+      }
+    }
+
+    @supports (display: grid) {
+      display: grid;
+      grid-gap: .4em;
+      grid-template-columns: 1fr 1fr 1fr 1fr
+        /* 1fr */
+      ;
+
+      div.toggle-button.new-toggle {
+        grid-row: 1;
+        grid-column: 1;
+      }
+
+      div.toggle-button.promo-toggle {
+        grid-row: 1;
+        grid-column: 2;
+      }
+
+      div.toggle-button.favorite-toggle {
+        grid-row: 1;
+        grid-column: 3;
+      }
+
+      div.toggle-button.order-toggle {
+        grid-row: 1;
+        grid-column: 4;
+      }
+
+      // div.toggle-button.attribute-button {
+      //   grid-row: 1;
+      //   grid-column: 5;
+      // }
+
+      div.search-query {
+        grid-row: 2;
+        grid-column: 1 / 4;
+
+        input {
+          border-width: 1px;
+          border-style: solid;
+          border-radius: .4em;
+          width: 100%;
+          padding: .4em .3em .5em .5em;
+          outline: none;
+          box-shadow: none;
+        }
+      }
+
+      div.toggle-button.reset-button {
+        grid-row: 2;
+        grid-column: 4 / 5;
+      }
+
+      border-spacing: unset;
+      border-collapse: unset;
+
+      @media screen and (min-width: 580px) {
+        grid-template-columns: auto auto auto auto 1fr auto
+          /* auto */
+        ;
+
+        div.toggle-button.new-toggle {
+          grid-row: 1;
+          grid-column: 1;
+        }
+
+        div.toggle-button.promo-toggle {
+          grid-row: 1;
+          grid-column: 2;
+        }
+
+        div.toggle-button.favorite-toggle {
+          grid-row: 1;
+          grid-column: 3;
+        }
+
+        div.toggle-button.order-toggle {
+          grid-row: 1;
+          grid-column: 4;
+        }
+
+        div.search-query {
+          grid-row: 1;
+          grid-column: 5;
+        }
+
+        div.toggle-button.reset-button {
+          grid-row: 1;
+          grid-column: 6;
+        }
+
+        // div.toggle-button.attribute-button {
+        //   grid-row: 1;
+        //   grid-column: 7;
+        // }
+      }
+
+      div.toggle-button {
+        display: block;
+        margin-right: 0;
+
+      }
+    }
+  }
+
+  div.toggle-button {
+    cursor: pointer;
+
+    span {
+      display: block;
+      padding: .45em .8em;
+      min-width: 55px;
+      text-align: center;
+      border-radius: 6px;
+      border-width: 2px;
+      border-style: solid;
+    }
+  }
+}
+
+img.icon-circle {
+  display: block;
+  border-radius: 100%;
+  border-width: 1px;
+  border-style: solid;
+  object-fit: cover;
+}
+
+div.product-listitem-grid {
+  display: grid;
+  grid-template-columns: auto 1fr 65px;
+  grid-column-gap: .5em;
+
+  div.product-options {
+    display: flex;
+    grid-column: 1;
+    grid-row: 2;
+
+    div.option-state {
+      flex: 1 100%;
+      margin: .45em 0;
+      cursor: default;
+
+      span {
+        font-weight: bold;
+        border-radius: 3px;
+        padding: .1em .15em;
+        line-height: 2em;
+      }
+    }
+  }
+
+  div.product-name {
+    align-self: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 100%;
+    grid-column: 1 / 4;
+    grid-row: 1;
+    padding-top: .375rem;
+
+    span {
+      line-height: 22px;
+      text-overflow: ellipsis;
+      max-height: 44px;
+      max-width: 100%;
+    }
+  }
+
+  div.product-packing-unit {
+    align-self: center;
+    display: block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 13px;
+    text-align: right;
+    grid-column: 3;
+    grid-row: 2;
+
+    span {
+      line-height: 22px;
+    }
+  }
+
+  div.add-to-cart {
+    display: none;
+  }
+
+  @media screen and (min-width: 375px) {
+    div.product-packing-unit {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
+
+  @media screen and (min-width: 650px) {
+    div.product-options {
+      grid-row: 1;
+    }
+
+    div.product-name {
+      padding-top: 0;
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    div.product-packing-unit {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+}

@@ -29,7 +29,7 @@ export class DatabaseService {
         const db = await this.sqlite.createConnection(databaseName, false, "no-encryption", 1)
         await db.open()
         let cb = await callback(db)
-        await this.sqlite.closeConnection(databaseName)
+        // await this.sqlite.closeConnection(databaseName)
         return cb
       }
     } catch (error) {

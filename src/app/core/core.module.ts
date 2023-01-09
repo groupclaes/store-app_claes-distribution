@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common'
 import { PipesModule } from './pipes/pipes.module'
 
 @NgModule({
-  declarations: [],
+  declarations: [
+  ],
   imports: [
     CommonModule,
     PipesModule

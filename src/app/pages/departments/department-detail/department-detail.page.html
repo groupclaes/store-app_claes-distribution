@@ -8,7 +8,10 @@
       <span>{{ department.alias | capitalize }}</span>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable size="small" class="icon-only" (click)="delete()">
+      <ion-button tappable size="small" class="icon-only" (click)="showUpdateInput()">
+        <i class="fal fa-fw fa-pen"></i>
+      </ion-button>
+      <ion-button tappable size="small" class="icon-only" (click)="showDeleteConfirmation()">
         <i class="fal fa-fw fa-trash"></i>
       </ion-button>
     </ion-buttons>
@@ -23,10 +26,12 @@
   </div>
 
   <ion-list *ngIf="!loading">
-    <ion-item lines="full" button *ngFor="let product of department.products" tappable [routerLink]="['/products', product.id]">
-      <div *ngIf="displayThumbnail" slot="start">
-        <!-- <product-thumbnail [itemnum]="product.itemnum" [size]="42"></product-thumbnail> -->
-      </div>
+    <ion-item lines="full" button *ngFor="let product of department.products" tappable
+      [routerLink]="['/products', product.id]">
+      <ion-avatar *ngIf="displayThumbnail" slot="start">
+        <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
+          [style]="'background-color:#' + product.color" width="32" height="32">
+      </ion-avatar>
       <ion-label>
         {{ product.name }}
       </ion-label>

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
+import { IProductInfoT } from './products.repository.service'
 
 @Injectable({
   providedIn: 'root'
@@ -38,11 +39,45 @@ export class DepartmentsRepositoryService {
 
   delete(id: number): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const result = await db.executeSet([
+        {
+          statement: 'DELETE FROM departmentProducts WHERE department = ?',
+          values: [
+            id
+          ]
+        }, {
+          statement: 'DELETE FROM departments WHERE id = ?',
+          values: [
+            id
+          ]
+        }
+      ])
+
+      return result.changes && result.changes.changes > 0
+    })
+  }
+
+  create(id: number, userCode: number, alias: string): Promise<boolean> {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        `DELETE FROM departments WHERE id = ?;
-         DELETE FROM departmentProducts WHERE department = ?`,
+        `INSERT INTO departments VALUES (?,?,?)`,
         [
           id,
+          userCode,
+          alias
+        ]
+      )
+
+      return result.changes && result.changes.changes > 0
+    })
+  }
+
+  updateName(id: number, alias: string): Promise<boolean> {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const result = await db.run(
+        `UPDATE departments SET alias = ? WHERE id = ?`,
+        [
+          alias,
           id
         ]
       )
@@ -70,14 +105,16 @@ export class DepartmentsRepositoryService {
 
       const department = result.values[0] as IDepartmentDetailT
       const resultP = await db.query(
-        `SELECT products.itemnum,
-          products.id,
-          products.${nameString} as name,
-          packingUnits.${nameString} as unit
+        `SELECT p.itemnum,
+          p.id,
+          p.${nameString} as name,
+          packingUnits.${nameString} as unit,
+          p.url,
+          p.color
          FROM departmentProducts
-         INNER JOIN products ON products.id = departmentProducts.product
-         INNER JOIN packingUnits ON products.packId = packingUnits.id
-         WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND departmentProducts.department = ?`,
+         INNER JOIN products as p ON p.id = departmentProducts.product
+         INNER JOIN packingUnits ON p.packId = packingUnits.id
+         WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = p.id) AND departmentProducts.department = ?`,
         [
           id
         ]
@@ -86,7 +123,7 @@ export class DepartmentsRepositoryService {
       if (resultP.values.length === 0) {
         department.products = []
       } else {
-        department.products = resultP.values as IDepartmentDetailProductT[]
+        department.products = resultP.values as IProductInfoT[]
       }
 
       return department
@@ -103,12 +140,5 @@ export interface IDepartmentT {
 export interface IDepartmentDetailT {
   id: number
   alias: string
-  products: IDepartmentDetailProductT[]
-}
-
-export interface IDepartmentDetailProductT {
-  id: number
-  itemnum: string
-  name: string
-  unit: string
+  products: IProductInfoT[]
 }

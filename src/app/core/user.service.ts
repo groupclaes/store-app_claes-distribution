@@ -190,7 +190,7 @@ export interface Customer {
   vatNum?: string
   language?: string
   bonusPercentage?: number
-  addressId?: number
+  // addressId?: number
   delvAddress?: string
   delvStreetNum?: string
   delvZipCode?: string

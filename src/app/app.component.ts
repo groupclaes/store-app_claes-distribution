@@ -10,6 +10,7 @@ import { IonMenu, NavController, Platform } from '@ionic/angular'
 import { LoggingProvider } from './@shared/logging/log.service'
 import { TranslateService } from '@ngx-translate/core'
 import { StorageProvider } from './core/storage-provider.service'
+import { CartService } from './core/cart.service'
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
 
@@ -32,7 +33,8 @@ export class AppComponent {
     private storage: StorageProvider,
     private navCtrl: NavController,
     private ref: ChangeDetectorRef,
-    private user: UserService
+    private user: UserService,
+    private cart: CartService
   ) {
     logger.log('MyApp.constructor() -- started.')
 
@@ -124,9 +126,9 @@ export class AppComponent {
   }
 
   get hasUnsendCarts(): boolean {
-    // if (this.cart && this.cart.carts) {
-    //   return this.cart.carts.length > 0
-    // }
+    if (this.cart && this.cart.carts) {
+      return this.cart.carts.length > 0
+    }
     return false
   }
 }

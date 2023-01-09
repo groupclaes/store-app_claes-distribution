@@ -8,5 +8,5 @@ export const environment = {
   ],
   api_url: 'https://api.groupclaes.be/distribution',
   pcm_url: 'https://pcm.groupclaes.be/v3',
-  databaseName: 'distribution'
+  database_name: 'distribution'
 }

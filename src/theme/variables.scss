@@ -48,8 +48,8 @@ $font-path: "../assets/fonts";
   /** warning **/
   --ion-color-warning: #ff9500;
   --ion-color-warning-rgb: 255, 196, 9;
-  --ion-color-warning-contrast: #000000;
-  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
   --ion-color-warning-shade: #e0ac08;
   --ion-color-warning-tint: #ffca22;
 
@@ -94,6 +94,8 @@ $font-path: "../assets/fonts";
   }
 }
 
+@import "theme.light.scss";
+
 @media (prefers-color-scheme: dark) {
   /*
    * Dark Colors
@@ -124,15 +126,15 @@ $font-path: "../assets/fonts";
 
     --ion-color-success: #28cd41;
     --ion-color-success-rgb: 47, 223, 117;
-    --ion-color-success-contrast: #000000;
-    --ion-color-success-contrast-rgb: 0, 0, 0;
+    --ion-color-success-contrast: #ffffff;
+    --ion-color-success-contrast-rgb: 255, 255, 255;
     --ion-color-success-shade: #29c467;
     --ion-color-success-tint: #44e283;
 
     --ion-color-warning: #ff9500;
     --ion-color-warning-rgb: 255, 213, 52;
-    --ion-color-warning-contrast: #000000;
-    --ion-color-warning-contrast-rgb: 0, 0, 0;
+    --ion-color-warning-contrast: #ffffff;
+    --ion-color-warning-contrast-rgb: 255, 255, 255;
     --ion-color-warning-shade: #e0bb2e;
     --ion-color-warning-tint: #ffd948;
 
@@ -197,9 +199,13 @@ $font-path: "../assets/fonts";
     --ion-color-step-900: #e6e6e6;
     --ion-color-step-950: #f2f2f2;
 
-    --ion-item-background: #222222;
+    // --ion-item-background: #222222;
 
     --ion-card-background: #1c1c1d;
+
+    ion-item {
+      --ion-background-color: black;
+    }
   }
 
   .ios ion-modal {
@@ -217,9 +223,19 @@ $font-path: "../assets/fonts";
   padding-bottom: 1rem
 }
 
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem
+}
+
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem
+}
+
+.px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem
 }
 
 a[disabled] {
@@ -228,11 +244,6 @@ a[disabled] {
   opacity: .6
 }
 
-.capitalize-text {
-  display: inline-block;
-  text-transform: lowercase;
-
-  &::first-letter {
-    text-transform: uppercase;
-  }
+.w-full {
+  width: 100%
 }

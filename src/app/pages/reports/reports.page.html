@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title translate="reportsPage"></ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable class="icon-only" routerLink="/cart">
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
     </ion-buttons>
@@ -13,6 +13,12 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large" translate="reportsPage"></ion-title>
+    </ion-toolbar>
+  </ion-header>
+
   <ion-list>
     <ion-list-header lines="full">
       <h3 translate="pages.reports.requestedReports"></h3>
@@ -44,7 +50,7 @@
     </div>
     <ion-item button lines="full" *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable
       (click)="confirmRunReport(report)">
-      <span [textContent]="report.name"></span>
+      <ion-label>{{ report.name }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

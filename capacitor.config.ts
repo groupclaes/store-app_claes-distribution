@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'be.claesdistribution.shopapp',
+  appId: 'be.claesdistribution.shop',
   appName: 'store-app',
   webDir: 'www',
   server: {

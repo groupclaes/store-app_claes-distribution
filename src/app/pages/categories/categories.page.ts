@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { ActivatedRoute } from '@angular/router'
 import { NavController, AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
+import { CartService } from 'src/app/core/cart.service'
 import { CategoriesRepositoryService, ICategory, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
 import { UserService } from 'src/app/core/user.service'
 
@@ -23,6 +24,7 @@ export class CategoriesPage {
     private translate: TranslateService,
     private ref: ChangeDetectorRef,
     private categoriesRepository: CategoriesRepositoryService,
+    private cart: CartService,
     route: ActivatedRoute
   ) {
     route.queryParams.subscribe(params => {
@@ -99,5 +101,10 @@ export class CategoriesPage {
 
   get backButtonText(): string {
     return this.translate.instant('backButtonText')
+  }
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) params.push(this.cart.active.id)
+    return params
   }
 }

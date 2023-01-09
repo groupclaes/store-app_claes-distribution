@@ -1,12 +1,13 @@
+import { Location } from '@angular/common'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
-import { DepartmentsRepositoryService } from 'src/app/core/repositories/departments.repository.service'
+import { ErrorAlertsService } from 'src/app/core/error-alerts.service'
+import { DepartmentsRepositoryService, IDepartmentDetailT } from 'src/app/core/repositories/departments.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
-import { SyncService } from 'src/app/core/sync.service'
 import { UserService } from 'src/app/core/user.service'
 
 @Component({
@@ -17,7 +18,7 @@ import { UserService } from 'src/app/core/user.service'
 })
 export class DepartmentDetailPage implements OnInit {
   loading = true
-  private _department: $TSFixMe
+  private _department: IDepartmentDetailT
   displayThumbnail: boolean
 
   constructor(
@@ -28,9 +29,10 @@ export class DepartmentDetailPage implements OnInit {
     private api: ApiService,
     private user: UserService,
     private departmentsRepository: DepartmentsRepositoryService,
-    private sync: SyncService,
     private alertCtrl: AlertController,
-    private logger: LoggingProvider
+    private logger: LoggingProvider,
+    private error: ErrorAlertsService,
+    private location: Location
   ) {
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail
@@ -68,48 +70,91 @@ export class DepartmentDetailPage implements OnInit {
     }
   }
 
-  async handleUpdate() {
-
-  }
-
-  async reload() {
-
-  }
-
-  async delete() {
+  private async update(data: { name: string }) {
     try {
-      const acceptDelete = await this.showDeleteConfirmation()
-      if (acceptDelete) {
-        const req = await this.api.delete(`departments/${this.department.id}`, {
-          userCode: this.user.activeUser.userCode
-        }).toPromise()
-        if (req) {
-          await this.departmentsRepository.delete(this.department.id)
+      const res = await this.api.put<{ Id: number }>(`departments/${this.department.id}`, {
+        Alias: data.name
+      }, {
+        userCode: this.user.activeUser.userCode
+      }).toPromise()
+      if (res.Id === this.department.id) {
+        if (await this.departmentsRepository.updateName(this.department.id, data.name)) {
+          this.department.alias = data.name
+          this.ref.markForCheck()
         }
       }
     } catch (err) {
       this.logger.error('DepartmentDetailPage.delete() error', err)
-
+      await this.error.alert(
+        this.translate.instant('errors.department-detail.delete.title'),
+        this.translate.instant('errors.department-detail.delete.message'),
+        [
+          'ok'
+        ]
+      )
     } finally {
 
     }
   }
 
-  async showDeleteConfirmation(): Promise<boolean> {
-    let resolveH: Function
-    const promise = new Promise<boolean>(resolve => resolveH = resolve)
+  private async delete() {
+    try {
+      await this.api.delete(`departments/${this.department.id}`, {
+        userCode: this.user.activeUser.userCode
+      }).toPromise()
+      if (await this.departmentsRepository.delete(this.department.id)) {
+        this.location.back()
+      }
+    } catch (err) {
+      this.logger.error('DepartmentDetailPage.delete() error', err)
+      await this.error.alert(
+        this.translate.instant('errors.department-detail.delete.title'),
+        this.translate.instant('errors.department-detail.delete.message'),
+        [
+          'ok'
+        ]
+      )
+    } finally {
+
+    }
+  }
+
+  async showUpdateInput(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: this.translate.instant('modifyDepartment'),
+      inputs: [
+        {
+          name: 'name',
+          placeholder: this.translate.instant('deparmtentChangeName')
+        }
+      ],
+      buttons: [
+        {
+          text: this.translate.instant('actions.cancel'),
+          role: 'cancel'
+        },
+        {
+          text: this.translate.instant('actions.modify'),
+          handler: data => this.update(data)
+        }
+      ]
+    })
+    await alert.present()
+  }
+
+  async showDeleteConfirmation(): Promise<void> {
     try {
       const alert = await this.alertCtrl.create({
         header: this.translate.instant('departmentDeletionWarning'),
         buttons: [
           {
-            text: this.translate.instant('yes'),
-            role: 'submit',
-            handler: () => resolveH(true)
-          }, {
-            text: this.translate.instant('no'),
+            text: this.translate.instant('actions.cancel'),
             role: 'cancel',
-            handler: () => resolveH(false)
+            handler: () => { }
+          }, {
+            text: this.translate.instant('yes'),
+            role: 'destructive',
+            handler: () => this.delete()
           }
         ]
       })
@@ -117,14 +162,10 @@ export class DepartmentDetailPage implements OnInit {
     } catch (err) {
       this.logger.error('DepartmentDetailPage.showDeleteConfirmation() error', err)
     }
-    return promise
   }
 
-  get department() {
-    if (this._department) {
-      return this._department
-    }
-    return {}
+  get department(): IDepartmentDetailT {
+    return this._department || { id: 0, alias: '', products: [] }
   }
 
   get culture(): string {

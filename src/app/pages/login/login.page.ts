@@ -13,6 +13,7 @@ import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/cu
 import { FormGroup, FormBuilder, Validators } from '@angular/forms'
 import { SettingsService } from 'src/app/core/settings.service'
 import { take } from 'rxjs/operators'
+import { CartService } from 'src/app/core/cart.service'
 
 @Component({
   selector: 'app-login',
@@ -41,7 +42,8 @@ export class LoginPage implements OnInit {
     private platform: Platform,
     private checksumRepository: DataIntegrityChecksumsRepositoryService,
     private cartsRepository: CartsRepositoryService,
-    private exceptionsRepository: CurrentExceptionsRepositoryService
+    private exceptionsRepository: CurrentExceptionsRepositoryService,
+    private cart: CartService
   ) { }
 
   ngOnInit() {
@@ -91,13 +93,13 @@ export class LoginPage implements OnInit {
     const oldCredential = this.user.storedCredential
 
     this.user.login(this.accountForm.value).subscribe(async (customer: ServerCustomer) => {
-      // await this.cart.init(this.account, this.user.userinfo.userId)
+      await this.cart.init(this.accountForm.value, this.user.userinfo.userId)
       if (customer) {
         // Check if we need to sync
         const syncRequired = await this.syncRequired(oldCredential)
         if (syncRequired) {
           this._loading = await this.loadingCtrl.create({
-            spinner: 'crescent',
+            spinner: 'lines',
             message: this.translate.instant('syncPage')
           })
           this._loading.present()
@@ -232,7 +234,7 @@ export class LoginPage implements OnInit {
         if (error.status === 0) {
           // there is no connection
           this.ref.markForCheck()
-          // await this.cart.init(this.account, this.user.userinfo.userId)
+          await this.cart.init(this.accountForm.value, this.user.userinfo.userId)
           if (this.user.hasAgentAccess) {
             this._loading = await this.loadingCtrl.create({
               spinner: 'lines',
@@ -277,9 +279,14 @@ export class LoginPage implements OnInit {
     // check if sync is needed
     const syncInterval: number = this.storage.get(`app-syncinterval`)
     const result = await this.checksumRepository.get<any>('lastSync')
+    const res = await this.checksumRepository.get<any>()
+    console.log(res)
+
     if (!result) {
       return true
     }
+
+    console.log(result)
 
     const lastSync: Date = (result && result.length >= 1) ? new Date(result[0].dateChanged) : new Date(1970, 0)
 

@@ -1,13 +1,15 @@
 import { TranslateService } from '@ngx-translate/core'
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { UserService } from 'src/app/core/user.service'
 import { IRecipe, RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
 import { NavController } from '@ionic/angular'
+import { CartService } from 'src/app/core/cart.service'
 
 @Component({
   selector: 'app-recipes',
   templateUrl: './recipes.page.html',
   styleUrls: ['./recipes.page.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipesPage implements OnInit {
   loading = true
@@ -18,17 +20,17 @@ export class RecipesPage implements OnInit {
 
   constructor(
     private translate: TranslateService,
-    private user: UserService,
     private navCtrl: NavController,
     private ref: ChangeDetectorRef,
-    private recipesRepository: RecipesRepositoryService
+    private recipesRepository: RecipesRepositoryService,
+    private cart: CartService
   ) { }
 
   ngOnInit() {
-    this.loadRecipes()
+    this.load()
   }
 
-  async loadRecipes(additional?: boolean, force?: boolean) {
+  async load(additional?: boolean, force?: boolean) {
     if (this._recipes && !additional && !force) {
       this.ref.markForCheck()
       return
@@ -47,9 +49,9 @@ export class RecipesPage implements OnInit {
         50
       )
 
-      if (result.length === 0) {
-        throw new Error('no rows!')
-      }
+      // if (result.length === 0) {
+      //   this.logger.error('no rows!')
+      // }
 
       if (result.length <= 49) {
         this.reachedEnd = true
@@ -71,7 +73,7 @@ export class RecipesPage implements OnInit {
   filterRecipes(event: $TSFixMe): void {
     this._query = event.target.value
     this._items = 50
-    this.loadRecipes(null, true)
+    this.load(null, true)
   }
 
   open(recipe: IRecipe) {
@@ -82,7 +84,7 @@ export class RecipesPage implements OnInit {
 
   async doInfinite(event: any) {
     this._items += 50
-    await this.loadRecipes(true)
+    await this.load(true)
     event.target.complete()
   }
 
@@ -99,5 +101,11 @@ export class RecipesPage implements OnInit {
 
   get culture(): string {
     return this.translate.currentLang
+  }
+  
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) params.push(this.cart.active.id)
+    return params
   }
 }

@@ -6,7 +6,7 @@
     <ion-title translate="newsPage">
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable class="icon-only" routerLink="/cart">
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
     </ion-buttons>
@@ -14,6 +14,12 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large" translate="newsPage"></ion-title>
+    </ion-toolbar>
+  </ion-header>
+
   <div *ngIf="loading" padding>
     <div style="text-align:center">
       <ion-spinner mode="ios"></ion-spinner>
@@ -26,7 +32,9 @@
         <ion-card-subtitle>{{ newsItem.date | date:'d MMMM yyyy':undefined:culture }}</ion-card-subtitle>
       </ion-card-header>
 
-      <ion-card-content [innerHtml]="safe(newsItem.content)">
+      <ion-card-content>
+        <iframe class="news-body" [title]="newsItem.title" [srcdoc]="safe(newsItem.content)"
+          onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this))'></iframe>
       </ion-card-content>
 
       <!-- <ion-button fill="clear">Action 1</ion-button>

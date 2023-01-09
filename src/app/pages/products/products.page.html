@@ -1,0 +1,127 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+      <ion-back-button *ngIf="category" [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <span class="title" [innerText]="pageTitle | capitalize"></span>
+      <span class="selected-customer" *ngIf="currentCustomer" [innerText]="currentCustomer"></span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable class="icon-only" (click)="changeSortOrder()" *ngIf="favoriteFilter">
+        <i class="fal fa-fw fa-sort"></i>
+      </ion-button>
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
+        <i class="fal fa-fw fa-shopping-cart"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <div class="filters-toolbar">
+      <div class="toggle-button new-toggle" tappable (click)="toggleNewFilter()" [attr.disabled]="loading">
+        <span [ngClass]="filter.newState" translate="newToggleButton"></span>
+      </div>
+      <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable
+        (click)="togglePromoFilter()">
+        <span [ngClass]="filter.promoState" translate="promoToggleButton"></span>
+      </div>
+      <div class="toggle-button favorite-toggle" tappable (click)="toggleFavoriteFilter()" [attr.disabled]="loading">
+        <span [ngClass]="filter.favoriteState" translate="favoriteToggleButton"></span>
+      </div>
+      <div class="toggle-button order-toggle" tappable (click)="toggleOrderFilter()" [attr.disabled]="loading">
+        <span [ngClass]="filter.orderState" translate="orderToggleButton"></span>
+      </div>
+      <!-- <div class="toggle-button attribute-button" tappable (click)="showFilterModal()"
+        [attr.disabled]="!canFilterModal || loading">
+        <span [ngClass]="hasAttributeFilter ? 'active': 'default'">
+          <i class="fal fa-fw fa-lg fa-filter active"></i>
+        </span>
+      </div> -->
+      <div class="search-query">
+        <input [placeholder]="'searchInput' | translate" class="control-color" style="width:100%" type="text"
+          [(ngModel)]="filter.query" (change)="load()" />
+      </div>
+      <div class="toggle-button reset-button" tappable (click)="resetFilters()" [attr.disabled]="loading">
+        <span class="default">
+          {{ 'removeSelection' | translate }}
+        </span>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list *ngIf="products.length > 0 && !loading">
+    <ion-item lines="full" tabbapble [routerLink]="[product.id]" *ngFor="let product of products; let i = index">
+      <ion-avatar *ngIf="displayThumbnail" slot="start">
+        <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
+          [style]="'background-color:#' + product.color" width="32" height="32">
+      </ion-avatar>
+
+      <ion-label class="ion-text-wrap">
+        <div class="product-options" style="display:flex">
+          <ion-badge color="secondary" *ngIf="newState(product) === 'active'" translate="newItem"></ion-badge>
+          {{ newState(product) === 'active' ? '&nbsp;' : '' }}
+          <ion-badge color="danger" *ngIf="promoState(product) === 'active'" translate="promoItem"></ion-badge>
+          {{ promoState(product) === 'active' ? '&nbsp;' : '' }}
+          <ion-badge color="warning" *ngIf="favoriteState(product) === 'active'" translate="favoriteItem"></ion-badge>
+          {{ favoriteState(product) === 'active' ? '&nbsp;' : '' }}
+          <ion-badge color="success" *ngIf="orderState(product) === 'active'" translate="orderItem"></ion-badge>
+        </div>
+        {{ product.unit | capitalize }} - {{ product.name }}
+        <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
+          {{ favinfo(product) }}
+        </div>
+        <ion-badge color="light" *ngIf="product.availableOn">
+          {{ availableDescription(product) }}
+        </ion-badge>
+      </ion-label>
+      <!-- <div class="w-full product-listitem-grid">
+        <div class="product-options">
+          <div class="option-state new-toggle">
+            <span [ngClass]="newState(product)" translate="newToggleButton"></span>
+          </div>
+          <div class="option-state promo-toggle">
+            <span [ngClass]="promoState(product)" translate="promoToggleButton"></span>
+          </div>
+          <div class="option-state favorite-toggle">
+            <span [ngClass]="favoriteState(product)" translate="favoriteToggleButton"></span>
+          </div>
+          <div class="option-state order-toggle">
+            <span [ngClass]="orderState(product)" translate="orderToggleButton"></span>
+          </div>
+        </div>
+        <div class="product-name">
+          {{ product.name }}
+          <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
+            {{ favinfo(product) }}
+          </div>
+          <ion-badge color="light" *ngIf="product.availableOn">
+            {{ availableDescription(product) }}
+          </ion-badge>
+        </div>
+        <div class="product-packing-unit">
+          {{ product.unit | capitalize }}
+        </div>
+      </div> -->
+      <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
+        <input [ngModel]="product.amount" [disabled]="product.availableOn != null" placeholder="0" class="control-color"
+          type="tel" [tabindex]="i+1" (input)="changeProductAmount($event, product)" />
+      </div>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="(!products.length && loading) || loading || loadingAdditional">
+    <div style="text-align:center">
+      <ion-spinner mode="ios"></ion-spinner>
+    </div>
+  </div>
+
+  <div style="margin:auto 1em;text-align:center" class="py-4"
+    *ngIf="products.length > 0 && !loadingAdditional && !loading && !noMoreProducts">
+    <ion-button color="primary" tappable (click)="load(true)">
+      {{ 'loadMoreProducts' | translate }}
+    </ion-button>
+  </div>
+</ion-content>

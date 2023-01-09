@@ -1,10 +1,9 @@
-import { Observable, zip } from 'rxjs'
 import { environment } from './../../environments/environment'
 import { ApiService } from './api.service'
 import { Injectable } from '@angular/core'
 import { LoggingProvider } from '../@shared/logging/log.service'
 import { StorageProvider } from './storage-provider.service'
-import { capSQLiteSet, SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from './database.service'
 import { AppCredential, AppCustomerModel } from './user.service'
 import { timeout } from 'rxjs/operators'
@@ -31,7 +30,7 @@ export class SyncService {
       ok = true
 
       await db.execute('DROP TABLE IF EXISTS images')
-      await db.execute('CREATE TABLE IF NOT EXISTS dataIntegrityChecksums (dataTable STRING PRIMARY KEY, checksum STRING, dateChanged DATETIME NULL)')
+      await db.execute('CREATE TABLE IF NOT EXISTS dataIntegrityChecksums (dataTable STRING PRIMARY KEY, checksum STRING, dateChanged DATETIME);CREATE UNIQUE INDEX IF NOT EXISTS idx_dataIntegrityChecksums_dataTable ON dataIntegrityChecksums(dataTable)')
 
       const version = this.storage.get('_db_version')
       this.logger.log(`database ${environment.database_name} has been opened in CheckDB!`, version)
@@ -89,7 +88,7 @@ export class SyncService {
    * @returns {Observable<boolean>}
    * @memberof SyncService
    */
-  public fullSync(credential: AppCredential, culture?: string, forceSync?: boolean) {
+  public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean) {
     this.logger.log(`SyncService.FullSync() -- start`)
     culture = culture || 'all'
 
@@ -153,10 +152,11 @@ export class SyncService {
         await db.execute('CREATE TABLE IF NOT EXISTS customers (id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
         this.logger.log('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
         await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)', false)
-      })
 
-      await this.updateDataIntegrityChecksum('lastSync', 'distribution-checksum-sha')
+        await this.updateDataIntegrityChecksum(db, 'lastSync', 'distribution-checksum-sha')
+      })
       const checksum = await this.loadIntegrity()
+
       this.logger.log(`SyncProvider.FullSync() -- end`)
       return resolve(checksum)
     })
@@ -179,7 +179,7 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS productAttributes')
           await db.execute('DROP TABLE IF EXISTS productAllergens')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, groupId INTEGER, packId INTEGER, itemnum STRING, nameNl STRING, nameFr STRING, [type] STRING, isNew BOOLEAN, c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, c5 INTEGER, c6 INTEGER, stackSize INTEGER, minOrder INTEGER, deliverTime INTEGER, ean STRING, supplierItemIdentifier STRING, relativeQuantity INTEGER, queryWordsNl STRING, queryWordsFr STRING, sortOrder INTEGER, AvailableOn DateTime NULL, contentQuantity INTEGER NULL, contentUnit INTEGER NULL)')
+          await db.execute('CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, groupId INTEGER, packId INTEGER, itemnum STRING, nameNl STRING, nameFr STRING, [type] STRING, isNew BOOLEAN, c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, c5 INTEGER, c6 INTEGER, stackSize INTEGER, minOrder INTEGER, deliverTime INTEGER, ean STRING, supplierItemIdentifier STRING, relativeQuantity INTEGER, queryWordsNl STRING, queryWordsFr STRING, sortOrder INTEGER, AvailableOn DateTime NULL, contentQuantity INTEGER NULL, contentUnit INTEGER NULL, url STRING, color STRING NULL)')
           await db.execute('CREATE TABLE IF NOT EXISTS productTexts (id INTEGER PRIMARY KEY, descriptionNl STRING, descriptionFr STRING, groupNameNl STRING, groupNameFr STRING, PromoNl STRING, PromoFr STRING)')
           await db.execute('CREATE TABLE IF NOT EXISTS productAttributes (attribute INTEGER, product INTEGER, PRIMARY KEY (attribute, product))')
           await db.execute('CREATE TABLE IF NOT EXISTS productAllergens (product INTEGER, code STRING, value STRING, PRIMARY KEY (product, code))')
@@ -202,7 +202,7 @@ export class SyncService {
             const queryWordsNl: string = product.queryWordsNl && product.queryWordsNl.length ? product.queryWordsNl : null
             const queryWordsFr: string = product.queryWordsFr && product.queryWordsFr.length ? product.queryWordsFr : null
 
-            const query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 24
+            const query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 26
             const textQuery = 'INSERT INTO productTexts VALUES (?, ?, ?, ?, ?, ?, ?)' // 7
             const param = [
               product.id,
@@ -230,7 +230,9 @@ export class SyncService {
               product.sortOrder,
               product.availableOn,
               product.contentQuantity,
-              product.contentUnit
+              product.contentUnit,
+              product.url,
+              product.color
             ]
             const textParam = [
               product.id,
@@ -263,9 +265,10 @@ export class SyncService {
               })
             }
           })
-          await db.executeSet(sqlStatements)
+          this.logger.debug(`Inserting ${sqlStatements.length} records into various product tables`)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted products; checksum', response.checksumSha)
-          await this.updateDataIntegrityChecksum('products', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'products', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncProducts() -- no changes`)
@@ -342,7 +345,7 @@ export class SyncService {
             await db.executeSet(sqlStatements)
           }
           this.logger.log('inserted prices', response.checksumSha)
-          await this.updateDataIntegrityChecksum('prices', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'prices', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncPrices() -- no changes`)
@@ -386,7 +389,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted packing-units', response.checksumSha)
-          await this.updateDataIntegrityChecksum('packingUnits', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'packingUnits', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncPackingUnits() -- no changes`)
@@ -462,7 +465,7 @@ export class SyncService {
           }
 
           this.logger.log('inserted favorites', response.checksumSha)
-          await this.updateDataIntegrityChecksum('favorites', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'favorites', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncFavorites() -- no changes`)
@@ -511,7 +514,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted productExceptions', response.checksumSha)
-          await this.updateDataIntegrityChecksum('productExceptions', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'productExceptions', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductExceptions() -- no changes`)
@@ -565,7 +568,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted attributes', response.checksumSha)
-          await this.updateDataIntegrityChecksum('attributes', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'attributes', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncAttributes() -- no changes`)
@@ -609,7 +612,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted categoryAttributes', response.checksumSha)
-          await this.updateDataIntegrityChecksum('categoryAttributes', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'categoryAttributes', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncCategoryAttributes() -- no changes`)
@@ -654,7 +657,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted productRelations', response.checksumSha)
-          await this.updateDataIntegrityChecksum('productRelations', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'productRelations', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductRelations() -- no changes`)
@@ -703,7 +706,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted reports', response.checksumSha)
-          await this.updateDataIntegrityChecksum('reports', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'reports', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncReports() -- no changes`)
@@ -749,7 +752,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted recipes', response.checksumSha)
-          await this.updateDataIntegrityChecksum('recipes', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'recipes', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncRecipes() -- no changes`)
@@ -795,7 +798,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted datasheets', response.checksumSha)
-          await this.updateDataIntegrityChecksum('datasheets', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'datasheets', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncDatasheets() -- no changes`)
@@ -841,7 +844,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted usageManuals', response.checksumSha)
-          await this.updateDataIntegrityChecksum('usageManuals', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'usageManuals', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncUsageManuals() -- no changes`)
@@ -895,7 +898,7 @@ export class SyncService {
           await db.executeSet(sqlStatements)
 
           this.logger.log('inserted departments', response.checksumSha)
-          await this.updateDataIntegrityChecksum('departments', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'departments', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncDepartments() -- no changes`)
@@ -919,9 +922,7 @@ export class SyncService {
 
       if (response && response.categories && response.categories.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-          console.log('categories', response.categories, await db.getTableList())
           const dropResult = await db.execute('DROP TABLE IF EXISTS categories')
-          console.log('categories drop', dropResult)
 
           await db.execute('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER, nameNl STRING, nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
 
@@ -950,7 +951,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted categories', response.categories.length, response.checksumSha)
-          await this.updateDataIntegrityChecksum('categories', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'categories', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncCategories() -- no changes`)
@@ -958,7 +959,6 @@ export class SyncService {
 
       return true
     } catch (err) {
-      console.log(err)
     }
   }
 
@@ -976,14 +976,13 @@ export class SyncService {
       if (response && response.notes && response.notes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS notes')
-
           await db.execute('CREATE TABLE IF NOT EXISTS notes (customer INTEGER, address INTEGER, date DATETIME, text STRING NULL)')
 
           this.logger.log('dropped notes')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.notes.forEach((note: $TSFixMe) => {
+          for (let note of response.notes) {
             sqlStatements.push({
               statement: 'INSERT INTO notes VALUES (?, ?, ?, ?)',
               values: [
@@ -993,11 +992,11 @@ export class SyncService {
                 note.text
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted notes', response.checksumSha)
-          await this.updateDataIntegrityChecksum('notes', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'notes', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncNotes() -- no changes`)
@@ -1022,7 +1021,6 @@ export class SyncService {
       if (response && response.productTaxes && response.productTaxes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productTaxes')
-
           await db.execute('CREATE TABLE IF NOT EXISTS productTaxes (product INTEGER, description STRING, amount REAL, type STRING)')
 
           this.logger.log('dropped productTaxes')
@@ -1043,7 +1041,7 @@ export class SyncService {
 
           await db.executeSet(sqlStatements)
           this.logger.log('inserted productTaxes', response.checksumSha)
-          await this.updateDataIntegrityChecksum('productTaxes', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'productTaxes', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductTaxes() -- no changes`)
@@ -1068,14 +1066,13 @@ export class SyncService {
       if (response && response.shippingCosts && response.shippingCosts.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS shippingCosts')
-
           await db.execute('CREATE TABLE IF NOT EXISTS shippingCosts (customerId INTEGER, addressId INTEGER, amount REAL, threshold INTEGER)')
 
           this.logger.log('dropped shippingCosts')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.shippingCosts.forEach((shippingCost: $TSFixMe) => {
+          for (let shippingCost of response.shippingCosts) {
             sqlStatements.push({
               statement: 'INSERT INTO shippingCosts VALUES (?, ?, ?, ?)',
               values: [
@@ -1085,11 +1082,11 @@ export class SyncService {
                 shippingCost.threshold
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted shippingCosts', response.checksumSha)
-          await this.updateDataIntegrityChecksum('shippingCosts', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'shippingCosts', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncShippingCosts() -- no changes`)
@@ -1114,14 +1111,13 @@ export class SyncService {
       if (response && response.contacts && response.contacts.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS contacts')
-
-          await db.execute('CREATE TABLE IF NOT EXISTS contacts (id INTEGER, customerId INTEGER, addressId INTEGER, firstName STRING, name STRING, mailAddress STRING, mobileNr STRING, ordConf BOOLEAN, bonus BOOLEAN, invoice BOOLEAN, reminder BOOLEAN, domicilation BOOLEAN, comMailing BOOLEAN, PRIMARY KEY (id, customerId, addressId)))')
+          await db.execute('CREATE TABLE IF NOT EXISTS contacts (id INTEGER, customerId INTEGER, addressId INTEGER, firstName STRING, name STRING, mailAddress STRING, mobileNr STRING, ordConf BOOLEAN, bonus BOOLEAN, invoice BOOLEAN, reminder BOOLEAN, domicilation BOOLEAN, comMailing BOOLEAN, PRIMARY KEY (id, customerId, addressId))')
 
           this.logger.log('dropped contacts')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.contacts.forEach((contact: $TSFixMe) => {
+          for (let contact of response.contacts) {
             sqlStatements.push({
               statement: 'INSERT INTO contacts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1140,11 +1136,11 @@ export class SyncService {
                 contact.comMailing
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted contacts', response.checksumSha)
-          await this.updateDataIntegrityChecksum('contacts', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'contacts', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncContacts() -- no changes`)
@@ -1169,14 +1165,13 @@ export class SyncService {
       if (response && response.deliverySchedules && response.deliverySchedules.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS deliverySchedules')
-
           await db.execute('CREATE TABLE IF NOT EXISTS deliverySchedules (customerId INTEGER, addressId INTEGER, monAMFr STRING, monAMTo STRING, monPMFr STRING, monPMTo STRING, tueAMFr STRING, tueAMTo STRING, tuePMFr STRING, tuePMTo STRING, wedAMFr STRING, wedAMTo STRING, wedPMFr STRING, wedPMTo STRING, thuAMFr STRING, thuAMTo STRING, thuPMFr STRING, thuPMTo STRING, friAMFr STRING, friAMTo STRING, friPMFr STRING, friPMTo STRING, PRIMARY KEY (customerId, addressId))')
 
           this.logger.log('dropped deliverySchedules')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.deliverySchedules.forEach((deliverySchedule: $TSFixMe) => {
+          for (let deliverySchedule of response.deliverySchedules) {
             sqlStatements.push({
               statement: 'INSERT INTO deliverySchedules VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1204,11 +1199,11 @@ export class SyncService {
                 deliverySchedule.friPMTo
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted deliverySchedules', response.checksumSha)
-          await this.updateDataIntegrityChecksum('deliverySchedules', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'deliverySchedules', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncDeliverySchedules() -- no changes`)
@@ -1233,14 +1228,13 @@ export class SyncService {
       if (response && response.customers && response.customers.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS customers')
-
           await db.execute('CREATE TABLE IF NOT EXISTS customers (id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))')
 
           this.logger.log('dropped customers')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.customers.forEach((customer: $TSFixMe) => {
+          for (let customer of response.customers) {
             sqlStatements.push({
               statement: 'INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1271,11 +1265,11 @@ export class SyncService {
                 customer.delvLanguage
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted customers', response.checksumSha)
-          await this.updateDataIntegrityChecksum('customers', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'customers', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncCustomers() -- no changes`)
@@ -1300,14 +1294,13 @@ export class SyncService {
       if (response && response.productDescriptionCustomers && response.productDescriptionCustomers.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productDescriptionCustomers')
-
           await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)')
 
           this.logger.log('dropped productDescriptionCustomers')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.productDescriptionCustomers.forEach((descriptionCustomer: $TSFixMe) => {
+          for (let descriptionCustomer of response.productDescriptionCustomers) {
             sqlStatements.push({
               statement: 'INSERT INTO productDescriptionCustomers VALUES (?, ?)',
               values: [
@@ -1315,11 +1308,11 @@ export class SyncService {
                 descriptionCustomer.description
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted productDescriptionCustomers', response.checksumSha)
-          await this.updateDataIntegrityChecksum('productDescriptionCustomers', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'productDescriptionCustomers', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductDescriptionCustomers() -- no changes`)
@@ -1344,14 +1337,14 @@ export class SyncService {
       if (response && response.recipes && response.recipes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS recipesModule')
-
           await db.execute('CREATE TABLE IF NOT EXISTS recipesModule (id INTEGER, productId INTEGER, nameNl STRING, nameFr STRING, PRIMARY KEY (id, productId))')
 
           this.logger.log('dropped recipesModule')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.recipes.forEach((recipesModule: $TSFixMe) => {
+          for (let recipesModule of response.recipes) {
+
             sqlStatements.push({
               statement: 'INSERT INTO recipesModule VALUES (?, ?, ?, ?)',
               values: [
@@ -1361,11 +1354,11 @@ export class SyncService {
                 recipesModule.nameFr
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted recipesModule', response.checksumSha)
-          await this.updateDataIntegrityChecksum('recipesModule', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'recipesModule', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncRecipesModule() -- no changes`)
@@ -1390,14 +1383,13 @@ export class SyncService {
       if (response && response.news && response.news.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS news')
-
           await db.execute('CREATE TABLE IF NOT EXISTS news (id INTEGER PRIMARY KEY, customerId INTEGER, addressId INTEGER, titleNl STRING, titleFr STRING, contentNl BLOB, contentFr BLOB, promo BOOLEAN, spotlight BOOLEAN, template TINYINT, date DATETIME)')
 
           this.logger.log('dropped news')
 
           let sqlStatements: capSQLiteSet[] = []
 
-          response.news.forEach((newsItem: $TSFixMe) => {
+          for (let newsItem of response.news) {
             sqlStatements.push({
               statement: 'INSERT INTO news VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1414,11 +1406,11 @@ export class SyncService {
                 newsItem.date
               ]
             })
-          })
+          }
 
-          await db.executeSet(sqlStatements)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted news', response.checksumSha)
-          await this.updateDataIntegrityChecksum('news', response.checksumSha)
+          await this.updateDataIntegrityChecksum(db, 'news', response.checksumSha)
         })
       } else {
         this.logger.log(`SyncProvider.syncNews() -- no changes`)
@@ -1436,18 +1428,13 @@ export class SyncService {
    * @param {string} checksum sha value of checksum
    * @memberof SyncService
    */
-  private async updateDataIntegrityChecksum(dataTable: string, checksum: string) {
-    await this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      const result = await db.run(`INSERT OR REPLACE INTO dataIntegrityChecksums VALUES (?, ?, ?)`, [
-        dataTable,
-        checksum,
-        new Date().toISOString()
-      ])
-      if (result.changes.lastId > 0) {
-        return result.changes
-      }
-      throw Error('create or update failed')
-    })
+  private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum: string): Promise<Changes> {
+    const res = await db.run(`INSERT OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
+      dataTable,
+      checksum,
+      new Date().toJSON()
+    ])
+    return res.changes
   }
 
   /**
@@ -1475,12 +1462,9 @@ export class SyncService {
     await this._db.executeQuery(async (db: SQLiteDBConnection) => {
       // Check if all tables exist
       const tables = (await db.getTableList()).values
-      if (tables.find(e => e === 'currentExceptions')) {
-        this.logger.debug('currentExceptions TABLE exists')
-        await db.execute('DELETE FROM currentExceptions')
-      } else {
+      if (!tables.find(e => e === 'currentExceptions')) {
         this.logger.warn('Creating missing TABLE currentExceptions')
-        await db.execute('CREATE TABLE currentExceptions (productId INTEGER PRIMARY KEY)')
+        await db.execute('CREATE TABLE currentExceptions (productId INTEGER PRIMARY KEY)', true)
       }
 
       if (!tables.find(e => e === 'productExceptions')) {
@@ -1512,6 +1496,12 @@ export class SyncService {
         return
       }
 
+      this.logger.info('We have found ' + products.length + ' products!')
+      this.logger.info('We have found ' + defaultExceptions.length + ' defaultExceptions!')
+      this.logger.info('We have found ' + customerExceptions.length + ' customerExceptions!')
+      this.logger.info('We have found ' + addressExceptions.length + ' addressExceptions!')
+      this.logger.info('We have found ' + addressGroupExceptions.length + ' addressGroupExceptions!')
+
       function uniqBy<T>(a, key): T[] {
         return [
           ...new Map<T, T>(
@@ -1520,11 +1510,17 @@ export class SyncService {
         ]
       }
 
+      if (defaultExceptions.length <= 0) {
+        this.logger.error('No defaultExceptions found!')
+        return
+      }
+
+      console.time('preparing')
+
       const hasCustomerExceptions = (customerExceptions && customerExceptions.length > 0)
       const hasAddressExceptions = (addressExceptions && addressExceptions.length > 0)
       const hasAddressGroupExceptions = (addressGroupExceptions && addressGroupExceptions.length > 0)
 
-      let sqlQueries = []
       let exceptions: string[]
       let allowed: number[]
 
@@ -1588,12 +1584,24 @@ export class SyncService {
         allowed = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
       }
 
-      for (let product of allowed) {
-        sqlQueries.push('INSERT INTO currentExceptions VALUES (' + product + ')')
+      let queries = [{
+        statement: 'DELETE FROM currentExceptions',
+        values: []
+      }]
+
+      for (let i = 0; i < allowed.length; i++) {
+        const product: number = allowed[i]
+        // Remove all existing exceptions and insert new ones
+        queries.push({
+          statement: 'INSERT OR REPLACE INTO currentExceptions VALUES (?)',
+          values: [product]
+        })
       }
 
-      await db.execute(sqlQueries.join(';\n'))
-      sqlQueries = undefined
+      this.logger.info('Inserting ' + allowed.length + ' records into currentExceptions')
+      await db.executeSet(queries, true)
+
+      console.timeEnd('preparing')
     })
     return result
   }

@@ -1,0 +1,105 @@
+:host {
+  @media screen and (min-width: 650px) {
+    div.image-price-container {
+      display: flex;
+
+      section {
+        flex: 1 50%;
+      }
+    }
+  }
+
+  section.product-actions-badges-wrapper {
+    max-width: 284px;
+    display: grid;
+    grid-column-gap: .5rem;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 1rem auto 0;
+
+    div.toggle-button {
+      cursor: default;
+
+      span {
+        display: block;
+        padding: .45rem .8rem;
+        min-width: 55px;
+        text-align: center;
+        border-radius: 6px;
+        border-width: 2px;
+        border-style: solid;
+      }
+    }
+  }
+
+  .list-ios .item-lines-full {
+    font-size: 14px;
+  }
+
+  .selected-price {
+    --background: var(--ion-color-light-shade);
+
+    div {
+      font-weight: bold
+    }
+  }
+
+  div.product-image-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 2em auto;
+
+    div.product-image-border {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 0%);
+      width: 280px;
+      height: 280px;
+      // border-radius: 2em;
+      // box-shadow: 1px 2px 6px 1px rgba(0, 0, 0, 0.33);
+
+      img {
+        display: block;
+        // border-radius: inherit;
+        // background-color: white;
+        width: 100%;
+        height: 100%;
+        object-fit: contain
+      }
+
+      div.product-image-inset {
+        // box-shadow: inset -2px -2px 26px 1px rgba(0, 0, 0, 0.33);
+        border-radius: inherit;
+        z-index: 2;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+      }
+    }
+  }
+
+  div.product-scroll-container {
+    max-width: 100%;
+    overflow-x: scroll;
+    padding: 0 .5rem;
+
+    div.product-placeholder {
+      display: table-cell;
+      position: relative;
+      padding: 1rem;
+      min-width: 180px;
+      max-width: 180px;
+
+      div.product-image {
+        width: 100px;
+        margin: 0 auto .75rem;
+      }
+
+      +.product-placeholder {
+        padding-left: 0px;
+      }
+    }
+  }
+}

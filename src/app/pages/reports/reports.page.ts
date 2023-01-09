@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/core/api.service'
 import { UserService } from 'src/app/core/user.service'
 import { ReportsRepositoryService } from 'src/app/core/repositories/reports.repository.service'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { CartService } from 'src/app/core/cart.service'
 
 @Component({
   selector: 'app-reports',
@@ -24,7 +25,8 @@ export class ReportsPage implements OnInit {
     private user: UserService,
     private ref: ChangeDetectorRef,
     private logger: LoggingProvider,
-    private reportsRepository: ReportsRepositoryService
+    private reportsRepository: ReportsRepositoryService,
+    private cart: CartService
     // private statistics: StatisticsProvider
   ) { }
 
@@ -196,6 +198,13 @@ export class ReportsPage implements OnInit {
       header: this.translate.instant('messages.choseDeliveryMethod'),
       buttons: [
         {
+          text: this.translate.instant('actions.cancel'),
+          role: 'cancel',
+          handler: () => {
+            return resolveRunning(false)
+          }
+        },
+        {
           text: this.translate.instant('actions.download'),
           handler: () => {
             this.handleReport(report, extension, 1)
@@ -207,12 +216,6 @@ export class ReportsPage implements OnInit {
           handler: () => {
             this.handleReport(report, extension, 4)
             return resolveRunning(true)
-          }
-        }, {
-          text: this.translate.instant('actions.cancel'),
-          role: 'cancel',
-          handler: () => {
-            return resolveRunning(false)
           }
         }
       ]
@@ -250,5 +253,11 @@ export class ReportsPage implements OnInit {
 
   get culture(): string {
     return this.translate.currentLang
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) params.push(this.cart.active.id)
+    return params
   }
 }

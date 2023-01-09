@@ -1,0 +1,78 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+      <ion-back-button [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title translate="cartsPage"></ion-title>
+    <ion-buttons slot="end">
+      <ion-button class="icon-only" *ngIf="menuItemsActive" tappable (click)="create()">
+        <i class="fal fa-fw fa-plus"></i>
+      </ion-button>
+      <ion-button class="icon-only" tappable *ngIf="isAgent" (click)="toggleMode()">
+        <i class="fal fa-fw fa-ellipsis-v"></i>
+      </ion-button>
+      <ion-button class="icon-only" tappable (click)="sendSelected()" *ngIf="isAgent" [disabled]="!showSelects">
+        <i class="fal fa-fw fa-paper-plane"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large" translate="cartsPage"></ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div *ngIf="loading" padding>
+    <div style="text-align:center">
+      <ion-spinner mode="ios"></ion-spinner>
+    </div>
+  </div>
+
+  <div class="pt-4 px-4">
+    <ion-text *ngIf="unsendCount > 0">
+      Er zijn {{ unsendCount }} winkelmandjes nog niet succesvol verstuurd!
+    </ion-text>
+    <ion-text *ngIf="carts && carts.length === 0">
+      {{ 'noCarts' | translate }}
+    </ion-text>
+  </div>
+
+  <ion-list>
+    <ion-item-sliding *ngFor="let cart of carts">
+      <ion-item lines="full" [routerLink]="[cart.id]" tappable button>
+        <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)"
+          class="fal fa-xs fa-check-circle" style="color:#76D572" *ngIf="cart.active"></i>
+        <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)"
+          class="fal fa-xs fa-check-circle" *ngIf="!cart.active"></i>
+        <ion-label>
+          <div class="select" style="display:inline-block" *ngIf="showSelects">
+            <ion-checkbox [(ngModel)]="cart.selected"></ion-checkbox>
+          </div>
+          <div style="display:inline-block">
+            <h2>
+              {{ cart.customerName | capitalize }}
+              {{ cart.addressName | capitalize }}
+            </h2>
+            <span>{{ cart.name }}</span>
+            <p [innerText]="cart.serverDate | date"></p>
+          </div>
+        </ion-label>
+        <span slot="end">
+          ({{ cart.products.length }})
+        </span>
+      </ion-item>
+    </ion-item-sliding>
+  </ion-list>
+
+  <div class="pt-4 px-4">
+    <div style="display:flex;flex-flow:column">
+      <ion-button tappable color="primary" [routerLink]="['history']">
+        {{ 'showCartsHistory' | translate }}
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
