@@ -34,7 +34,7 @@
 
       <ion-card-content>
         <iframe class="news-body" [title]="newsItem.title" [srcdoc]="safe(newsItem.content)"
-          onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this))'></iframe>
+          onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";if(o.contentWindow.document.documentElement.innerHTML.includes("https://shop.claes-distribution.be/leaflet")){o.style.height="184px"}}(this))'></iframe>
       </ion-card-content>
 
       <!-- <ion-button fill="clear">Action 1</ion-button>
