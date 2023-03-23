@@ -179,6 +179,8 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS productAttributes')
           await db.execute('DROP TABLE IF EXISTS productAllergens')
 
+          this.logger.log('dropped products', 'inserts todo: ', response.products.length)
+
           await db.execute('CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, groupId INTEGER, packId INTEGER, itemnum STRING, nameNl STRING, nameFr STRING, [type] STRING, isNew BOOLEAN, c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, c5 INTEGER, c6 INTEGER, stackSize INTEGER, minOrder INTEGER, deliverTime INTEGER, ean STRING, supplierItemIdentifier STRING, relativeQuantity INTEGER, queryWordsNl STRING, queryWordsFr STRING, sortOrder INTEGER, AvailableOn DateTime NULL, contentQuantity INTEGER NULL, contentUnit INTEGER NULL, url STRING, color STRING NULL)')
           await db.execute('CREATE TABLE IF NOT EXISTS productTexts (id INTEGER PRIMARY KEY, descriptionNl STRING, descriptionFr STRING, groupNameNl STRING, groupNameFr STRING, PromoNl STRING, PromoFr STRING)')
           await db.execute('CREATE TABLE IF NOT EXISTS productAttributes (attribute INTEGER, product INTEGER, PRIMARY KEY (attribute, product))')
@@ -202,7 +204,7 @@ export class SyncService {
             const queryWordsNl: string = product.queryWordsNl && product.queryWordsNl.length ? product.queryWordsNl : null
             const queryWordsFr: string = product.queryWordsFr && product.queryWordsFr.length ? product.queryWordsFr : null
 
-            const query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 26
+            const query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 28
             const textQuery = 'INSERT INTO productTexts VALUES (?, ?, ?, ?, ?, ?, ?)' // 7
             const param = [
               product.id,
