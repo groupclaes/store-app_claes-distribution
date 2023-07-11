@@ -19,7 +19,30 @@ export class CartService {
     private logger: LoggingProvider,
     private translate: TranslateService
     // private statistics: StatisticsProvider
-  ) {
+  ) { }
+
+  get active(): ICartDetail | null {
+    if (this._carts) {
+      return this._carts.find(e => e.active === true) || null
+    }
+    return null
+  }
+
+  get newId(): number {
+    const newNum = Math.floor(Math.random() * (2147483647 - 0)) + 0
+    return newNum
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
+  get carts(): ICartDetail[] {
+    return this._carts
+  }
+
+  set carts(value: ICartDetail[]) {
+    this._carts = value
   }
 
   async verifyDb() {
@@ -69,7 +92,10 @@ export class CartService {
       return
     }
 
-    if (!this._carts || this.carts.length === 0 || (!this.active && !this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) || !(this.active.customer === customer && this.active.address === address)) {
+    if (!this._carts || this.carts.length === 0
+      || (!this.active
+        && !this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
+        || !(this.active.customer === customer && this.active.address === address)) {
       this.logger.log('CartService.updateProduct() -- createCart')
       if (!await this.createCart(customer, address, credential)) {
         this.logger.error('CartService.updateProduct() -- createCart failed!')
@@ -94,7 +120,10 @@ export class CartService {
       }
     } else {
       this.logger.log('CartService.updateProduct() -- else')
-      if (!this.active.products) this.active.products = []
+      if (!this.active.products) {
+        this.active.products = []
+      }
+
       this.active.products.push({
         id,
         itemnum: '',
@@ -117,7 +146,7 @@ export class CartService {
     } else if (this._carts && this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) {
       // there is a cart for the user
       this.logger.log('CartService.updateActive() -- case 2', 'loop trough')
-      for (let cart of this._carts) {
+      for (const cart of this._carts) {
         cart.active = false
       }
       const myCart: ICartDetail = this._carts.find(e => e.customer === customer && e.address === address && e.send === false)
@@ -149,8 +178,8 @@ export class CartService {
     const newCart: ICartDetail = {
       id: this.newId,
       name: 'cart-' + new Date().getTime(),
-      customer: customer,
-      address: address,
+      customer,
+      address,
       serverDate: null,
       lastChangeDate: new Date(),
       sendDate: null,
@@ -166,7 +195,7 @@ export class CartService {
         this._carts = []
       }
 
-      for (let cart of this._carts) {
+      for (const cart of this._carts) {
         cart.active = false
       }
 
@@ -180,7 +209,7 @@ export class CartService {
     let response: any
     try {
       await this.repo.updateSend(cart.id)
-      this._carts = this._carts.filter(e => e.id != cart.id)
+      this._carts = this._carts.filter(e => e.id !== cart.id)
 
       response = await this.api.post('app/carts/complete', {
         credentials: this._credential,
@@ -197,29 +226,5 @@ export class CartService {
       }
       return false
     }
-  }
-
-  get active(): ICartDetail | null {
-    if (this._carts) {
-      return this._carts.find(e => e.active === true) || null
-    }
-    return null
-  }
-
-  set carts(value: ICartDetail[]) {
-    this._carts = value
-  }
-
-  get carts(): ICartDetail[] {
-    return this._carts
-  }
-
-  get newId(): number {
-    const newNum = Math.floor(Math.random() * (2147483647 - 0)) + 0
-    return newNum
-  }
-
-  get culture(): string {
-    return this.translate.currentLang
   }
 }
