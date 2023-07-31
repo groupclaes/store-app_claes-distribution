@@ -5,8 +5,8 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-slides pager="true" dir="ltr">
-    <ion-slide>
+  <swiper-container pager="true" dir="ltr">
+    <swiper-slide>
       <div>
         <!--
       <img src="assets/img/ica-slidebox-img-1.png" class="slide-image" />
@@ -17,8 +17,8 @@
         <p [innerHtml]="'tutorial.slide1Description3' | translate"></p>
         <br>
       </div>
-    </ion-slide>
-    <ion-slide>
+    </swiper-slide>
+    <swiper-slide>
       <div>
         <h2 class="slide-title" translate="tutorial.slide2Title"></h2>
         <div class="product-attributes clickable five-cols" style="margin-bottom:6px;">
@@ -65,8 +65,8 @@
         </div>
         <br>
       </div>
-    </ion-slide>
-    <ion-slide>
+    </swiper-slide>
+    <swiper-slide>
       <div>
         <h2 class="slide-title" translate="tutorial.slide3Title"></h2>
         <div>
@@ -86,8 +86,8 @@
         </div>
         <br>
       </div>
-    </ion-slide>
-    <ion-slide>
+    </swiper-slide>
+    <swiper-slide>
       <div>
         <h2 class="slide-title" translate="tutorial.slide4Title"></h2>
         <div>
@@ -110,6 +110,6 @@
         </ion-button>
         <br>
       </div>
-    </ion-slide>
-  </ion-slides>
+    </swiper-slide>
+  </swiper-container>
 </ion-content>
