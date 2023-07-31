@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: '1.2.0',
+  version: '1.3.0',
   default_language: 'nl-BE',
   supported_languages: [
     'nl-BE',
