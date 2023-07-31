@@ -154,7 +154,7 @@ export class LoginPage implements OnInit {
             this.ref.markForCheck()
 
             if (prepare) {
-              this.navCtrl.navigateForward(await this.defaultPage)
+              this.navCtrl.navigateRoot(await this.defaultPage)
             } else {
               this.toast(this.translate.instant('unknownError'))
             }
