@@ -123,8 +123,7 @@ export class SettingsPage implements OnInit, OnDestroy {
   }
 
   changeLanguage($event: any) {
-    this.translate.use($event.detail.value)
-    this.ref.markForCheck()
+    this.translate.use($event.detail.value).subscribe(x => this.ref.markForCheck())
   }
 
   get languages() {

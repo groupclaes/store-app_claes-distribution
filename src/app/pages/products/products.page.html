@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
-      <ion-back-button *ngIf="category" [text]="backButtonText"></ion-back-button>
+      <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
     <ion-title>
       <span class="title" [innerText]="pageTitle | capitalize"></span>
@@ -106,7 +106,7 @@
         </div>
       </div> -->
       <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
-        <input [ngModel]="product.amount" [disabled]="product.availableOn != null" placeholder="0" class="control-color"
+        <input [ngModel]="product.amount" [disabled]="product.availableOn !== null" placeholder="0" class="control-color"
           type="tel" [tabindex]="i+1" (input)="changeProductAmount($event, product)" />
       </div>
     </ion-item>
