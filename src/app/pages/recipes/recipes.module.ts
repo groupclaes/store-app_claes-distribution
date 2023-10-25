@@ -6,10 +6,12 @@ import { FormsModule } from '@angular/forms'
 
 import { IonicModule } from '@ionic/angular'
 import { RecipesPage } from './recipes.page'
+import { CoreModule } from 'src/app/core/core.module'
 
 @NgModule({
   imports: [
     CommonModule,
+    CoreModule,
     FormsModule,
     IonicModule,
     TranslateModule.forChild(),
