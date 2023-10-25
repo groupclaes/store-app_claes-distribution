@@ -7,6 +7,7 @@ import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/
 import { DatabaseService } from './database.service'
 import { AppCredential, AppCustomerModel } from './user.service'
 import { timeout } from 'rxjs/operators'
+import { firstValueFrom } from 'rxjs'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -23,6 +24,11 @@ export class SyncService {
     private _db: DatabaseService
   ) { }
 
+
+  private get checksum(): Array<Store> {
+    return this._checksum || new Array<Store>()
+  }
+
   async checkDB(): Promise<boolean> {
     let ok = false
 
@@ -30,7 +36,9 @@ export class SyncService {
       ok = true
 
       await db.execute('DROP TABLE IF EXISTS images')
-      await db.execute('CREATE TABLE IF NOT EXISTS dataIntegrityChecksums (dataTable STRING PRIMARY KEY, checksum STRING, dateChanged DATETIME);CREATE UNIQUE INDEX IF NOT EXISTS idx_dataIntegrityChecksums_dataTable ON dataIntegrityChecksums(dataTable)')
+      await db.execute('CREATE TABLE IF NOT EXISTS dataIntegrityChecksums '
+        + '(dataTable STRING PRIMARY KEY, checksum STRING, dateChanged DATETIME);'
+        + 'CREATE UNIQUE INDEX IF NOT EXISTS idx_dataIntegrityChecksums_dataTable ON dataIntegrityChecksums(dataTable)')
 
       const version = this.storage.get('_db_version')
       this.logger.log(`database ${environment.database_name} has been opened in CheckDB!`, version)
@@ -39,7 +47,7 @@ export class SyncService {
     return ok
   }
 
-  async Initialize(): Promise<boolean> {
+  async initialize(): Promise<boolean> {
     this.logger.log(`SyncService.Initialize() -- start`)
     const check = await this.checkDB()
     this.logger.log(`SyncService.Initialize() -- after checkdb`)
@@ -57,7 +65,7 @@ export class SyncService {
 
   public async loadIntegrity(): Promise<boolean> {
     this.logger.log(`SyncService.loadIntegrity() -- start`)
-    let result = []
+    const result = []
 
     await this._db.executeQuery(async (db: SQLiteDBConnection) => {
       const sqlResult = await db.query(`SELECT * FROM dataIntegrityChecksums`)
@@ -67,8 +75,7 @@ export class SyncService {
         return false
       }
 
-      for (let i = 0; i < sqlResult.values.length; i++) {
-        const value: Store = sqlResult.values[i]
+      for (const value of sqlResult.values as Store[]) {
         value.dateChanged = new Date(value.dateChanged) || new Date()
         result.push(value)
       }
@@ -82,10 +89,10 @@ export class SyncService {
 
   /**
    * Full sync procedure for app db
-   * @param {AppCredential} credential user credentials to determine data-access
-   * @param {string} [culture] cultures thet will be synced to db
-   * @param {boolean} [force] if true syncronisation and rebuld of table will be forced
-   * @returns {Observable<boolean>}
+   *
+   * @param credential user credentials to determine data-access
+   * @param culture cultures thet will be synced to db
+   * @param force if true syncronisation and rebuld of table will be forced
    * @memberof SyncService
    */
   public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean) {
@@ -93,9 +100,7 @@ export class SyncService {
     culture = culture || 'all'
 
     return new Promise<boolean>(async (resolve, reject) => {
-      var timertje = setTimeout(() => {
-        return reject('timeout_err')
-      }, TIMEOUT_INTERVAL)
+      const timertje = setTimeout(() => reject('timeout_err'), TIMEOUT_INTERVAL)
 
       this.logger.log('SyncService.FullSync() -- await promises')
 
@@ -149,7 +154,12 @@ export class SyncService {
 
       await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
         this.logger.log('CREATE TABLE IF NOT EXISTS customers')
-        await db.execute('CREATE TABLE IF NOT EXISTS customers (id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
+        await db.execute('CREATE TABLE IF NOT EXISTS customers '
+          + '(id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, '
+          + 'address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, '
+          + 'language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, '
+          + 'delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, '
+          + 'delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
         this.logger.log('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
         await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)', false)
 
@@ -179,10 +189,21 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS productAttributes')
           await db.execute('DROP TABLE IF EXISTS productAllergens')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, groupId INTEGER, packId INTEGER, itemnum STRING, nameNl STRING, nameFr STRING, [type] STRING, isNew BOOLEAN, c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, c5 INTEGER, c6 INTEGER, stackSize INTEGER, minOrder INTEGER, deliverTime INTEGER, ean STRING, supplierItemIdentifier STRING, relativeQuantity INTEGER, queryWordsNl STRING, queryWordsFr STRING, sortOrder INTEGER, AvailableOn DateTime NULL, contentQuantity INTEGER NULL, contentUnit INTEGER NULL, url STRING, color STRING NULL)')
-          await db.execute('CREATE TABLE IF NOT EXISTS productTexts (id INTEGER PRIMARY KEY, descriptionNl STRING, descriptionFr STRING, groupNameNl STRING, groupNameFr STRING, PromoNl STRING, PromoFr STRING)')
-          await db.execute('CREATE TABLE IF NOT EXISTS productAttributes (attribute INTEGER, product INTEGER, PRIMARY KEY (attribute, product))')
-          await db.execute('CREATE TABLE IF NOT EXISTS productAllergens (product INTEGER, code STRING, value STRING, PRIMARY KEY (product, code))')
+          await db.execute('CREATE TABLE IF NOT EXISTS products '
+            + '(id INTEGER PRIMARY KEY, groupId INTEGER, packId INTEGER, itemnum STRING, nameNl STRING, '
+            + 'nameFr STRING, [type] STRING, isNew BOOLEAN, c1 INTEGER, c2 INTEGER, c3 INTEGER, c4 INTEGER, '
+            + 'c5 INTEGER, c6 INTEGER, stackSize INTEGER, minOrder INTEGER, deliverTime INTEGER, ean STRING, '
+            + 'supplierItemIdentifier STRING, relativeQuantity INTEGER, queryWordsNl STRING, queryWordsFr STRING, '
+            + 'sortOrder INTEGER, AvailableOn DateTime NULL, contentQuantity INTEGER NULL, contentUnit INTEGER NULL, '
+            + 'url STRING, color STRING NULL, searchQueryWordsNl STRING, searchQueryWordsFr STRING, searchNameNl STRING, '
+            + 'searchNameFr STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS productTexts '
+            + '(id INTEGER PRIMARY KEY, descriptionNl STRING, descriptionFr STRING, groupNameNl STRING, '
+            + 'groupNameFr STRING, PromoNl STRING, PromoFr STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS productAttributes '
+            + '(attribute INTEGER, product INTEGER, PRIMARY KEY (attribute, product))')
+          await db.execute('CREATE TABLE IF NOT EXISTS productAllergens '
+            + '(product INTEGER, code STRING, value STRING, PRIMARY KEY (product, code))')
           await db.execute('DROP INDEX IF EXISTS products_category_ids')
           await db.execute('CREATE INDEX IF NOT EXISTS products_category_ids ON products (c1, c2, c3, c4, c5, c6)')
           await db.execute('DROP INDEX IF EXISTS products_itemnum')
@@ -202,7 +223,8 @@ export class SyncService {
             const queryWordsNl: string = product.queryWordsNl && product.queryWordsNl.length ? product.queryWordsNl : null
             const queryWordsFr: string = product.queryWordsFr && product.queryWordsFr.length ? product.queryWordsFr : null
 
-            const query = 'INSERT INTO products VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 26
+            const query = 'INSERT INTO products VALUES '
+              + '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 26
             const textQuery = 'INSERT INTO productTexts VALUES (?, ?, ?, ?, ?, ?, ?)' // 7
             const param = [
               product.id,
@@ -232,7 +254,11 @@ export class SyncService {
               product.contentQuantity,
               product.contentUnit,
               product.url,
-              product.color
+              product.color,
+              queryWordsNl != null ? this.filterDiacritics(queryWordsNl) : null,
+              queryWordsFr != null ? this.filterDiacritics(queryWordsFr) : null,
+              nameNl != null ? this.filterDiacritics(nameNl) : null,
+              nameFr != null ? this.filterDiacritics(nameFr) : null
             ]
             const textParam = [
               product.id,
@@ -298,7 +324,9 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS prices')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS prices (product INTEGER, price REAL, pricepromo REAL, stack INTEGER, promo BOOLEAN, discount REAL, customer INTEGER, address INTEGER, [group] INTEGER, PRIMARY KEY (product, customer, address, [group], stack))')
+          await db.execute('CREATE TABLE IF NOT EXISTS prices '
+            + '(product INTEGER, price REAL, pricepromo REAL, stack INTEGER, promo BOOLEAN, discount REAL, '
+            + 'customer INTEGER, address INTEGER, [group] INTEGER, PRIMARY KEY (product, customer, address, [group], stack))')
           this.logger.log('dropped prices', 'inserts todo: ', response.prices.length)
 
           let sqlStatements: capSQLiteSet[] = []
@@ -417,7 +445,9 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS favorites')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS favorites (id INTEGER, cu INTEGER, ad INTEGER, buy INTEGER, pro INTEGER, ret INTEGER, lastB DateTime, lastA INTEGER, hi BOOLEAN, PRIMARY KEY (id, cu, ad))')
+          await db.execute('CREATE TABLE IF NOT EXISTS favorites '
+            + '(id INTEGER, cu INTEGER, ad INTEGER, buy INTEGER, pro INTEGER, ret INTEGER, lastB DateTime, '
+            + 'lastA INTEGER, hi BOOLEAN, PRIMARY KEY (id, cu, ad))')
 
           this.logger.log('dropped favorites', 'inserts todo: ', response.favorites.length)
           let sqlStatements: capSQLiteSet[] = []
@@ -490,14 +520,15 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productExceptions')
           // We used to delete currentExceptions, due to unexpected outcome we changed this temporarily untill a fix is implemented
-          // await db.execute('DROP TABLE IF EXISTS currentExceptions')
+          await db.execute('DROP TABLE IF EXISTS currentExceptions')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS productExceptions (customer INTEGER, address INTEGER, addressGroup INTEGER, deny BOOLEAN, list STRING)')
-          // await db.execute('CREATE TABLE IF NOT EXISTS currentExceptions (productId INTEGER PRIMARY KEY)')
+          await db.execute('CREATE TABLE IF NOT EXISTS productExceptions '
+            + '(customer INTEGER, address INTEGER, addressGroup INTEGER, deny BOOLEAN, list STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS currentExceptions (productId INTEGER PRIMARY KEY)')
 
           this.logger.log('dropped productExceptions')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.productExceptions.forEach((excecption: $TSFixMe) => {
             sqlStatements.push({
@@ -541,11 +572,13 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS attributes')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS attributes (id INTEGER PRIMARY KEY, attribute INTEGER, [group] INTEGER, nameNl STRING, nameFr STRING, groupNameNl STRING, groupNameFr STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS attributes '
+            + '(id INTEGER PRIMARY KEY, attribute INTEGER, [group] INTEGER, nameNl STRING, '
+            + 'nameFr STRING, groupNameNl STRING, groupNameFr STRING)')
 
           this.logger.log('dropped attributes')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.attributes.forEach((attribute: $TSFixMe) => {
             const nameNl: string = (attribute.name && attribute.name.nl) ? attribute.name.nl : null
@@ -594,11 +627,12 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS categoryAttributes')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS categoryAttributes (categoryId INTEGER, groupId INTEGER, PRIMARY KEY (categoryId, groupId))')
+          await db.execute('CREATE TABLE IF NOT EXISTS categoryAttributes '
+            + '(categoryId INTEGER, groupId INTEGER, PRIMARY KEY (categoryId, groupId))')
 
           this.logger.log('dropped categoryAttributes')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.categoryAttributes.forEach((categoryAttribute: $TSFixMe) => {
             sqlStatements.push({
@@ -638,11 +672,12 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productRelations')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS productRelations (item INTEGER, product INTEGER, type INTEGER, PRIMARY KEY (item, product, type))')
+          await db.execute('CREATE TABLE IF NOT EXISTS productRelations '
+            + '(item INTEGER, product INTEGER, type INTEGER, PRIMARY KEY (item, product, type))')
 
           this.logger.log('dropped productRelations')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.productRelations.forEach((productRelation: $TSFixMe) => {
             sqlStatements.push({
@@ -683,11 +718,12 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS reports')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS reports (id INTEGER PRIMARY KEY, extension INTEGER, nameNl STRING, nameFr STRING, onlyAgent BOOLEAN)')
+          await db.execute('CREATE TABLE IF NOT EXISTS reports '
+            + '(id INTEGER PRIMARY KEY, extension INTEGER, nameNl STRING, nameFr STRING, onlyAgent BOOLEAN)')
 
           this.logger.log('dropped reports')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.reports.forEach((report: $TSFixMe) => {
             const nameNl: string = (report.name && report.name.nl) ? report.name.nl : null
@@ -736,7 +772,7 @@ export class SyncService {
 
           this.logger.log('dropped recipes')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.recipes.forEach((recipe: $TSFixMe) => {
             sqlStatements.push({
@@ -778,11 +814,12 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS datasheets')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS datasheets (guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS datasheets '
+            + '(guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
 
           this.logger.log('dropped datasheets')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.datasheets.forEach((datasheet: $TSFixMe) => {
             sqlStatements.push({
@@ -824,11 +861,12 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS usageManuals')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS usageManuals (guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS usageManuals '
+            + '(guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
 
           this.logger.log('dropped usageManuals')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.usageManuals.forEach((usageManual: $TSFixMe) => {
             sqlStatements.push({
@@ -872,13 +910,14 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS departmentProducts')
 
           await db.execute('CREATE TABLE IF NOT EXISTS departments (id INTEGER PRIMARY KEY, userCode INTEGER, alias STRING)')
-          await db.execute('CREATE TABLE IF NOT EXISTS departmentProducts (department INTEGER, product INTEGER, PRIMARY KEY (department, product))')
+          await db.execute('CREATE TABLE IF NOT EXISTS departmentProducts '
+            + '(department INTEGER, product INTEGER, PRIMARY KEY (department, product))')
 
           this.logger.log('dropped departments')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let department of response.departments) {
+          for (const department of response.departments) {
             sqlStatements.push({
               statement: 'INSERT INTO departments VALUES (?, ?, ?)',
               values: [
@@ -887,7 +926,7 @@ export class SyncService {
                 department.alias
               ]
             })
-            for (let product of department.products) {
+            for (const product of department.products) {
               sqlStatements.push({
                 statement: 'INSERT INTO departmentProducts VALUES (?, ?)',
                 values: [department.id, product]
@@ -924,11 +963,13 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           const dropResult = await db.execute('DROP TABLE IF EXISTS categories')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER, nameNl STRING, nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS categories '
+            + '(id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER, nameNl STRING, '
+            + 'nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
 
           this.logger.log('dropped categories')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.categories.forEach((category: $TSFixMe) => {
             const nameNl: string = (category.name && category.name.nl) ? category.name.nl : null
@@ -980,9 +1021,9 @@ export class SyncService {
 
           this.logger.log('dropped notes')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let note of response.notes) {
+          for (const note of response.notes) {
             sqlStatements.push({
               statement: 'INSERT INTO notes VALUES (?, ?, ?, ?)',
               values: [
@@ -1025,7 +1066,7 @@ export class SyncService {
 
           this.logger.log('dropped productTaxes')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
           response.productTaxes.forEach((productTax: $TSFixMe) => {
             sqlStatements.push({
@@ -1066,13 +1107,14 @@ export class SyncService {
       if (response && response.shippingCosts && response.shippingCosts.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS shippingCosts')
-          await db.execute('CREATE TABLE IF NOT EXISTS shippingCosts (customerId INTEGER, addressId INTEGER, amount REAL, threshold INTEGER)')
+          await db.execute('CREATE TABLE IF NOT EXISTS shippingCosts '
+            + '(customerId INTEGER, addressId INTEGER, amount REAL, threshold INTEGER)')
 
           this.logger.log('dropped shippingCosts')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let shippingCost of response.shippingCosts) {
+          for (const shippingCost of response.shippingCosts) {
             sqlStatements.push({
               statement: 'INSERT INTO shippingCosts VALUES (?, ?, ?, ?)',
               values: [
@@ -1111,13 +1153,16 @@ export class SyncService {
       if (response && response.contacts && response.contacts.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS contacts')
-          await db.execute('CREATE TABLE IF NOT EXISTS contacts (id INTEGER, customerId INTEGER, addressId INTEGER, firstName STRING, name STRING, mailAddress STRING, mobileNr STRING, ordConf BOOLEAN, bonus BOOLEAN, invoice BOOLEAN, reminder BOOLEAN, domicilation BOOLEAN, comMailing BOOLEAN, PRIMARY KEY (id, customerId, addressId))')
+          await db.execute('CREATE TABLE IF NOT EXISTS contacts '
+            + '(id INTEGER, customerId INTEGER, addressId INTEGER, firstName STRING, name STRING, '
+            + 'mailAddress STRING, mobileNr STRING, ordConf BOOLEAN, bonus BOOLEAN, invoice BOOLEAN, '
+            + 'reminder BOOLEAN, domicilation BOOLEAN, comMailing BOOLEAN, PRIMARY KEY (id, customerId, addressId))')
 
           this.logger.log('dropped contacts')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let contact of response.contacts) {
+          for (const contact of response.contacts) {
             sqlStatements.push({
               statement: 'INSERT INTO contacts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1165,13 +1210,17 @@ export class SyncService {
       if (response && response.deliverySchedules && response.deliverySchedules.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS deliverySchedules')
-          await db.execute('CREATE TABLE IF NOT EXISTS deliverySchedules (customerId INTEGER, addressId INTEGER, monAMFr STRING, monAMTo STRING, monPMFr STRING, monPMTo STRING, tueAMFr STRING, tueAMTo STRING, tuePMFr STRING, tuePMTo STRING, wedAMFr STRING, wedAMTo STRING, wedPMFr STRING, wedPMTo STRING, thuAMFr STRING, thuAMTo STRING, thuPMFr STRING, thuPMTo STRING, friAMFr STRING, friAMTo STRING, friPMFr STRING, friPMTo STRING, PRIMARY KEY (customerId, addressId))')
+          await db.execute('CREATE TABLE IF NOT EXISTS deliverySchedules '
+            + '(customerId INTEGER, addressId INTEGER, monAMFr STRING, monAMTo STRING, monPMFr STRING, monPMTo STRING, '
+            + 'tueAMFr STRING, tueAMTo STRING, tuePMFr STRING, tuePMTo STRING, wedAMFr STRING, wedAMTo STRING, wedPMFr STRING, '
+            + 'wedPMTo STRING, thuAMFr STRING, thuAMTo STRING, thuPMFr STRING, thuPMTo STRING, friAMFr STRING, friAMTo STRING, '
+            + 'friPMFr STRING, friPMTo STRING, PRIMARY KEY (customerId, addressId))')
 
           this.logger.log('dropped deliverySchedules')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let deliverySchedule of response.deliverySchedules) {
+          for (const deliverySchedule of response.deliverySchedules) {
             sqlStatements.push({
               statement: 'INSERT INTO deliverySchedules VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1228,13 +1277,18 @@ export class SyncService {
       if (response && response.customers && response.customers.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS customers')
-          await db.execute('CREATE TABLE IF NOT EXISTS customers (id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))')
+          await db.execute('CREATE TABLE IF NOT EXISTS customers '
+            + '(id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, '
+            + 'name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, '
+            + 'honeNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, '
+            + 'addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, '
+            + 'delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))')
 
           this.logger.log('dropped customers')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let customer of response.customers) {
+          for (const customer of response.customers) {
             sqlStatements.push({
               statement: 'INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1298,9 +1352,9 @@ export class SyncService {
 
           this.logger.log('dropped productDescriptionCustomers')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let descriptionCustomer of response.productDescriptionCustomers) {
+          for (const descriptionCustomer of response.productDescriptionCustomers) {
             sqlStatements.push({
               statement: 'INSERT INTO productDescriptionCustomers VALUES (?, ?)',
               values: [
@@ -1337,13 +1391,14 @@ export class SyncService {
       if (response && response.recipes && response.recipes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS recipesModule')
-          await db.execute('CREATE TABLE IF NOT EXISTS recipesModule (id INTEGER, productId INTEGER, nameNl STRING, nameFr STRING, PRIMARY KEY (id, productId))')
+          await db.execute('CREATE TABLE IF NOT EXISTS recipesModule '
+            + '(id INTEGER, productId INTEGER, nameNl STRING, nameFr STRING, PRIMARY KEY (id, productId))')
 
           this.logger.log('dropped recipesModule')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let recipesModule of response.recipes) {
+          for (const recipesModule of response.recipes) {
 
             sqlStatements.push({
               statement: 'INSERT INTO recipesModule VALUES (?, ?, ?, ?)',
@@ -1373,23 +1428,24 @@ export class SyncService {
     try {
       this.logger.log(`SyncProvider.syncNews()`)
 
-      const response = await this.api.post<any>('app/news', credential, {
+      const response = await firstValueFrom(this.api.post<any>('app/news', credential, {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'news')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.news && response.news.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS news')
-          await db.execute('CREATE TABLE IF NOT EXISTS news (id INTEGER PRIMARY KEY, customerId INTEGER, addressId INTEGER, titleNl STRING, titleFr STRING, contentNl BLOB, contentFr BLOB, promo BOOLEAN, spotlight BOOLEAN, template TINYINT, date DATETIME)')
+          await db.execute('CREATE TABLE IF NOT EXISTS news '
+            + '(id INTEGER PRIMARY KEY, customerId INTEGER, addressId INTEGER, titleNl STRING, '
+            + 'titleFr STRING, contentNl BLOB, contentFr BLOB, promo BOOLEAN, spotlight BOOLEAN, template TINYINT, date DATETIME)')
 
           this.logger.log('dropped news')
 
-          let sqlStatements: capSQLiteSet[] = []
+          const sqlStatements: capSQLiteSet[] = []
 
-          for (let newsItem of response.news) {
+          for (const newsItem of response.news) {
             sqlStatements.push({
               statement: 'INSERT INTO news VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1421,42 +1477,6 @@ export class SyncService {
     }
   }
 
-  /**
-   * Set the checksum in the database for the given dataTable
-   * @private
-   * @param {string} dataTable name of table
-   * @param {string} checksum sha value of checksum
-   * @memberof SyncService
-   */
-  private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum: string): Promise<Changes> {
-    const res = await db.run(`INSERT OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
-      dataTable,
-      checksum,
-      new Date().toJSON()
-    ])
-    return res.changes
-  }
-
-  /**
-   * Returns an array with arrays of the given size.
-   *
-   * @param myArray {Array} array to split
-   * @param chunk_size {Integer} Size of every group
-   */
-  private chunkArray(myArray: any[], chunk_size: number) {
-    let index = 0
-    const arrayLength = myArray.length
-    const tempArray = []
-
-    for (index = 0; index < arrayLength; index += chunk_size) {
-      const myChunk = myArray.slice(index, index + chunk_size)
-      // Do something if you want with the group
-      tempArray.push(myChunk)
-    }
-
-    return tempArray
-  }
-
   async prepareCurrentExceptions(customer: AppCustomerModel): Promise<boolean> {
     let result = true
     await this._db.executeQuery(async (db: SQLiteDBConnection) => {
@@ -1478,15 +1498,19 @@ export class SyncService {
         return
       }
 
-      const defaultExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = 0 AND address = 0 AND addressGroup = 0 LIMIT 1')).values
-      const customerExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = ? AND address = 0 AND addressGroup = 0 LIMIT 1', [
+      const defaultExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = 0 '
+       + 'AND address = 0 AND addressGroup = 0 LIMIT 1')).values
+      const customerExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = ? '
+        + 'AND address = 0 AND addressGroup = 0 LIMIT 1', [
         customer.id
       ])).values
-      const addressExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = ? AND address = ? AND addressGroup = 0 LIMIT 1', [
+      const addressExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = ? '
+        + 'AND address = ? AND addressGroup = 0 LIMIT 1', [
         customer.id,
         customer.addressId
       ])).values
-      const addressGroupExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = 0 AND address = 0 AND addressGroup = ? AND addressGroup != 0 LIMIT 1', [
+      const addressGroupExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = 0 '
+        + 'AND address = 0 AND addressGroup = ? AND addressGroup != 0 LIMIT 1', [
         customer.addressGroupId
       ])).values
       const products = (await db.query('SELECT id,itemnum FROM products')).values
@@ -1502,19 +1526,18 @@ export class SyncService {
       this.logger.info('We have found ' + addressExceptions.length + ' addressExceptions!')
       this.logger.info('We have found ' + addressGroupExceptions.length + ' addressGroupExceptions!')
 
-      function uniqBy<T>(a, key): T[] {
-        return [
-          ...new Map<T, T>(
-            a.map(x => [key(x), x])
-          ).values()
-        ]
-      }
+      const uniqBy = <T>(a, key): T[] => [
+        ...new Map<T, T>(
+          a.map(x => [key(x), x])
+        ).values()
+      ]
 
       if (defaultExceptions.length <= 0) {
         this.logger.error('No defaultExceptions found!')
         return
       }
 
+      // eslint-disable-next-line no-console
       console.time('preparing')
 
       const hasCustomerExceptions = (customerExceptions && customerExceptions.length > 0)
@@ -1576,7 +1599,8 @@ export class SyncService {
           this.logger.warn('This user has additional addressGroupExceptions')
           exceptions = exceptions.concat(addressGroupExceptions[0].list.toString().split(','))
         }
-        allowed = uniqBy<number>(temp.concat(products.filter(e => exceptions.includes(e.itemnum.toString())).map(e => e.id)), JSON.stringify)
+        allowed = uniqBy<number>(temp.concat(products.filter(
+            e => exceptions.includes(e.itemnum.toString())).map(e => e.id)), JSON.stringify)
       } else {
         this.logger.warn('I dont know what is going on here but default will have to do!')
         exceptions = defaultExceptions[0].list.toString().split(',')
@@ -1584,13 +1608,12 @@ export class SyncService {
         allowed = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
       }
 
-      let queries = [{
+      const queries = [{
         statement: 'DELETE FROM currentExceptions',
         values: []
       }]
 
-      for (let i = 0; i < allowed.length; i++) {
-        const product: number = allowed[i]
+      for (const product of allowed) {
         // Remove all existing exceptions and insert new ones
         queries.push({
           statement: 'INSERT OR REPLACE INTO currentExceptions VALUES (?)',
@@ -1601,13 +1624,63 @@ export class SyncService {
       this.logger.info('Inserting ' + allowed.length + ' records into currentExceptions')
       await db.executeSet(queries, true)
 
+      // eslint-disable-next-line no-console
       console.timeEnd('preparing')
     })
     return result
   }
 
-  private get checksum(): Array<Store> {
-    return this._checksum || new Array<Store>()
+  /**
+   * Set the checksum in the database for the given dataTable
+   *
+   * @private
+   * @param dataTable name of table
+   * @param checksum sha value of checksum
+   * @memberof SyncService
+   */
+  private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum: string): Promise<Changes> {
+    const res = await db.run(`INSERT OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
+      dataTable,
+      checksum,
+      new Date().toJSON()
+    ])
+    return res.changes
+  }
+
+  /**
+   * Returns an array with arrays of the given size.
+   *
+   * @param myArray {Array} array to split
+   * @param chunkSize {Integer} Size of every group
+   */
+  private chunkArray(myArray: any[], chunkSize: number) {
+    let index = 0
+    const arrayLength = myArray.length
+    const tempArray = []
+
+    for (index = 0; index < arrayLength; index += chunkSize) {
+      const myChunk = myArray.slice(index, index + chunkSize)
+      // Do something if you want with the group
+      tempArray.push(myChunk)
+    }
+
+    return tempArray
+  }
+
+  /**
+   * Remove diacritics from a string for easy search
+   *
+   * @param input input string
+   * @returns output string
+   */
+  private filterDiacritics(input: string): string {
+    return input.toLowerCase().replace(/(é|ë|ê|è|ę|ė|ē)/g, 'e')
+    .replace(/(á|ä|â|à|ã|å|ā)/g, 'a')
+    .replace(/(í|ï|ì|î|į|ī)/g, 'i')
+    .replace(/(œ)/g, 'oe')
+    .replace(/(ó|ö|ô|ò|õ|ø|ō)/g, 'o')
+    .replace(/(ú|ü|û|ù|ū)/g, 'u')
+    .replace(/(æ)/g, 'ae')
   }
 }
 
