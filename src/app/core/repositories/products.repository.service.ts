@@ -198,6 +198,8 @@ export class ProductsRepositoryService {
       const pr = `( SELECT promo FROM prices WHERE prices.product = products.id AND ( ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 ) OR ( prices.customer = ?1 AND ( prices.address = ?2 OR prices.address = 0 ) AND prices.[group] = 0 ) OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ?3 ) ) AND prices.stack = 1 ORDER BY address DESC, customer DESC, [group] DESC LIMIT 1 )`
 
       let query = `SELECT products.id,
+        products.nameNl,
+        products.nameFr,
         products.minOrder,
         products.stackSize,
         products.itemnum,
@@ -239,22 +241,28 @@ export class ProductsRepositoryService {
         query += ` AND ( isPromo = 1 )`
       }
       if (filters.query) {
-        const parts = filters.query.split(' ')
-        for (let i = 0; i < parts.length; i++) {
+        const filterQuery: string =  filters.query
+        const parts = filterQuery.toLowerCase().replace('\'', '\'\'').split(' ')
+        for (const part of parts) {
           if (culture === 'nl-BE') {
-            query += ` AND (products.nameNl LIKE '%${parts[i]}%' OR products.itemnum LIKE '${parts[i]}%' OR products.queryWordsNl LIKE '%${parts[i]}%')`
+            query += ` AND (products.searchNameNl LIKE '%${part}%'`
+              + `OR products.itemnum LIKE '%${part}%' `
+              + `OR products.searchQueryWordsNl LIKE '%${part}%')`
           } else {
-            query += ` AND (products.nameFr LIKE '%${parts[i]}%' OR products.itemnum LIKE '${parts[i]}%' OR products.queryWordsFr LIKE '%${parts[i]}%')`
+            query += ` AND (products.searchNameFr LIKE '%${part}%' `
+              + `OR products.itemnum LIKE '${part}%'`
+              + `OR products.searchQueryWordsFr LIKE '%${part}%')`
           }
         }
       }
       if (filters.attributes && filters.attributes.length > 0) {
-        for (let i = 0; i < filters.attributes.length; i++) {
-          const filter = filters.attributes[i]
+        for (const filter of filters.attributes) {
           const attributes: number[] = filter.selected
           query += ` AND ( ( SELECT COUNT(*) FROM productAttributes WHERE productAttributes.product = products.id AND (`
           for (let j = 0; j < attributes.length; j++) {
-            if (j >= 1) query += ` OR `
+            if (j >= 1) {
+              query += ` OR `
+            }
             query += ` productAttributes.attribute = ${attributes[j]} `
           }
           query += `) LIMIT 1) > 0 )`
