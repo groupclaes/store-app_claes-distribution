@@ -45,13 +45,13 @@
     </div>
   </div>
 
-  <ion-list *ngIf="!loading && view === 'productsView' && currentCart">
+  <ion-list *ngIf="!loading && view === 'productsView' && currentCart && currentCart.products?.length > 0">
     <ion-list-header lines="full">
       <h3>{{ 'productsPage' |translate }} ({{ currentCart.products.length }})</h3>
     </ion-list-header>
     <ion-item lines="full" *ngFor="let product of currentCart.products">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
-        <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
+        <img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy"
           [style]="'background-color:#' + product.color" width="32" height="32">
       </ion-avatar>
       <ion-label class="ion-text-wrap w-full item-details-grid">
@@ -79,20 +79,21 @@
         <h3 translate="commonInfo"></h3>
       </ion-list-header>
       <ion-item lines="full">
-        <ion-label>{{ 'reference' | translate }}</ion-label>
-        <ion-input type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.reference"></ion-input>
+        <ion-input type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.reference"
+          [disabled]="isHistory"
+          [label]="'reference' | translate"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <ion-label>{{ 'atNextDelivery' | translate }}</ion-label>
-        <ion-toggle (ionChange)="onChange()" [(ngModel)]="invoiceForm.nextDelivery"></ion-toggle>
+        <ion-toggle (ionChange)="onChange()" [(ngModel)]="invoiceForm.nextDelivery"
+          [disabled]="isHistory">{{ 'atNextDelivery' | translate }}</ion-toggle>
       </ion-item>
       <ion-item lines="full" *ngIf="isAgent">
-        <ion-label>{{ 'offer' | translate }}</ion-label>
-        <ion-toggle (ionChange)="onChange()" [(ngModel)]="invoiceForm.offer"></ion-toggle>
+        <ion-toggle (ionChange)="onChange()" [(ngModel)]="invoiceForm.offer"
+          [disabled]="isHistory">{{ 'offer' | translate }}</ion-toggle>
       </ion-item>
       <ion-item lines="full">
-        <ion-label>{{ 'deliverDate' | translate }}</ion-label>
-        <ion-select (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryDate" interface="popover">
+        <ion-select (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryDate"
+          interface="popover" [disabled]="isHistory" [label]="'deliverDate' | translate">
           <ion-select-option [value]="date" *ngFor="let date of delvDates">
             {{ date }}
           </ion-select-option>
@@ -103,14 +104,15 @@
       <ion-list-header lines="full">
         <h3 translate="deliverMethod"></h3>
       </ion-list-header>
-      <ion-radio-group [allowEmptySelection]="true" (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryMethod">
+      <ion-radio-group [disabled]="isHistory" [allowEmptySelection]="true"
+        (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryMethod">
         <ion-item lines="full">
-          <ion-label translate="deliver"></ion-label>
-          <ion-radio value="deliver"></ion-radio>
+          <ion-radio [disabled]="isHistory" value="deliver"
+            >{{ 'deliver' | translate }}</ion-radio>
         </ion-item>
         <ion-item lines="full">
-          <ion-label translate="collect"></ion-label>
-          <ion-radio value="collect"></ion-radio>
+          <ion-radio [disabled]="isHistory" value="collect"
+            >{{ 'collect' | translate }}</ion-radio>
         </ion-item>
       </ion-radio-group>
 
@@ -138,16 +140,15 @@
       <ion-list-header lines="full">
         <h3 translate="deliverOption"></h3>
       </ion-list-header>
-      <ion-radio-group [allowEmptySelection]="true" (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryOption">
+      <ion-radio-group [disabled]="isHistory" [allowEmptySelection]="true"
+        (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryOption">
         <ion-item lines="full">
-          <ion-label><span translate="fastest"></span>
-          </ion-label>
-          <ion-radio value="fastest"></ion-radio>
+          <ion-radio [disabled]="isHistory" value="fastest"
+            >{{ 'fastest' | translate }}</ion-radio>
         </ion-item>
         <ion-item lines="full">
-          <ion-label><span translate="onlyComplete"></span>
-          </ion-label>
-          <ion-radio value="onlyComplete"></ion-radio>
+          <ion-radio [disabled]="isHistory" value="onlyComplete"
+            >{{ 'onlyComplete' | translate }}</ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
@@ -156,24 +157,29 @@
         <h3 translate="comments"></h3>
       </ion-list-header>
       <ion-item lines="full">
-        <ion-label fixed>{{ 'comments' | translate }}</ion-label>
-        <ion-textarea type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.comments"></ion-textarea>
+        <ion-textarea type="text" (ionChange)="onChange()"
+          [(ngModel)]="invoiceForm.comments" [disabled]="isHistory"
+          [label]="'comments' | translate"></ion-textarea>
       </ion-item>
       <ion-item lines="full">
-        <ion-label fixed>{{ 'commentsPlanning' | translate }}</ion-label>
-        <ion-textarea type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.commentsPlanning"></ion-textarea>
+        <ion-textarea type="text" (ionChange)="onChange()"
+          [(ngModel)]="invoiceForm.commentsPlanning" [disabled]="isHistory"
+          [label]="'commentsPlanning' | translate"></ion-textarea>
       </ion-item>
       <ion-item lines="full">
-        <ion-label fixed>{{ 'commentsInvoice' | translate }}</ion-label>
-        <ion-textarea type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.commentsInvoice"></ion-textarea>
+        <ion-textarea type="text" (ionChange)="onChange()"
+          [(ngModel)]="invoiceForm.commentsInvoice" [disabled]="isHistory"
+          [label]="'commentsInvoice' | translate"></ion-textarea>
       </ion-item>
       <ion-item lines="full">
-        <ion-label fixed>{{ 'commentsDriver' | translate }}</ion-label>
-        <ion-textarea type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.commentsDriver"></ion-textarea>
+        <ion-textarea type="text" (ionChange)="onChange()"
+          [(ngModel)]="invoiceForm.commentsDriver" [disabled]="isHistory"
+          [label]="'commentsDriver' | translate"></ion-textarea>
       </ion-item>
       <ion-item lines="full" [hidden]="!isAgent">
-        <ion-label fixed>{{ 'commentsMachines' | translate }}</ion-label>
-        <ion-textarea type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.commentsMachines"></ion-textarea>
+        <ion-textarea type="text" (ionChange)="onChange()"
+          [(ngModel)]="invoiceForm.commentsMachines" [disabled]="isHistory"
+          [label]="'commentsMachines' | translate"></ion-textarea>
       </ion-item>
     </ion-list>
   </div>

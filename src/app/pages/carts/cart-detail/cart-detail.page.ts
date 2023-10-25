@@ -1,11 +1,13 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
-import { AlertController } from '@ionic/angular'
+import { AlertController, LoadingController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
-import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailSettings } from 'src/app/core/repositories/carts.repository.service'
+import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailSettings }
+  from 'src/app/core/repositories/carts.repository.service'
 import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shipping-costs.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
@@ -20,7 +22,7 @@ export class CartDetailPage implements OnInit {
   displayThumbnail = false
   loading = true
 
-  view: string = 'productsView'
+  view = 'productsView'
   delvDates = []
   productsPrice = 0
   taxesPrice = 0
@@ -28,6 +30,7 @@ export class CartDetailPage implements OnInit {
   invoiceForm: ICartDetailSettings
 
   private _cart: ICartDetailS
+  private _history = false;
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -39,19 +42,87 @@ export class CartDetailPage implements OnInit {
     private shippingCostRepository: ShippingCostsRepositoryService,
     private cart: CartService,
     private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
+    private loadingCtrl: LoadingController,
+    private navCtrl: NavController,
     settings: SettingsService,
-    route: ActivatedRoute
+    private route: ActivatedRoute
   ) {
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail
       this.ref.markForCheck()
     })
     route.params.subscribe(params => {
-      this.load(+params['id'])
+      this.load(+params.id)
     })
   }
 
+
+  get step1Class(): string {
+    switch (this.view) {
+      case 'productsView':
+        return 'active'
+
+      default:
+        return 'completed'
+    }
+  }
+
+  get step2Class(): string {
+    switch (this.view) {
+      case 'productsView':
+        return ''
+
+      case 'invoiceView':
+        return 'active'
+
+      default:
+        return 'completed'
+    }
+  }
+
+  get step3Class(): string {
+    switch (this.view) {
+      case 'summaryView':
+        return 'active'
+
+      case 'done':
+        return 'completed'
+
+      default:
+        return ''
+    }
+  }
+
+  get allowSend(): boolean {
+    return this.view === 'summaryView' || this.isAgent
+  }
+
+  get currentCart() {
+    return this._cart
+  }
+
+  get isAgent(): boolean {
+    return this.user.hasAgentAccess
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
+  get backButtonText(): string {
+    return this.translate.instant('backButtonText')
+  }
+
+  get isHistory() {
+    return this._history;
+  }
+
   ngOnInit() {
+    this.route.queryParams.subscribe(x => {
+      this._history = x['history'] === 'true';
+      console.log(x)
+    })
   }
 
   async load(id: number) {
@@ -81,11 +152,29 @@ export class CartDetailPage implements OnInit {
   }
 
   async send() {
+    const loading = await this.loadingCtrl.create({
+      message: this.translate.instant('sendingCart')
+    });
+    loading.present();
+    this.ref.markForCheck();
 
+    this._cart.settings = this.invoiceForm;
+    const sendOk = await this.cart.sendCart(this._cart);
+    loading.dismiss();
+    if (!sendOk) {
+      this.toastCtrl.create({
+        message: this.translate.instant('cartSendError'),
+        duration: 10000
+      });
+    }
+    this.navCtrl.pop();
+    this.ref.markForCheck();
   }
 
   async delete() {
-
+    await this.cart.deleteCart(this._cart);
+    this.navCtrl.pop();
+    this.ref.markForCheck();
   }
 
   async changeProductAmount($event: any, product: ICartDetailProductA) {
@@ -228,61 +317,5 @@ export class CartDetailPage implements OnInit {
     } catch (err) {
       this.logger.error('CartDetailPage.showDeleteConfirmation() error', err)
     }
-  }
-
-  get step1Class(): string {
-    switch (this.view) {
-      case 'productsView':
-        return 'active'
-
-      default:
-        return 'completed'
-    }
-  }
-
-  get step2Class(): string {
-    switch (this.view) {
-      case 'productsView':
-        return ''
-
-      case 'invoiceView':
-        return 'active'
-
-      default:
-        return 'completed'
-    }
-  }
-
-  get step3Class(): string {
-    switch (this.view) {
-      case 'summaryView':
-        return 'active'
-
-      case 'done':
-        return 'completed'
-
-      default:
-        return ''
-    }
-  }
-
-  get allowSend(): boolean {
-    return this.view === 'summaryView' || this.isAgent
-  }
-
-  get currentCart() {
-    return this._cart
-  }
-
-  get isAgent(): boolean {
-    return this.user.hasAgentAccess
-  }
-
-  get culture(): string {
-    return this.translate.currentLang
-  }
-
-  get backButtonText(): string {
-    return this.translate.instant('backButtonText')
   }
 }
