@@ -27,12 +27,14 @@ export class RecipesRepositoryService {
       const recipe = result.values[0] as IRecipe
       const products = JSON.parse(recipe.products)
       const response: IRecipeDetailT = { ...recipe, products: []}
-      for (let itemnum of products) {
+      for (const itemnum of products) {
         const productResult = await db.query(`
-        SELECT itemnum, products.id,products.${nameString} as name,packingUnits.${nameString} as unit
+        SELECT
+          itemnum, products.id,products.${nameString} as name,packingUnits.${nameString} as unit, url
         FROM products
         INNER JOIN packingUnits ON products.packId = packingUnits.id
-        WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND products.itemnum = ?`, [itemnum])
+        WHERE EXISTS
+          (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND products.itemnum = ?`, [itemnum])
         if (productResult.values.length > 0) {
           response.products.push(productResult.values[0] as IRecipeDetailProductT)
         }
