@@ -23,7 +23,6 @@ registerLocaleData(localeNlBE)
 export class AppComponent {
   @ViewChild('menu') menu: IonMenu
   databaseLoaded = false
-  selectedTheme: string = 'light-theme'
 
   constructor(
     platform: Platform,
@@ -40,21 +39,6 @@ export class AppComponent {
 
     platform.ready().then(() => {
       logger.log('MyApp.constructor() -- Platform is ready')
-      settings.DisplayTheme.subscribe((selectedTheme: string) => {
-        switch (selectedTheme) {
-          case 'dark-theme':
-            window.document.body.classList.remove('light-theme')
-            window.document.body.classList.add('dark-theme')
-            break
-
-          default:
-            window.document.body.classList.remove('dark-theme')
-            window.document.body.classList.add('light-theme')
-            break
-        }
-
-        this.ref.markForCheck()
-      })
 
       const tutorialCompleted = localStorage.getItem('tutorialCompleted')
       if (tutorialCompleted) {
@@ -66,34 +50,6 @@ export class AppComponent {
     this.initTranslate()
   }
 
-  async initTranslate() {
-    this.translate.setDefaultLang(environment.default_language)
-    const browserLang = this.translate.getBrowserCultureLang()
-
-    this.translate.addLangs(environment.supported_languages)
-
-    if (browserLang && this.translate.langs.some(e => e === browserLang)) {
-      this.translate.use(browserLang)
-    } else {
-      this.translate.use(environment.default_language)
-    }
-  }
-
-  async open(componentName: string) {
-    if (componentName === '/account/login') {
-      this.user.logout()
-    } else if (componentName === '/tutorial') {
-      localStorage.removeItem('tutorialCompleted')
-    }
-    if (await this.navCtrl.navigateRoot(componentName)) {
-      await this.menu.close()
-    }
-  }
-
-  openLeaflet(): void {
-    // this.statistics.leafletView(this.user.userinfo.userId)
-    window.open(`https://pcm.groupclaes.be/v3/content/dis/website/month-leaflet/100/${this.culture.split('-')[0]}`, '_system', 'location=yes')
-  }
 
   get menuItemsActive(): boolean {
     if (this.user && (!this.user.activeUser && this.user.userinfo && this.user.multiUser)) {
@@ -130,5 +86,38 @@ export class AppComponent {
       return this.cart.carts.length > 0
     }
     return false
+  }
+
+  async initTranslate() {
+    this.translate.setDefaultLang(environment.default_language)
+    const browserLang = this.translate.getBrowserCultureLang()
+
+    this.translate.addLangs(environment.supported_languages)
+
+    if (browserLang && this.translate.langs.some(e => e === browserLang)) {
+      this.translate.use(browserLang)
+    } else {
+      this.translate.use(environment.default_language)
+    }
+
+    console.log(environment.default_language, browserLang, this.translate.langs, this.translate.currentLang)
+  }
+
+  async open(componentName: string) {
+    if (componentName === '/account/login') {
+      this.user.logout()
+    } else if (componentName === '/tutorial') {
+      localStorage.removeItem('tutorialCompleted')
+    }
+    if (await this.navCtrl.navigateRoot(componentName)) {
+      await this.menu.close()
+    }
+  }
+
+  openLeaflet(): void {
+    // this.statistics.leafletView(this.user.userinfo.userId)
+    window.open(
+      `https://pcm.groupclaes.be/v3/content/dis/website/month-leaflet/100/${this.culture.split('-')[0]}`,
+      '_system', 'location=yes')
   }
 }

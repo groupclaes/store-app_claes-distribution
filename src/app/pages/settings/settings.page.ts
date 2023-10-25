@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/member-delimiter-style */
 import { SettingsService } from 'src/app/core/settings.service'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core'
 import { TranslateService } from '@ngx-translate/core'
@@ -14,7 +15,6 @@ export class SettingsPage implements OnInit, OnDestroy {
   syncInterval: number
   displayDefaultPage: string
   displayThumbnail: boolean
-  displayTheme: string
   displayLanguage: string
   displayDefaultFilters: {
     new: boolean
@@ -33,6 +33,10 @@ export class SettingsPage implements OnInit, OnDestroy {
   ) {
   }
 
+  get languages() {
+    return this.translate.langs
+  }
+
   ngOnInit() {
     this.logger.log('SettingsPage.ngOnInit()')
     this.subscriptions.push(this.settings.SyncInterval.subscribe((interval: number) => {
@@ -49,10 +53,6 @@ export class SettingsPage implements OnInit, OnDestroy {
 
     this.subscriptions.push(this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail
-    }))
-
-    this.subscriptions.push(this.settings.DisplayTheme.subscribe((theme: string) => {
-      this.displayTheme = theme
     }))
 
     this.displayLanguage = this.translate.currentLang
@@ -117,16 +117,7 @@ export class SettingsPage implements OnInit, OnDestroy {
     this.ref.markForCheck()
   }
 
-  changeTheme($event: any) {
-    this.settings.setActiveTheme($event.detail.value)
-    this.ref.markForCheck()
-  }
-
   changeLanguage($event: any) {
     this.translate.use($event.detail.value).subscribe(x => this.ref.markForCheck())
-  }
-
-  get languages() {
-    return this.translate.langs
   }
 }

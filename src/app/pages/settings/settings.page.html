@@ -20,8 +20,8 @@
     </ion-list-header>
     <ion-item lines="full">
       <i slot="start" class="fal fa-fw fa-sync-alt"></i>
-      <ion-label>{{ 'syncInterval' | translate }}</ion-label>
-      <ion-select (ionChange)="changeSyncInterval($event)" [(ngModel)]="syncInterval" interface="popover">
+      <ion-select (ionChange)="changeSyncInterval($event)" [(ngModel)]="syncInterval" interface="popover"
+        [label]="'syncInterval' | translate">
         <ion-select-option value="0">{{ 'always' | translate }}</ion-select-option>
         <ion-select-option value="3600000">{{ '1hour' | translate }}</ion-select-option>
         <ion-select-option value="14400000">{{ '4hours' | translate }}</ion-select-option>
@@ -39,8 +39,8 @@
     </ion-list-header>
     <ion-item lines="full">
       <i slot="start" class="fal fa-fw fa-home"></i>
-      <ion-label>{{ 'displayPage' | translate }}</ion-label>
-      <ion-select (ionChange)="changeDefaultPage($event)" [(ngModel)]="displayDefaultPage" interface="popover">
+      <ion-select (ionChange)="changeDefaultPage($event)" [(ngModel)]="displayDefaultPage" interface="popover"
+        [label]="'displayPage' | translate">
         <ion-select-option value="/products" checked="true">{{ 'productsPage' | translate }}</ion-select-option>
         <ion-select-option value="/categories">{{ 'categoriesPage' | translate }}</ion-select-option>
         <ion-select-option value="/news">{{ 'newsPage' | translate }}</ion-select-option>
@@ -63,7 +63,7 @@
           </div>
           <div class="toggle-button favorite-toggle" tappable (click)="toggleFavorite()">
             <span
-              [ngClass]="displayDefaultFilters.favorite ? 'active' : ( displayDefaultFilters.favorite == false ? 'default' : 'inactive')"
+              [ngClass]="displayDefaultFilters.favorite ? 'active' : ( displayDefaultFilters.favorite === false ? 'default' : 'inactive')"
               translate="favoriteToggleButton"></span>
           </div>
           <div class="toggle-button order-toggle" tappable (click)="toggleOrder()">
@@ -74,31 +74,12 @@
     </ion-item>
     <ion-item lines="full">
       <i slot="start" class="fal fa-fw fa-image"></i>
-      <ion-label>
-        <span translate="displayThumbnail"></span>
-      </ion-label>
-      <ion-toggle (ionChange)="changeThumbnail($event)" [(ngModel)]="displayThumbnail"></ion-toggle>
-    </ion-item>
-    <ion-item lines="full">
-      <i slot="start" class="fal fa-fw fa-palette"></i>
-      <ion-label>
-        <span translate="displayTheme"></span>
-      </ion-label>
-      <ion-select [(ngModel)]="displayTheme" (ionChange)="changeTheme($event)" interface="popover">
-        <ion-select-option value="light-theme" checked="true">
-          <span translate="lightTheme"></span>
-        </ion-select-option>
-        <ion-select-option value="dark-theme">
-          <span translate="darkTheme"></span>
-        </ion-select-option>
-      </ion-select>
+      <ion-toggle (ionChange)="changeThumbnail($event)" [(ngModel)]="displayThumbnail">{{ 'displayThumbnail' | translate }}</ion-toggle>
     </ion-item>
     <ion-item lines="full">
       <i slot="start" class="fal fa-fw fa-language"></i>
-      <ion-label>
-        <span translate="displayLanguage"></span>
-      </ion-label>
-      <ion-select [(ngModel)]="displayLanguage" (ionChange)="changeLanguage($event)" interface="popover">
+      <ion-select [(ngModel)]="displayLanguage" (ionChange)="changeLanguage($event)" interface="popover"
+        [label]="'displayLanguage' | translate">
         <ion-select-option *ngFor="let lang of languages" [value]="lang" checked="true" [translate]="lang">
         </ion-select-option>
       </ion-select>

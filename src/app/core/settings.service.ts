@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core'
 import { BehaviorSubject, Observable } from 'rxjs'
 import { LoggingProvider } from '../@shared/logging/log.service'
@@ -11,7 +12,6 @@ export class SettingsService {
   private _displayDefaultPage: BehaviorSubject<string>
   private _displayDefaultFilters: BehaviorSubject<$TSFixMe>
   private _displayThumbnail: BehaviorSubject<boolean>
-  private _displayTheme: BehaviorSubject<string>
 
   constructor(
     private storage: StorageProvider,
@@ -27,9 +27,26 @@ export class SettingsService {
       order: true
     })
     this._displayThumbnail = new BehaviorSubject(true)
-    this._displayTheme = new BehaviorSubject('light-theme')
 
     this.init()
+  }
+
+
+
+  get SyncInterval(): Observable<number> {
+    return this._syncInterval.asObservable()
+  }
+
+  get DisplayDefaultPage(): Observable<string> {
+    return this._displayDefaultPage.asObservable()
+  }
+
+  get DisplayDefaultFilters(): Observable<$TSFixMe> {
+    return this._displayDefaultFilters.asObservable()
+  }
+
+  get DisplayThumbnail(): Observable<boolean> {
+    return this._displayThumbnail.asObservable()
   }
 
   init() {
@@ -65,13 +82,6 @@ export class SettingsService {
     } else {
       this.storage.set('app-displaythumbnail', true)
     }
-
-    const displayTheme: string = this.storage.get('app-displaytheme')
-    if (displayTheme) {
-      this._displayTheme.next(displayTheme)
-    } else {
-      this.storage.set('app-displaytheme', 'light-theme')
-    }
   }
 
   setSyncInterval(val: number) {
@@ -92,30 +102,5 @@ export class SettingsService {
   setDisplayThumbnail(val: boolean) {
     this._displayThumbnail.next(val)
     this.storage.set('app-displaythumbnail', val)
-  }
-
-  setActiveTheme(val: string) {
-    this._displayTheme.next(val)
-    this.storage.set('app-displaytheme', val)
-  }
-
-  get SyncInterval(): Observable<number> {
-    return this._syncInterval.asObservable()
-  }
-
-  get DisplayDefaultPage(): Observable<string> {
-    return this._displayDefaultPage.asObservable()
-  }
-
-  get DisplayDefaultFilters(): Observable<$TSFixMe> {
-    return this._displayDefaultFilters.asObservable()
-  }
-
-  get DisplayTheme(): Observable<string> {
-    return this._displayTheme.asObservable()
-  }
-
-  get DisplayThumbnail(): Observable<boolean> {
-    return this._displayThumbnail.asObservable()
   }
 }
