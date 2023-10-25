@@ -241,8 +241,15 @@ export class ProductsRepositoryService {
         query += ` AND ( isPromo = 1 )`
       }
       if (filters.query) {
-        const filterQuery: string =  filters.query
-        const parts = filterQuery.toLowerCase().replace('\'', '\'\'').split(' ')
+        const filterQuery: string =  filters.query.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
+          .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
+          .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
+          .replace(/(œ|Œ)/g, 'oe')
+          .replace(/(ó|ö|ô|ò|õ|ø|ō|Ó|Ö|Ô|Ò|Õ|Ø|Ō)/g, 'o')
+          .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
+          .replace(/(æ|Æ)/g, 'ae')
+          .toLowerCase()
+        const parts = filterQuery.toLowerCase().replace(/\'/g, '\'\'').split(' ')
         for (const part of parts) {
           if (culture === 'nl-BE') {
             query += ` AND (products.searchNameNl LIKE '%${part}%'`

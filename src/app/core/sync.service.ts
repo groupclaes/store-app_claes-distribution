@@ -1674,13 +1674,14 @@ export class SyncService {
    * @returns output string
    */
   private filterDiacritics(input: string): string {
-    return input.toLowerCase().replace(/(é|ë|ê|è|ę|ė|ē)/g, 'e')
-    .replace(/(á|ä|â|à|ã|å|ā)/g, 'a')
-    .replace(/(í|ï|ì|î|į|ī)/g, 'i')
-    .replace(/(œ)/g, 'oe')
-    .replace(/(ó|ö|ô|ò|õ|ø|ō)/g, 'o')
-    .replace(/(ú|ü|û|ù|ū)/g, 'u')
-    .replace(/(æ)/g, 'ae')
+    return input.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
+    .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
+    .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
+    .replace(/(œ|Œ)/g, 'oe')
+    .replace(/(ó|ö|ô|ò|õ|ø|ō|Ó|Ö|Ô|Ò|Õ|Ø|Ō)/g, 'o')
+    .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
+    .replace(/(æ|Æ)/g, 'ae')
+    .toLowerCase()
   }
 }
 
