@@ -1,0 +1,93 @@
+:host {
+  position: relative;
+  display: none;
+  margin: 0 auto;
+  height: 380px;
+  width: 100%;
+  max-width: 380px;
+
+  @media screen and (min-width: 760px) {
+    max-width: 760px;
+  }
+
+  @media screen and (min-width: 1140px) {
+    max-width: 1140px;
+  }
+
+  a.slides {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    display: block;
+    height: inherit;
+    background-position: center 60%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    transition: all ease-in-out 600ms;
+
+    &.background {
+      opacity: 0;
+      z-index: 0;
+    }
+
+    &.fade-in {
+      opacity: 1;
+      z-index: 1;
+    }
+    img {
+      width: auto;
+      height: inherit;
+      margin: 0 auto;
+      display: inline-block;
+    }
+  }
+
+  div.bottom-container {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 0;
+    background-color: rgba(40, 40, 40, .65);
+    z-index: 1;
+
+    h2 {
+      text-align: center;
+      font-size: 30px;
+      color: white;
+      margin: 0;
+    }
+
+    div.slide-selectors {
+      margin-top: 0px;
+      text-align: center;
+
+      div.slide-selector {
+        display: inline-block;
+        margin: 0 4px;
+        color: white;
+        cursor: pointer;
+
+        &.selected {
+          i {
+            font-weight: 900;
+          }
+        }
+
+        &:hover {
+          i {
+            font-weight: 900;
+            color: #2196f3;
+          }
+        }
+      }
+    }
+  }
+
+  @media sreen and (inverted-colors: inverted) {
+    a.slides {
+      filter: invert(1)
+    }
+  }
+}
