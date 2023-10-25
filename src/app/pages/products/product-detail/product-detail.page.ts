@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'
 import { ActivatedRoute } from '@angular/router'
-import { AlertController } from '@ionic/angular'
+import { AlertController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
@@ -41,6 +41,7 @@ export class ProductDetailPage implements OnInit {
     private sanitizer: DomSanitizer,
     public user: UserService,
     private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
     settings: SettingsService,
     route: ActivatedRoute
   ) {
@@ -111,8 +112,13 @@ export class ProductDetailPage implements OnInit {
     }
   }
 
-  copyMessage(val: string) {
+  async copyMessage(val: string) {
     navigator.clipboard.writeText(val)
+
+    const toast = await this.toastCtrl.create({
+      message: this.translate.instant('messages.copiedToClipboard')
+    })
+    toast.present()
   }
 
   showImageModal() { }
@@ -143,12 +149,12 @@ export class ProductDetailPage implements OnInit {
   openRecipe(recipe: IRecipeModuleEntry) {
     switch (this.culture) {
       case 'fr-BE':
-        window.open(`https://www.claes-distribution.be/recettes/${recipe.id}/${recipe.name.replace('/ /g', '-')}`, '_system', 'location=yes')
+        window.open(`https://recettes.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`, '_system', 'location=yes')
         break
 
       case 'nl-BE':
       default:
-        window.open(`https://www.claes-distribution.be/recepten/${recipe.id}/${recipe.name.replace('/ /g', '-')}`, '_system', 'location=yes')
+        window.open(`https://recepten.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`, '_system', 'location=yes')
         break
     }
   }
