@@ -24,13 +24,15 @@
     </ion-toolbar>
   </ion-header>
 
-  <div *ngIf="loading" padding>
+  <div *ngIf="loading" class="ion-padding">
     <div style="text-align:center">
       <ion-spinner mode="ios"></ion-spinner>
     </div>
   </div>
 
-  <gro-recipe-banner></gro-recipe-banner>
+  <div class="ion-padding">
+    <gro-recipe-banner></gro-recipe-banner>
+  </div>
   <ion-item lines="full">
     <ion-note class="ion-text-wrap">
       Wist je dat je nog meer overheerlijke recepten terug kan vinden op onze recepten website?

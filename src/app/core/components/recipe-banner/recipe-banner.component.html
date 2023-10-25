@@ -1,16 +1,14 @@
-<div>
-  <a *ngFor="let slide of slides" [ngClass]="slide.state"
-    class="slides" [title]="slide.title" [attr.href]="slide.href">
-    <img [src]="slide.url" [alt]="slide.title" />
-  </a>
-  
-  <div class="bottom-container">
-    <h2 [innerText]="description" *ngIf="description"></h2>
-    <div class="slide-selectors" *ngIf="slideCount > 1">
-      <div class="slide-selector" [ngClass]="{ selected: index === currentIndex }"
-        *ngFor="let slide of slides; let index = index" (click)="selectIndex(index)">
-        <i class="far fa-fw fa-circle fa-sm"></i>
-      </div>
+<a *ngFor="let slide of slides" [ngClass]="slide.state"
+  class="slides" [title]="slide.title" [attr.href]="slide.href">
+  <img [src]="slide.url" [alt]="slide.title" />
+</a>
+
+<div class="bottom-container">
+  <h2 [innerText]="description" *ngIf="description"></h2>
+  <div class="slide-selectors" *ngIf="slideCount > 1">
+    <div class="slide-selector" [ngClass]="{ selected: index === currentIndex }"
+      *ngFor="let slide of slides; let index = index" (click)="selectIndex(index)">
+      <i class="far fa-fw fa-circle fa-sm"></i>
     </div>
   </div>
 </div>
