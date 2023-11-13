@@ -14,6 +14,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms'
 import { SettingsService } from 'src/app/core/settings.service'
 import { take } from 'rxjs/operators'
 import { CartService } from 'src/app/core/cart.service'
+import { firstValueFrom } from 'rxjs'
 
 @Component({
   selector: 'app-login',
@@ -46,6 +47,34 @@ export class LoginPage implements OnInit {
     private cart: CartService
   ) { }
 
+  get defaultPage(): Promise<string> {
+    if (this.user.userinfo.type > 1) {
+      return Promise.resolve('/customers')
+    }
+    return firstValueFrom(this.settings.DisplayDefaultPage.pipe<string>(take(1)))
+  }
+
+  get backgroundImage() {
+    let size = 'small'
+    if (this.platform.width() >= 1366) {
+      size = 'large'
+    } else if (this.platform.width() >= 768) {
+      size = 'medium'
+    }
+
+    switch (this.translate.currentLang) {
+      case 'nl':
+        return this.sanitizer.bypassSecurityTrustStyle(`url('${environment.pcm_url}/content/dis/website/banner-image?size=${size}')`)
+
+      default:
+        return this.sanitizer.bypassSecurityTrustStyle(`url('${environment.pcm_url}/content/dis/website/banner-image/100/fr?size=${size}')`)
+    }
+  }
+
+  get appVersion(): string {
+    return environment.version
+  }
+
   ngOnInit() {
     this.accountForm = this.fb.group({
       username: ['', [Validators.required, Validators.email]],
@@ -72,7 +101,7 @@ export class LoginPage implements OnInit {
       this.ref.markForCheck()
     }, 10000)
 
-    this.sync.Initialize().then(async (dbOk) => {
+    this.sync.initialize().then(async (dbOk) => {
       this.busy = !dbOk
       clearTimeout(timer)
       this.ref.markForCheck()
@@ -168,7 +197,7 @@ export class LoginPage implements OnInit {
             await this.exceptionsRepository.delete()
             this._loading.dismiss()
             this.ref.markForCheck()
-            this.navCtrl.navigateForward(await this.defaultPage)
+            this.navCtrl.navigateRoot(await this.defaultPage)
           }
         } else {
           this.toast(this.translate.instant('localData'))
@@ -210,12 +239,12 @@ export class LoginPage implements OnInit {
             this.ref.markForCheck()
 
             if (prepare) {
-              this.navCtrl.navigateForward(await this.defaultPage)
+              this.navCtrl.navigateRoot(await this.defaultPage)
             } else {
               this.toast(this.translate.instant('unknownError'))
             }
           } else {
-            this.navCtrl.navigateForward(await this.defaultPage)
+            this.navCtrl.navigateRoot(await this.defaultPage)
           }
         }
       } else {
@@ -250,7 +279,7 @@ export class LoginPage implements OnInit {
             this._loading.dismiss()
             this.ref.markForCheck()
           }
-          this.navCtrl.navigateForward(await this.defaultPage)
+          this.navCtrl.navigateRoot(await this.defaultPage)
         } else if (error.status === 404 || error.status === 401) {
           this.toast(this.translate.instant('loginError'))
         } else {
@@ -318,30 +347,5 @@ export class LoginPage implements OnInit {
       position: 'top'
     })
     await toast.present()
-  }
-
-  get defaultPage(): Promise<string> {
-    return this.settings.DisplayDefaultPage.pipe<string>(take(1)).toPromise()
-  }
-
-  get backgroundImage() {
-    let size = 'small'
-    if (this.platform.width() >= 1366) {
-      size = 'large'
-    } else if (this.platform.width() >= 768) {
-      size = 'medium'
-    }
-
-    switch (this.translate.currentLang) {
-      case 'nl':
-        return this.sanitizer.bypassSecurityTrustStyle(`url('${environment.pcm_url}/content/dis/website/banner-image?size=${size}')`)
-
-      default:
-        return this.sanitizer.bypassSecurityTrustStyle(`url('${environment.pcm_url}/content/dis/website/banner-image/100/fr?size=${size}')`)
-    }
-  }
-
-  get appVersion(): string {
-    return environment.version
   }
 }

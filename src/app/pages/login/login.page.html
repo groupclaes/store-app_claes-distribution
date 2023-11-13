@@ -8,13 +8,12 @@
       <form [formGroup]="accountForm" (submit)="login()">
         <ion-list style="margin-bottom:1px">
           <ion-item lines="full">
-            <ion-label position="floating"><span translate="email"></span></ion-label>
-            <ion-input type="email" formControlName="username" autocomplete="username" name="email"></ion-input>
+            <ion-input type="email" formControlName="username" autocomplete="username" name="email"
+              [label]="'email' | translate" labelPlacement="floating"></ion-input>
           </ion-item>
           <ion-item lines="full">
-            <ion-label position="floating"><span translate="password"></span></ion-label>
-            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password">
-            </ion-input>
+            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password"
+              [label]="'password' | translate" labelPlacement="floating"></ion-input>
           </ion-item>
         </ion-list>
         <div class="pt-4 px-4">
