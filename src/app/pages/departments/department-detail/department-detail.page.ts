@@ -53,7 +53,7 @@ export class DepartmentDetailPage implements OnInit {
     try {
       this._department = await this.departmentsRepository.getDetail(id, this.culture)
     } catch (err) {
-      this.logger.error('DepartmentDetailPage.load() error!', err)
+      this.logger.error('DepartmentDetailPage.load() error!', err, err.message, err.stack)
     } finally {
       this.loading = false
       this.ref.markForCheck()

@@ -224,7 +224,7 @@ export class SyncService {
             const queryWordsFr: string = product.queryWordsFr && product.queryWordsFr.length ? product.queryWordsFr : null
 
             const query = 'INSERT INTO products VALUES '
-              + '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 26
+              + '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 30
             const textQuery = 'INSERT INTO productTexts VALUES (?, ?, ?, ?, ?, ?, ?)' // 7
             const param = [
               product.id,
@@ -254,7 +254,8 @@ export class SyncService {
               product.contentQuantity,
               product.contentUnit,
               product.url,
-              product.color,
+              product.color != null ?
+                (product.color.startsWith('rgb') ? product.color : '#' + product.color) : null,
               queryWordsNl != null ? this.filterDiacritics(queryWordsNl) : null,
               queryWordsFr != null ? this.filterDiacritics(queryWordsFr) : null,
               nameNl != null ? this.filterDiacritics(nameNl) : null,
@@ -313,12 +314,19 @@ export class SyncService {
     try {
       this.logger.log(`SyncProvider.syncPrices() -- customerId: ${customerId}, addressId: ${addressId}`)
 
-      const response = await this.api.post<any>('app/prices', credential, {
+      const params: any = {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'prices')?.checksum ?? ''
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+      }
+
+      if (customerId != null && customerId > 0) {
+        params.customerId = customerId
+        params.addressId = addressId ?? 0
+      }
+
+      const response = await firstValueFrom(this.api.post<any>('app/prices', credential, params)
+        .pipe(timeout(TIMEOUT_INTERVAL)))
+      console.log(params, response)
 
       if (response && response.prices && response.prices.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -707,12 +715,11 @@ export class SyncService {
     try {
       this.logger.log(`SyncProvider.syncReports()`)
 
-      const response = await this.api.post<any>('app/reports', credential, {
+      const response = await firstValueFrom(this.api.post<any>('app/reports', credential, {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'reports')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.reports && response.reports.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -725,6 +732,8 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
+          console.log(response.reports)
+
           response.reports.forEach((report: $TSFixMe) => {
             const nameNl: string = (report.name && report.name.nl) ? report.name.nl : null
             const nameFr: string = (report.name && report.name.fr) ? report.name.fr : null
@@ -735,7 +744,7 @@ export class SyncService {
                 report.extension,
                 nameNl,
                 nameFr,
-                report.onlyAgent
+                report.onlyAgent ? true : false
               ]
             })
           })
@@ -743,10 +752,13 @@ export class SyncService {
           await db.executeSet(sqlStatements)
           this.logger.log('inserted reports', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'reports', response.checksumSha)
+
+          console.log(await db.query('SELECT * FROM `reports`'))
         })
       } else {
         this.logger.log(`SyncProvider.syncReports() -- no changes`)
       }
+
 
       return true
     } catch (err) {
@@ -1280,49 +1292,56 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS customers '
             + '(id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, '
             + 'name STRING, address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, '
-            + 'honeNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, '
+            + 'phoneNum STRING, vatNum STRING, language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, '
             + 'addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, '
             + 'delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))')
 
           this.logger.log('dropped customers')
 
+
           const sqlStatements: capSQLiteSet[] = []
 
           for (const customer of response.customers) {
             sqlStatements.push({
+              // 1. id , 2. addressId, 3. addressGroupId, 4. userCode, 5. userType, 
+              // 6. name, 7. address, 8. streetNum, 9. zipCode, 10. city, 11. country, '
+              // 12. phoneNum, 13. vatNum, 14. language, 15. promo, 16. fostplus, 17. bonusPercentage, '
+              // 18 addressName STRING, 19 delvAddress STRING, 20 delvStreetNum STRING, 21 delvZipCode STRING, 22 delvCity STRING, '
+              // 23 delvCountry STRING, 24 delvPhoneNum STRING, 25 delvLanguage
               statement: 'INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
-                customer.id,
-                customer.addressId,
-                customer.addressGroupId,
-                customer.userCode,
-                customer.userType,
-                customer.name,
-                customer.address,
-                customer.streetNum,
-                customer.zipCode,
-                customer.city,
-                customer.country,
-                customer.phoneNum,
-                customer.vatNum,
-                customer.language,
-                customer.promo,
-                customer.fostplus,
-                customer.bonusPercentage,
-                customer.addressName,
-                customer.delvAddress,
-                customer.delvStreetNum,
-                customer.delvZipCode,
-                customer.delvCity,
-                customer.delvCountry,
-                customer.delvPhoneNum,
-                customer.delvLanguage
+                customer.id, // 1
+                customer.addressId, // 2
+                customer.addressGroupId, // 3
+                customer.userCode, // 4
+                customer.userType, // 5
+                customer.name, // 6
+                customer.address, // 7
+                customer.streetNum, // 8
+                customer.zipCode, // 9
+                customer.city, // 10
+                customer.country, // 11
+                customer.phoneNum, // 12
+                customer.vatNum, // 13
+                customer.language, // 14
+                customer.promo, // 15
+                customer.fostplus, // 16
+                customer.bonusPercentage, // 17
+                customer.addressName, // 18
+                customer.delvAddress, // 19
+                customer.delvStreetNum, // 20
+                customer.delvZipCode, // 21
+                customer.delvCity, // 22
+                customer.delvCountry, // 23
+                customer.delvPhoneNum, // 24
+                customer.delvLanguage // 25
               ]
             })
           }
 
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted customers', response.checksumSha)
+          const result = await db.executeSet(sqlStatements, true)
+
+          this.logger.log('inserted customers', response.checksumSha, result.changes)
           await this.updateDataIntegrityChecksum(db, 'customers', response.checksumSha)
         })
       } else {
@@ -1331,6 +1350,7 @@ export class SyncService {
 
       return true
     } catch (err) {
+      this.logger.error(err.message, err)
     }
   }
 

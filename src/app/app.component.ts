@@ -1,5 +1,4 @@
 import { UserService } from './core/user.service'
-import { SettingsService } from './core/settings.service'
 import { environment } from './../environments/environment.prod'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
 
@@ -27,7 +26,6 @@ export class AppComponent {
   constructor(
     platform: Platform,
     logger: LoggingProvider,
-    settings: SettingsService,
     private translate: TranslateService,
     private storage: StorageProvider,
     private navCtrl: NavController,
@@ -40,12 +38,7 @@ export class AppComponent {
     platform.ready().then(() => {
       logger.log('MyApp.constructor() -- Platform is ready')
 
-      const tutorialCompleted = localStorage.getItem('tutorialCompleted')
-      if (tutorialCompleted) {
-        this.navCtrl.navigateRoot('/account/login')
-      } else {
-        this.navCtrl.navigateRoot('/tutorial')
-      }
+      this.navCtrl.navigateRoot('/account/login')
     })
     this.initTranslate()
   }
@@ -60,6 +53,10 @@ export class AppComponent {
 
   get isAgent(): boolean {
     return this.user && this.user.hasAgentAccess
+  }
+
+  get isActivePromo(): boolean {
+    return this.isAgent || this.user.activeUser?.promo === true
   }
 
   get hasCustomers(): boolean {
@@ -106,8 +103,6 @@ export class AppComponent {
   async open(componentName: string) {
     if (componentName === '/account/login') {
       this.user.logout()
-    } else if (componentName === '/tutorial') {
-      localStorage.removeItem('tutorialCompleted')
     }
     if (await this.navCtrl.navigateRoot(componentName)) {
       await this.menu.close()

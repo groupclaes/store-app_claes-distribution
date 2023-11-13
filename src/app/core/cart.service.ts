@@ -3,7 +3,9 @@ import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from '../@shared/logging/log.service'
 import { ApiService } from './api.service'
 import { CartsRepositoryService, ICartDetail } from './repositories/carts.repository.service'
-import { AppCredential } from './user.service'
+import { AppCredential, Customer } from './user.service'
+import { firstValueFrom } from 'rxjs'
+import { CustomersRepositoryService } from './repositories/customers.repository.service'
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +18,7 @@ export class CartService {
   constructor(
     public api: ApiService,
     private repo: CartsRepositoryService,
+    private customerRepo: CustomersRepositoryService,
     private logger: LoggingProvider,
     private translate: TranslateService
     // private statistics: StatisticsProvider
@@ -51,9 +54,18 @@ export class CartService {
 
   async loadCarts() {
     this.logger.log('CartService.loadCarts() -- start')
-    this._carts = await this.repo.loadUnsend(this.culture)
+    this._carts = await this.repo.loadUnsent(this.culture)
     this.logger.log(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
     this.logger.log('CartService.loadCarts() -- end')
+  }
+
+  async getHistoryCarts() {
+    this.logger.log('CartService.loadCarts() -- start')
+    const carts = await this.repo.loadCarts(false, this.culture)
+    this.logger.log(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
+    this.logger.log('CartService.loadCarts() -- end')
+
+    return carts
   }
 
   async init(credential: AppCredential, userId: number) {
@@ -175,10 +187,15 @@ export class CartService {
   async createCart(customer: number, address: number, credential: AppCredential) {
     this.logger.log('CartService.createCart() --', customer, address)
     this._credential = credential
+
+    const { name, addressName } = await this.customerRepo.get<Customer>(customer, address);
+
     const newCart: ICartDetail = {
       id: this.newId,
       name: 'cart-' + new Date().getTime(),
       customer,
+      customerName: name,
+      addressName,
       address,
       serverDate: null,
       lastChangeDate: new Date(),
@@ -209,19 +226,19 @@ export class CartService {
     let response: any
     try {
       await this.repo.updateSend(cart.id)
-      this._carts = this._carts.filter(e => e.id !== cart.id)
 
-      response = await this.api.post('app/carts/complete', {
+      response = await firstValueFrom(this.api.post('app/carts/complete', {
         credentials: this._credential,
         order: cart
-      }).toPromise().catch(err => {
+      })).catch(err => {
         this.logger.error('CartService.sendCart() error', JSON.stringify(err))
-        return undefined
+        throw err;
       })
     } catch (err) {
       this.logger.error('CartService.sendCart() catch error', JSON.stringify(err))
     } finally {
       if (response && response.result === true) {
+        cart.sendOk = true
         return await this.repo.updateSendOk(cart.id)
       }
       return false

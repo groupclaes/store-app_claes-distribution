@@ -1,0 +1,83 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title translate="pages.notes.title"></ion-title>
+    <ion-buttons slot="end">
+      <button ion-button icon-only *ngIf="!showCreate" tappable (click)="addNote()">
+        <i class="fal fa-sm fa-fw fa-plus"></i>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list *ngIf="newNote">
+    <ion-list-header>
+      <span [innerText]="newNote.date | date:'fullDate':null:culture"></span>
+      <span item-end tappable (click)="addNote(newNote)">
+        <ion-icon>
+          <i class="fal fa-fw fa-lg fa-copy"></i>
+        </ion-icon>
+      </span>
+    </ion-list-header>
+    <ion-item>
+      <ion-label>
+        <i class="fal fa-sm fa-fw fa-pencil"></i>
+      </ion-label>
+      <ion-textarea type="text" auto-grow="true" rows="4" [(ngModel)]="newNote.text" [legacy]="true"></ion-textarea>
+    </ion-item>
+    <ion-item>
+      <ion-label>
+        <i class="fal fa-fw fa-calendar-day"></i>
+        <span translate="nextVisit"></span>
+      </ion-label>
+      <ion-datetime displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.nextVisit"></ion-datetime>
+    </ion-item>
+    <ion-item>
+      <ion-label>
+        <i class="fal fa-fw fa-door-closed"></i>
+        <span translate="customerCloseFrom"></span>
+      </ion-label>
+      <ion-datetime displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerCloseFrom"></ion-datetime>
+    </ion-item>
+    <ion-item>
+      <ion-label>
+        <i class="fal fa-fw fa-door-open"></i>
+        <span translate="customerOpenFrom"></span>
+      </ion-label>
+      <ion-datetime displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerOpenFrom"></ion-datetime>
+    </ion-item>
+    <ion-item>
+      <button ion-button large outline block color="primary" tappable (click)="send(newNote)">
+        <i class="fal fa-fw fa-lg fa-paper-plane"></i>
+        <span translate="actions.send"></span>
+      </button>
+      <button ion-button large outline block color="primary" tappable (click)="save(newNote)">
+        <i class="fal fa-fw fa-lg fa-save"></i>
+        <span translate="actions.save"></span>
+      </button>
+      <button *ngIf="newNote._savedDate !== null || newNote._isSent === true" ion-button large outline block
+        color="primary" tappable (click)="deleteNote(newNote)">
+        <i class="fal fa-fw fa-lg fa-trash"></i>
+        <span translate="actions.delete"></span>
+      </button>
+    </ion-item>
+  </ion-list>
+  <ion-list *ngFor="let note of notes">
+    <ion-list-header class="ion-padding">
+      <ion-label [innerText]="note.date | date : 'fullDate' : null : culture"></ion-label>
+      <ion-button (click)="addNote(note)">
+        <i class="fal fa-fw fa-lg fa-copy" [ngClass]="note._savedDate ? 'fa-pencil' : 'fa-copy'"></i>
+      </ion-button>
+    </ion-list-header>
+    <ion-item *ngIf="note._savedDate">
+      <span translate="pages.notes.saved"></span>
+    </ion-item>
+    <ion-item>
+      <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
+        item-content [innerText]="note.text"></div>
+    </ion-item>
+  </ion-list>
+</ion-content>

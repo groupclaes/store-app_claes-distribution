@@ -56,7 +56,7 @@
     <ion-item lines="full" tabbapble [routerLink]="[product.id]" *ngFor="let product of products; let i = index">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
         <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
-          [style]="'background-color:#' + product.color" width="32" height="32">
+          [style]="'background-color:' + product.color" width="32" height="32">
       </ion-avatar>
 
       <ion-label class="ion-text-wrap">

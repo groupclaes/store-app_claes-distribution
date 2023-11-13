@@ -13,13 +13,11 @@ import { SQLiteService } from './core/sqlite.service'
 import { InitializeAppService } from './core/initialize.app.service'
 import { DatabaseService } from './core/database.service'
 
-export function createTranslateLoader(http: HttpClient) {
-  return new TranslateHttpLoader(http, './assets/i18n/', '.json')
-}
+const createTranslateLoader =
+  (http: HttpClient) => new TranslateHttpLoader(http, './assets/i18n/', '.json')
 
-export function initializeFactory(init: InitializeAppService) {
-  return () => init.initializeApp()
-}
+const initializeFactory =
+  (init: InitializeAppService) => () => init.initializeApp()
 
 @NgModule({
   declarations: [

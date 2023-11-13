@@ -16,8 +16,10 @@ export class InitializeAppService {
       try {
         this.logger.debug('InitializeAppService -- initializeApp() called')
         //execute startup queries
-        const db = await this.sqliteService.createConnection(environment.database_name, false, "no-encryption", 1)
+        const db = await this.sqliteService.createConnection(environment.database_name, false, 'no-encryption', 1)
+        this.logger.debug('InitializeAppService -- Created Sqlite connection ' + environment.database_name)
         await db.open()
+        this.logger.debug('InitializeAppService -- Sqlite connection opened')
         // await this.sqliteService.closeConnection(environment.database_name)
       } catch (err) {
         throw Error(`initializeAppError: ${err}`)

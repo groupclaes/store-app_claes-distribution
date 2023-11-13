@@ -107,6 +107,64 @@ export class ProductsPage implements OnInit {
     })
   }
 
+
+  get canPromo(): boolean {
+    return this.user && this.user.activeUser && this.user.activeUser.promo && this.user.activeUser.promo == true
+  }
+
+  get canFilterModal(): boolean { return this._filters.category !== null }
+
+  get hasAttributeFilter(): boolean {
+    return this._filters.attributes && this._filters.attributes instanceof Array && this._filters.attributes.length > 0
+  }
+
+  get filter(): $TSFixMe {
+    return this._filters
+  }
+
+  get newFilter(): boolean { return this._filters.newState === 'active' }
+
+  get promoFilter(): boolean { return this._filters.promoState === 'active' }
+
+  get favoriteFilter(): boolean { return this._filters.favoriteState === 'active' }
+
+  get orderFilter(): boolean { return this._filters.orderState === 'inactive' }
+
+  get products(): IProductT[] { return this._products || [] }
+
+  get culture(): string { return this.translate.currentLang }
+
+  get category(): number {
+    if (this._filters && this._filters.category) {
+      return this._filters.category.id
+    }
+    return undefined
+  }
+
+  get pageTitle(): string {
+    if (this._filters && this._filters.category) {
+      return this._filters.category.name
+    }
+    return this.translate.instant('productsPage')
+  }
+
+  get backButtonText(): string { return this.translate.instant('backButtonText') }
+
+  get currentCustomer(): string {
+    if (this.user.hasAgentAccess) {
+      return '  -  ' + (this.user.activeUser.addressName != null ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`)
+    } else if (this.user.multiUser) {
+      return '  -  ' + (this.user.activeUser.addressName != null ? this.user.activeUser.addressName : this.user.activeUser.name)
+    }
+    return ''
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) params.push(this.cart.active.id)
+    return params
+  }
+
   ngOnInit() {
 
   }
@@ -311,7 +369,7 @@ export class ProductsPage implements OnInit {
 
   newState = (product: $TSFixMe) => product.isNew ? 'active' : 'inactive'
 
-  promoState = (product: $TSFixMe) => product.isPromo ? 'active' : 'inactive'
+  promoState = (product: $TSFixMe) => this.canPromo && product.isPromo ? 'active' : 'inactive'
 
   favoriteState = (product: $TSFixMe) => product.isFavorite ? 'active' : 'inactive'
 
@@ -373,61 +431,6 @@ export class ProductsPage implements OnInit {
       return `${this.translate.instant('availableOn')} ${this.datePipe.transform(product.availableOn, 'dd/MM/yyyy', undefined, this.culture)}`
     }
     return ''
-  }
-
-  get canPromo(): boolean { return this.user && this.user.activeUser && this.user.activeUser.promo && this.user.activeUser.promo == true }
-
-  get canFilterModal(): boolean { return this._filters.category !== null }
-
-  get hasAttributeFilter(): boolean {
-    return this._filters.attributes && this._filters.attributes instanceof Array && this._filters.attributes.length > 0
-  }
-
-  get filter(): $TSFixMe {
-    return this._filters
-  }
-
-  get newFilter(): boolean { return this._filters.newState === 'active' }
-
-  get promoFilter(): boolean { return this._filters.promoState === 'active' }
-
-  get favoriteFilter(): boolean { return this._filters.favoriteState === 'active' }
-
-  get orderFilter(): boolean { return this._filters.orderState === 'inactive' }
-
-  get products(): IProductT[] { return this._products || [] }
-
-  get culture(): string { return this.translate.currentLang }
-
-  get category(): number {
-    if (this._filters && this._filters.category) {
-      return this._filters.category.id
-    }
-    return undefined
-  }
-
-  get pageTitle(): string {
-    if (this._filters && this._filters.category) {
-      return this._filters.category.name
-    }
-    return this.translate.instant('productsPage')
-  }
-
-  get backButtonText(): string { return this.translate.instant('backButtonText') }
-
-  get currentCustomer(): string {
-    if (this.user.hasAgentAccess) {
-      return '  -  ' + (this.user.activeUser.addressName != null ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`)
-    } else if (this.user.multiUser) {
-      return '  -  ' + (this.user.activeUser.addressName != null ? this.user.activeUser.addressName : this.user.activeUser.name)
-    }
-    return ''
-  }
-
-  get cartLink(): any[] {
-    const params: any[] = ['/carts']
-    if (this.cart.active) params.push(this.cart.active.id)
-    return params
   }
 }
 

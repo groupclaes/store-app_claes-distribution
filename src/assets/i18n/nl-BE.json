@@ -31,6 +31,7 @@
   "yes": "Ja",
   "no": "Nee",
   "maybe": "Misschien",
+  "preparing": "Voorbereiden",
   "choseAValue": "Kies een waarde",
   "selectAValue": "Selecteer een waarde",
   "searchInput": "Zoeken",
@@ -307,7 +308,8 @@
     "removeFromFavorites": "Verwijderen uit favorieten",
     "changeCustomerDescription": "Wijzig persoonlijke omschrijving",
     "choseFiletype": "Kies het gewenste bestandstype",
-    "choseDeliveryMethod": "Kies de gewenste aflevermethode."
+    "choseDeliveryMethod": "Kies de gewenste aflevermethode.",
+    "copiedToClipboard": "Artikel gekopieerd naar klembord"
   },
   "actions": {
     "open": "Openen",
@@ -330,6 +332,7 @@
       "availableReports": "Beschikbare rapporten"
     },
     "notes": {
+      "titles": "Notities",
       "saved": "Onafgewerkte notitie",
       "unsavedNotes": {
         "title": "Onafgewerkte notities voor deze klant",
@@ -425,6 +428,28 @@
     "productDescriptionCustomers": "Artikelnummers klant",
     "attributes": "Attributen",
     "lastSync": "Laatst gesynchroniseerd"
+  },
+
+  "customer-info": {
+    "alerts": {
+      "invalid-customer": {
+        "title": "Ongeldige selectie",
+        "message": "Je het geen klant geselecteerd",
+        "buttons": {
+          "cancel": "Sluiten"
+        }
+      },
+      "switch-customer": {
+        "title": "Klant wisselen",
+        "message": "Je hebt nog geen notitie gemaakt voor je bezoek bij {{ACTIVE_CUSTOMER_NAME}} te {{ACTIVE_CUSTOMER_CITY}} weet je zeker dat je klant wilt wisselen?"
+      },
+      "no-change-customer": {
+        "title": "Klant niet gewijzigd!",
+        "message": "Je bevindt je momenteel al bij deze klant."
+      }
+    },
+    "search": "Zoek klant",
+    "customers": "Klanten"
   },
   "newItem": "Nieuw",
   "promoItem": "Promotie",

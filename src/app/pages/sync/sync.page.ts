@@ -31,6 +31,19 @@ export class SyncPage implements OnInit {
     this.load()
   }
 
+  async fullSync() {
+    this.loader = await this.loadingCtrl.create({
+      spinner: 'lines',
+      message: this.translate.instant('syncPage')
+    })
+
+    this.loader.present()
+
+    this.sync.fullSync(this.user.credential, 'all', true)
+      .then(_ => this.loader.dismiss())
+      .then(_ => this.load())
+  }
+
   private async load(): Promise<void> {
     try {
       this.loading = true
@@ -38,7 +51,7 @@ export class SyncPage implements OnInit {
 
       const dataIntegrity = await this.repo.get<Store>()
       this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
-      this.integrityChecksums = dataIntegrity.filter(e => e.dataTable != 'lastSync')
+      this.integrityChecksums = dataIntegrity.filter(e => e.dataTable !== 'lastSync')
       console.log(dataIntegrity)
     } catch (err) {
       this.logger.error('SyncPage.load() error', err)
@@ -48,12 +61,6 @@ export class SyncPage implements OnInit {
     }
   }
 
-  async fullSync() {
-    this.loader = await this.loadingCtrl.create({
-      spinner: 'lines',
-      message: this.translate.instant('syncPage')
-    })
-  }
 
   get internalUser(): boolean {
     return this.user.userinfo.id < 1000

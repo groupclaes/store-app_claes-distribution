@@ -30,6 +30,37 @@ export class ReportsPage implements OnInit {
     // private statistics: StatisticsProvider
   ) { }
 
+  get menuItemActive(): boolean {
+    if (!this.user.activeUser && this.user.userinfo
+      && (this.user.userinfo.type === 2 || this.user.userinfo.type === 3 || this.user.userinfo.type === 4)) {
+      return false
+    }
+    return true
+  }
+
+  get reports(): $TSFixMe[] {
+    return this._reports || []
+  }
+
+  get myreports(): $TSFixMe[] {
+    if (this._myreports) {
+      return this._myreports
+    }
+    return []
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) {
+      params.push(this.cart.active.id)
+    }
+    return params
+  }
+
   ngOnInit() {
     this.loadReports()
   }
@@ -69,39 +100,6 @@ export class ReportsPage implements OnInit {
   async confirmRunReport(report: $TSFixMe): Promise<boolean> {
     const shouldRunReport = await this.selectExtension(report)
     return shouldRunReport
-  }
-
-  private handleReport(report: $TSFixMe, type: number, mode: number): void {
-    this.api.get(`reports/${report.id}`, {
-      mode: mode,
-      type: type,
-      userCode: this.user.userinfo.userCode,
-      customerId: this.user.activeUser.id,
-      addressId: this.user.activeUser.address,
-      culture: this.translate.currentLang
-    }).subscribe(resp => {
-      // this.statistics.reportQueue(this.user.userinfo.userId, report.id)
-      this.checkReportProgress(resp, mode)
-    })
-  }
-
-  private checkReportProgress(reportGuid: $TSFixMe, mode: number): void {
-    setTimeout(() => {
-      this.api.get(`reports/queue/${reportGuid}/status`, {
-        userCode: this.user.userinfo.userCode
-      }).subscribe((resp: $TSFixMe) => {
-        if (resp && resp === true) {
-          // done
-          this.loadReportList()
-          this.ref.markForCheck()
-          if (mode === 1) {
-            this.downloadReport(reportGuid)
-          }
-        } else {
-          this.checkReportProgress(reportGuid, mode)
-        }
-      })
-    }, 200)
   }
 
   async showActionMenu(report: $TSFixMe) {
@@ -233,31 +231,36 @@ export class ReportsPage implements OnInit {
     // this.iab.create(`${this.api.url}/reports/queue/${reportGuid}?userCode=${this.user.userinfo.userCode}`, '_system', 'location=yes')
   }
 
-  get menuItemActive(): boolean {
-    if (!this.user.activeUser && this.user.userinfo && (this.user.userinfo.type === 2 || this.user.userinfo.type === 3 || this.user.userinfo.type === 4)) {
-      return false
-    }
-    return true
-  }
 
-  get reports(): $TSFixMe[] {
-    return this._reports || []
+  private handleReport(report: $TSFixMe, type: number, mode: number): void {
+    this.api.get(`reports/${report.id}`, {
+      mode: mode,
+      type: type,
+      userCode: this.user.userinfo.userCode,
+      customerId: this.user.activeUser.id,
+      addressId: this.user.activeUser.address,
+      culture: this.translate.currentLang
+    }).subscribe(resp => {
+      // this.statistics.reportQueue(this.user.userinfo.userId, report.id)
+      this.checkReportProgress(resp, mode)
+    })
   }
-
-  get myreports(): $TSFixMe[] {
-    if (this._myreports) {
-      return this._myreports
-    }
-    return []
-  }
-
-  get culture(): string {
-    return this.translate.currentLang
-  }
-
-  get cartLink(): any[] {
-    const params: any[] = ['/carts']
-    if (this.cart.active) params.push(this.cart.active.id)
-    return params
+  private checkReportProgress(reportGuid: $TSFixMe, mode: number): void {
+    setTimeout(() => {
+      this.api.get(`reports/queue/${reportGuid}/status`, {
+        userCode: this.user.userinfo.userCode
+      }).subscribe((resp: $TSFixMe) => {
+        if (resp && resp === true) {
+          // done
+          this.loadReportList()
+          this.ref.markForCheck()
+          if (mode === 1) {
+            this.downloadReport(reportGuid)
+          }
+        } else {
+          this.checkReportProgress(reportGuid, mode)
+        }
+      })
+    }, 200)
   }
 }
