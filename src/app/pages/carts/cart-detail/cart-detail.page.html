@@ -52,7 +52,7 @@
     <ion-item lines="full" *ngFor="let product of currentCart.products">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
         <img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy"
-          [style]="'background-color:#' + product.color" width="32" height="32">
+          [style]="'background-color:' + product.color" width="32" height="32">
       </ion-avatar>
       <ion-label class="ion-text-wrap w-full item-details-grid">
         <div class="product-name">

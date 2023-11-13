@@ -36,7 +36,7 @@ export class CartsPage implements OnInit {
     this.load()
   }
 
-  async load(): Promise<void> {
+  async load(viewReload: boolean = false): Promise<void> {
     try {
       this.loading = true
       this.ref.markForCheck()
@@ -45,9 +45,9 @@ export class CartsPage implements OnInit {
       this._cartsNotSend = []
       this.unsendCount = await this.repo.failedCount()
 
-      const carts = (await this.repo.loadUnsend(this.culture)) as ICartDetailCustom[]
+      const carts = (await this.repo.loadUnsent(this.culture)) as ICartDetailCustom[]
 
-      for (let cart of carts) {
+      for (const cart of carts) {
         cart.selected = true
       }
 
@@ -60,11 +60,11 @@ export class CartsPage implements OnInit {
       this.ref.markForCheck()
     }
 
-    // if (this._carts.length === 1 && this.user.userinfo.type === 1) {
-    //   this.navCtrl.navigateForward(
-    //     `/carts/${this._carts[0].id}`
-    //   )
-    // }
+    if (!viewReload && this._carts.length === 1 && this.user.userinfo.type === 1) {
+      this.navCtrl.navigateForward(
+        `/carts/${this._carts[0].id}`
+      )
+    }
   }
 
   async create() {
@@ -141,7 +141,7 @@ export class CartsPage implements OnInit {
       this.ref.markForCheck()
 
       const selectedCarts = this._carts.filter((e: $TSFixMe) => e.selected === true)
-      for (let cart of selectedCarts) {
+      for (const cart of selectedCarts) {
         await this.send(cart)
       }
       this.load()
@@ -170,6 +170,10 @@ export class CartsPage implements OnInit {
     }, 18)
   }
 
+  ionViewWillEnter() {
+    this.load(true)
+  }
+
   get carts(): ICartDetailCustom[] {
     return this._carts
   }
@@ -192,5 +196,5 @@ export class CartsPage implements OnInit {
 }
 
 export interface ICartDetailCustom extends ICartDetail {
-  selected: boolean
+  selected: boolean;
 }
