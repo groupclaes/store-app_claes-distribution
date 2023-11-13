@@ -8,7 +8,7 @@
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
-      <ion-button tappable class="icon-only" (click)="showActions()">
+      <ion-button tappable class="icon-only" (click)="showActions()" style="font-size: 1.5em">
         <i class="fal fa-fw fa-ellipsis-h"></i>
       </ion-button>
     </ion-buttons>
@@ -23,12 +23,12 @@
     </ion-toolbar>
   </ion-header>
   <article *ngIf="product !== null && !loading">
-    <div class="image-price-container">
+    <div class="image-price-container" tappable (click)="openPicturePreview()">
       <section class="product-image-wrapper">
-        <div class="product-image-container" tappable (click)="showImageModal()">
+        <div class="product-image-container">
           <div class="product-image-border">
             <img [title]="product.name" [alt]="product.name" loading="lazy"
-              [style]="'background-color:#' + product.color" [src]="productImage">
+              [style]="'background-color:' + product.color" [src]="productImage">
             <div class="product-image-inset"></div>
           </div>
         </div>
@@ -71,7 +71,7 @@
               -{{ price.discount | number:'0.2-2' }}%
             </ion-badge>
           </ion-item>
-          <ion-item lines="full" *ngIf="product.prices.length > 0">
+          <ion-item lines="full" *ngIf="product.prices.length > 0 && (product.contentQuantity !== null || product.contentQuantity > 1)">
             <ion-label class="ion-text-wrap">
               {{ 'piecepricedisclaimer' | translate }} {{ product.unit }}
             </ion-label>
@@ -99,7 +99,7 @@
         <span [ngClass]="product.isNew === true ? 'active' : 'inactive'" translate="newToggleButton"></span>
       </div>
       <div class="toggle-button promo-toggle">
-        <span [ngClass]="product.isPromo === true ? 'active' : 'inactive'" translate="promoToggleButton"></span>
+        <span [ngClass]="canPromo && product.isPromo === true ? 'active' : 'inactive'" translate="promoToggleButton"></span>
       </div>
       <div class="toggle-button favorite-toggle">
         <span [ngClass]="product.isFavorite === true ? 'active' : 'inactive'" translate="favoriteToggleButton"></span>
@@ -127,7 +127,7 @@
               *ngFor="let promoProduct of product.promoProducts">
               <div class="product-image" *ngIf="displayThumbnail">
                 <img class="product-image" [src]="'https:' + promoProduct.url" [title]="promoProduct.name"
-                  [alt]="promoProduct.name" loading="lazy" [style]="'background-color:#' + promoProduct.color"
+                  [alt]="promoProduct.name" loading="lazy" [style]="'background-color:' + promoProduct.color"
                   width="72" height="72">
               </div>
               <span [innerHtml]="promoProduct.name"></span>
@@ -148,7 +148,7 @@
               *ngFor="let rel of product.relatedProducts">
               <div class="product-image" *ngIf="displayThumbnail">
                 <img class="product-image" [src]="'https:' + rel.url" [title]="rel.name" [alt]="rel.name" loading="lazy"
-                  [style]="'background-color:#' + rel.color" width="72" height="72">
+                  [style]="'background-color:' + rel.color" width="72" height="72">
               </div>
               <div>
                 {{ rel.name }}
@@ -170,7 +170,7 @@
               *ngFor="let similarProduct of product.similarProducts">
               <div class="product-image" *ngIf="displayThumbnail">
                 <img class="product-image" [src]="'https:' + similarProduct.url" [title]="similarProduct.name"
-                  [alt]="similarProduct.name" loading="lazy" [style]="'background-color:#' + product.color" width="72"
+                  [alt]="similarProduct.name" loading="lazy" [style]="'background-color:' + product.color" width="72"
                   height="72">
               </div>
               <span>{{ similarProduct.name }}</span>
@@ -343,4 +343,21 @@
       </ion-list>
     </section>
   </article>
+  <ion-modal [isOpen]="pictureOpen" style="--max-width:800px;--max-height:800px;--width:100%; --height:calc(100vw + 40px);"
+    (didDismiss)="pictureOpen = false">
+    <!-- <ion-backdrop [visible]="true"></ion-backdrop> -->
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button (click)="modalCtrl.dismiss()">Cancel</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <img [src]="'https://pcm.groupclaes.be/v3/content/dis/artikel/foto/' + _product.itemnum"
+          [alt]="_product.name" width="800" height="800" style="max-width: inherit; max-height: inherit; height: auto; width: 100%" />
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

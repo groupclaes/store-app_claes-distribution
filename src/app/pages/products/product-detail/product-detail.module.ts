@@ -10,9 +10,9 @@ import { CoreModule } from 'src/app/core/core.module'
 @NgModule({
   imports: [
     CommonModule,
+    CoreModule,
     FormsModule,
     IonicModule,
-    CoreModule,
     TranslateModule.forChild(),
     RouterModule.forChild([{
       path: '', component: ProductDetailPage

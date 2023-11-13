@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'
 import { ActivatedRoute } from '@angular/router'
-import { AlertController, ToastController } from '@ionic/angular'
+import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
-import { IPCMAttachmentEntry, IProductDetailT, IProductPrice, IRecipeModuleEntry, ProductsRepositoryService } from 'src/app/core/repositories/products.repository.service'
+import { LargeImageComponent } from 'src/app/core/components/large-image/large-image'
+import { IPCMAttachmentEntry, IProductDetailT, IProductPrice, IRecipeModuleEntry, ProductsRepositoryService }
+  from 'src/app/core/repositories/products.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
@@ -24,6 +26,7 @@ export class ProductDetailPage implements OnInit {
   recipeCount = 5
   showContentUnit = false
   displayThumbnail: boolean
+  pictureOpen = false
 
   _product: IProductDetailT
   recipes: IPCMAttachmentEntry[] = []
@@ -42,18 +45,26 @@ export class ProductDetailPage implements OnInit {
     public user: UserService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
+    private navCtrl: NavController,
+    public modalCtrl: ModalController,
     settings: SettingsService,
-    route: ActivatedRoute
+    route: ActivatedRoute,
+    private actionSheetCtrl: ActionSheetController
   ) {
     logger.log('ProductDetailPage -- constructor()')
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail
     })
     route.params.subscribe(async (params) => {
-      if (+params['id']) {
-        await this.load(+params['id'])
+      if (+params.id) {
+        await this.load(+params.id)
       }
     })
+  }
+
+  get canPromo() {
+    // eslint-disable-next-line eqeqeq
+    return this.user.activeUser?.promo == true
   }
 
   ngOnInit() {
@@ -116,12 +127,11 @@ export class ProductDetailPage implements OnInit {
     navigator.clipboard.writeText(val)
 
     const toast = await this.toastCtrl.create({
-      message: this.translate.instant('messages.copiedToClipboard')
+      message: this.translate.instant('messages.copiedToClipboard'),
+      duration: 2000
     })
     toast.present()
   }
-
-  showImageModal() { }
 
   isCurrentStack(price: IProductPrice): string {
     let ladderfound = false
@@ -133,7 +143,6 @@ export class ProductDetailPage implements OnInit {
       if (ladderfound === true) break
     }
 
-    console.log(ladderfound)
 
     return (ladderfound && ladder.quantity == price.quantity) ? 'selected-price' : ''
   }
@@ -143,22 +152,76 @@ export class ProductDetailPage implements OnInit {
     this.recipeCount = 99
   }
 
-  showDocumentActionSheet(doc: $TSFixMe) { }
-  showRecipeActionSheet(recipe: $TSFixMe) { }
+  showDocumentActionSheet(doc: any) {
+    this.actionSheetCtrl.create({
+      buttons: [
+        {
+          text: this.translate.instant('actions.open'),
+          handler: () => {
+            window.open(`https://pcm.groupclaes.be/v3/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
+          }
+        },
+        // {
+        //   text: this.translate.instant('actions.mail'),
+        //   handler: () => {
+        //     this.ShowOptionalTextInput(document.guid, 0);
+        //   }
+        // },
+        // {
+        //   text: 'Downloaden', /* | translate */
+        //   handler: () => { }
+        // },
+        {
+          text: this.translate.instant('cancelButtonText'),
+          role: 'cancel',
+          handler: () => { }
+        }
+      ]
+    }).then(sheet => sheet.present())
+  }
+  showRecipeActionSheet(recipe: any) {
+    this.actionSheetCtrl.create({
+      buttons: [
+        {
+          text: this.translate.instant('actions.open'),
+          handler: () => {
+            window.open(`https://pcm.groupclaes.be/v3/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
+          }
+        },
+        // {
+        //   text: this.translate.instant('actions.mail'),
+        //   handler: () => this.ShowOptionalTextInput(recipe.guid, 1)
+        // },
+        {
+          text: this.translate.instant('actions.show'),
+          handler: () => this.navCtrl.navigateForward('/recipe/recipe-detail', { queryParams: { guid: recipe.guid } })
+        },
+        {
+          text: this.translate.instant('cancelButtonText'),
+          role: 'cancel',
+          handler: () => { }
+        }
+      ]
+    }).then(sheet => sheet.present())
+  }
 
   openRecipe(recipe: IRecipeModuleEntry) {
     switch (this.culture) {
       case 'fr-BE':
-        window.open(`https://recettes.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`, '_system', 'location=yes')
+        window.open(`https://recettes.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
+          '_system', 'location=yes')
         break
 
       case 'nl-BE':
       default:
-        window.open(`https://recepten.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`, '_system', 'location=yes')
+        window.open(`https://recepten.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
+          '_system', 'location=yes')
         break
     }
   }
-  showActions() { }
+  showActions() {
+    // TODO
+  }
 
   safe(html: string) {
     return this.sanitizer.bypassSecurityTrustHtml(html)
@@ -207,6 +270,12 @@ export class ProductDetailPage implements OnInit {
     this.cart.updateProduct(productId, productAmount, customerId, addressId, credential)
     this.ref.markForCheck()
   }
+
+  openPicturePreview() {
+    this.pictureOpen = true;
+    console.log('Opened image preview')
+  }
+
 
   get productName(): string {
     if (this._product) {
@@ -263,4 +332,29 @@ export class ProductDetailPage implements OnInit {
     if (this.cart.active) params.push(this.cart.active.id)
     return params
   }
+
+
+  // private async showOptionalTextInput(guid: string, type: number) {
+  //   const textModal = this.modalCtrl.create(MessageInputModalComponent);
+
+  //   switch (type) {
+  //     case 0:
+  //       textModal.onDidDismiss((result) => {
+  //         if (result != null && result.success === true) {
+  //           this.mailDatasheet(guid, result.text);
+  //         }
+  //       });
+  //       break;
+
+  //     case 1:
+  //       textModal.onDidDismiss((result) => {
+  //         if (result != null && result.success === true) {
+  //           this.mailRecipe(guid, result.text);
+  //         }
+  //       });
+  //       break;
+  //   }
+
+  //   await textModal.present();
+  // }
 }
