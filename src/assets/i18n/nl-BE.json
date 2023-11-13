@@ -47,6 +47,7 @@
   "categoriesPage": "Assortiment",
   "productsPage": "Producten",
   "departmentsPage": "Afdelingen",
+  "departments": "Afdelingen",
   "recipesPage": "Recepten",
   "reportsPage": "Rapporten",
   "newsPage": "Nieuws",
@@ -312,6 +313,7 @@
     "copiedToClipboard": "Artikel gekopieerd naar klembord"
   },
   "actions": {
+    "title": "Acties",
     "open": "Openen",
     "mail": "Mailen",
     "show": "Tonen",

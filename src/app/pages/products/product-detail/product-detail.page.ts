@@ -4,9 +4,9 @@ import { ActivatedRoute } from '@angular/router'
 import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
-import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
-import { LargeImageComponent } from 'src/app/core/components/large-image/large-image'
+import { ProductsService } from 'src/app/core/products.service'
+import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
 import { IPCMAttachmentEntry, IProductDetailT, IProductPrice, IRecipeModuleEntry, ProductsRepositoryService }
   from 'src/app/core/repositories/products.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
@@ -28,6 +28,10 @@ export class ProductDetailPage implements OnInit {
   displayThumbnail: boolean
   pictureOpen = false
 
+  departmentAddOpen = false
+  selectedDepartment: number = null
+  departments: IDepartmentT[]
+
   _product: IProductDetailT
   recipes: IPCMAttachmentEntry[] = []
   recipesModule: IRecipeModuleEntry[] = []
@@ -38,9 +42,10 @@ export class ProductDetailPage implements OnInit {
     private ref: ChangeDetectorRef,
     private translate: TranslateService,
     private repo: ProductsRepositoryService,
+    private products: ProductsService,
     private cart: CartService,
-    private api: ApiService,
     private logger: LoggingProvider,
+    private departmentsRepo: DepartmentsRepositoryService,
     private sanitizer: DomSanitizer,
     public user: UserService,
     private alertCtrl: AlertController,
@@ -66,6 +71,89 @@ export class ProductDetailPage implements OnInit {
     // eslint-disable-next-line eqeqeq
     return this.user.activeUser?.promo == true
   }
+  get productName(): string {
+    if (this._product) {
+      return `${this._product.name}`
+    }
+    return '(unknown)'
+  }
+
+  get productImage(): string {
+    if (this._product) {
+      return `${environment.pcm_url}/product-images/dis/${this._product.itemnum}`
+    }
+    return null
+  }
+
+  get allowPromo(): boolean {
+    if (this._product && this._product.promo && this._product.promo.length > 0 && this.user.activeUser.promo) {
+      return this._product.isPromo && this.user.activeUser.promo
+    }
+    return false
+  }
+
+  get product(): IProductDetailT | undefined {
+    if (this._product) {
+      return this._product
+    }
+    return undefined
+  }
+
+  get isFood(): boolean {
+    if (this._product && this._product.itemnum) {
+      const itemnum = parseInt(this._product.itemnum.toString().substring(0, 3), 10)
+      return itemnum <= 136
+    }
+    return false
+  }
+
+  get isUnavailable(): boolean {
+    if (this._product.availableOn) {
+      return new Date(this._product.availableOn + '.000Z') >= UNAVAILABLE_AFTER
+    }
+    return false
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
+  get backButtonText(): string {
+    return this.translate.instant('backButtonText')
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active) { params.push(this.cart.active.id) }
+    return params
+  }
+
+  get actionSheetButtons() {
+    const buttons = [
+      {
+        text: this.translate.instant('messages.addToDepartment'),
+        handler: () => this.openAddProductToDepartment()
+      },
+      {
+        text: this.translate.instant('messages.changeCustomerDescription'),
+        // handler: () => this.changeCustomerDescription()
+      },
+      {
+        text: this.translate.instant(
+          this._product.isFavorite ? 'messages.removeFromFavorites' : 'messages.addToFavorites'),
+        role: this.product.isFavorite ? 'destructive' : undefined,
+        handler: () => this._product.isFavorite ? this.removeFromFavourites() : this.addToFavourites()
+      },
+      {
+        text: this.translate.instant('cancelButtonText'),
+        role: 'cancel',
+        handler: () => { }
+      }
+    ]
+
+    return buttons
+  }
+
 
   ngOnInit() {
   }
@@ -74,6 +162,9 @@ export class ProductDetailPage implements OnInit {
     try {
       this.loading = true
       this.ref.markForCheck()
+
+      this.departmentsRepo.get(
+        this.user.activeUser.userCode).then(x => this.departments = x)
 
       this._product = await this.repo.getDetail(
         id,
@@ -84,7 +175,7 @@ export class ProductDetailPage implements OnInit {
 
       const cart = (this.cart || this.cart.active) ? this.cart.active : null
       if (cart) {
-        const pr = cart.products.find(x => x.id == this._product.id)
+        const pr = cart.products.find(x => x.id === this._product.id)
         this._product.amount = (pr !== undefined) ? pr.amount : null
       }
     } catch (err) {
@@ -137,16 +228,14 @@ export class ProductDetailPage implements OnInit {
     let ladderfound = false
     let ladder: IProductPrice
 
-    for (let i = 0; i < this._product.prices.length; i++) {
-      ladderfound = (this._product.prices[i].quantity <= this._product.amount)
-      ladder = this._product.prices[i]
-      if (ladderfound === true) break
+    for (const selectedPrice of this._product.prices) {
+      ladderfound = (selectedPrice.quantity <= this._product.amount)
+      ladder = selectedPrice
+      if (ladderfound === true) { break }
     }
 
-
-    return (ladderfound && ladder.quantity == price.quantity) ? 'selected-price' : ''
+    return (ladderfound && ladder.quantity === price.quantity) ? 'selected-price' : ''
   }
-  removeFromDepartment(departmentId: number) { }
 
   showAllRecipes() {
     this.recipeCount = 99
@@ -249,7 +338,7 @@ export class ProductDetailPage implements OnInit {
     }
 
     if (this._product.stackSize > 1) {
-      if (productAmount > 0 && (productAmount % this._product.stackSize) != 0) {
+      if (productAmount > 0 && (productAmount % this._product.stackSize) !== 0) {
         const subr = Math.floor(productAmount / this._product.stackSize) + 1
 
         productAmount = subr * this._product.stackSize
@@ -277,62 +366,93 @@ export class ProductDetailPage implements OnInit {
   }
 
 
-  get productName(): string {
-    if (this._product) {
-      return `${this._product.name}`
+  async removeFromDepartment(departmentId: number) {
+    if (departmentId != null) {
+      await this.products.removeFromDepartment(this.product.id, departmentId)
+      this.product.departments = this.product.departments.filter(x => x.id !== departmentId)
+
+      const toast = await this.toastCtrl.create({
+        message: 'Het product werd uit de afdeling verwijderd.', /* | translate */
+        duration: 3000,
+        position: 'top'
+      })
+      toast.present()
+
+      this.ref.markForCheck()
+    } else {
+      const toast = await this.toastCtrl.create({
+        message: 'Er is geen Geen afdeling geselecteerd.', /* | translate */
+        duration: 3000,
+        position: 'top'
+      })
+
+      toast.present()
     }
-    return '(unknown)'
   }
 
-  get productImage(): string {
-    if (this._product) {
-      return `${environment.pcm_url}/product-images/dis/${this._product.itemnum}`
+  openAddProductToDepartment() {
+    this.departmentAddOpen = true
+    this.ref.markForCheck()
+  }
+
+  async completeAddProductToDepartment() {
+    if (this.selectedDepartment) {
+      await this.products.addToDepartment(this._product.id, this.selectedDepartment)
+
+      this.selectedDepartment = null
+      this.departmentAddOpen = false
+
+      const toast = await this.toastCtrl.create({
+        message: 'Het product werd toegevoegd aan de afdeling.', /* | translate */
+        duration: 3000,
+        position: 'top'
+      })
+
+      toast.present()
+
+      await this.load(this.product.id)
+    } else {
+      const toast = await this.toastCtrl.create({
+        message: 'Er is geen Geen afdeling geselecteerd.', /* | translate */
+        duration: 3000,
+        position: 'top'
+      })
+
+      toast.present()
     }
-    return null
   }
 
-  get allowPromo(): boolean {
-    if (this._product && this._product.promo && this._product.promo.length > 0 && this.user.activeUser.promo) {
-      return this._product.isPromo && this.user.activeUser.promo
-    }
-    return false
+  async addToFavourites() {
+    await this.products.addToFavourites(this._product.id)
+    this._product.isFavorite = true
+
+
+    const toast = await this.toastCtrl.create({
+      message: 'Het product is toegevoegd aan uw favorieten.', /* | translate */
+      duration: 3000,
+      position: 'top'
+    })
+
+    toast.present()
+
+    this.ref.markForCheck()
   }
 
-  get product(): IProductDetailT | undefined {
-    if (this._product)
-      return this._product
-    return undefined
-  }
+  async removeFromFavourites() {
+    await this.products.removeFromFavourites(this._product.id)
+    this._product.isFavorite = false
 
-  get isFood(): boolean {
-    if (this._product && this._product.itemnum) {
-      const itemnum = parseInt(this._product.itemnum.toString().substring(0, 3), 10)
-      return itemnum <= 136
-    }
-    return false
-  }
 
-  get isUnavailable(): boolean {
-    if (this._product.availableOn) {
-      return new Date(this._product.availableOn + ".000Z") >= UNAVAILABLE_AFTER
-    }
-    return false
-  }
+    const toast = await this.toastCtrl.create({
+      message: 'Het product is verwijderd uit uw favorieten.', /* | translate */
+      duration: 3000,
+      position: 'top'
+    })
 
-  get culture(): string {
-    return this.translate.currentLang
-  }
+    toast.present()
 
-  get backButtonText(): string {
-    return this.translate.instant('backButtonText')
+    this.ref.markForCheck()
   }
-
-  get cartLink(): any[] {
-    const params: any[] = ['/carts']
-    if (this.cart.active) params.push(this.cart.active.id)
-    return params
-  }
-
 
   // private async showOptionalTextInput(guid: string, type: number) {
   //   const textModal = this.modalCtrl.create(MessageInputModalComponent);

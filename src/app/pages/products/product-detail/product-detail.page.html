@@ -8,7 +8,7 @@
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
-      <ion-button tappable class="icon-only" (click)="showActions()" style="font-size: 1.5em">
+      <ion-button tappable class="icon-only" id="open-action-sheet" style="font-size: 1.5em">
         <i class="fal fa-fw fa-ellipsis-h"></i>
       </ion-button>
     </ion-buttons>
@@ -342,6 +342,7 @@
         </ion-item>
       </ion-list>
     </section>
+    <ion-action-sheet trigger="open-action-sheet" [header]="'actions.title' | translate" [buttons]="actionSheetButtons"></ion-action-sheet>
   </article>
   <ion-modal [isOpen]="pictureOpen" style="--max-width:800px;--max-height:800px;--width:100%; --height:calc(100vw + 40px);"
     (didDismiss)="pictureOpen = false">
@@ -357,6 +358,40 @@
       <ion-content class="ion-padding">
         <img [src]="'https://pcm.groupclaes.be/v3/content/dis/artikel/foto/' + _product.itemnum"
           [alt]="_product.name" width="800" height="800" style="max-width: inherit; max-height: inherit; height: auto; width: 100%" />
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+  <ion-modal [isOpen]="departmentAddOpen" (didDismiss)="departmentAddOpen = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>
+            {{ 'selectaDepartment' | translate }}
+          </ion-title>
+          <ion-buttons start>
+            <ion-button tappable (click)="modalCtrl.dismiss()">
+              <span color="primary" showWhen="ios">
+                {{ 'cancelButtonText' | translate }}
+              </span>
+              <ion-icon name="md-close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-list-header>
+          {{ 'department' | translate }}
+        </ion-list-header>
+        <ion-list>
+          <ion-item lines="full">
+            <ion-select [(ngModel)]="selectedDepartment" interface="popover">
+              <ion-select-option value="" checked="true">{{ 'selectaDepartment' | translate }}</ion-select-option>
+              <ion-select-option [value]="department.id" *ngFor="let department of departments">{{ department.alias }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-button  color="primary" tappable (click)="completeAddProductToDepartment()"
+            [disabled]="!selectedDepartment">{{ 'confirm' | translate }}</ion-button>
+        </ion-list>
       </ion-content>
     </ng-template>
   </ion-modal>
