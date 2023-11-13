@@ -1,0 +1,291 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title translate="customerInfoPage">
+      <span translate="customerInfoPage"></span>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="customer">
+    <ion-list>
+      <ion-list-header class="ion-padding">
+        <ion-title>
+          <span class="text-capitalize" translate="customerInfoPage"></span>
+        </ion-title>
+      </ion-list-header>
+      <ion-item lines="full">
+        <span class="customer" item-start translate="customer"></span>
+        <span class="customer-id-name">
+          <span [innerText]="customer.id"></span>
+          <span [innerText]="customer.name"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="bonus" item-start translate="bonus"></span>
+        <span class="bonus-value">
+          <span [innerText]="customer.bonusPercentage / 100 | percent:'1.1'"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="promo" item-start translate="promo"></span>
+        <span class="promo-property">
+          <span *ngIf="!customer.promo" translate="no"></span>
+          <span *ngIf="customer.promo" translate="yes"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="fostplus" item-start translate="fostplus"></span>
+        <span class="fostplus-value">
+          <span *ngIf="!customer.fostplus" translate="no"></span>
+          <span *ngIf="customer.fostplus" translate="yes"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="address"></span>
+        <span class="address">
+          <span [innerText]="customer.address"></span>&nbsp;
+          <span [innerText]="customer.streetNum"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="city"></span>
+        <span class="address">
+          <span [innerText]="customer.zipCode"></span>&nbsp;
+          <span [innerText]="customer.city"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="country"></span>
+        <span class="address">
+          <span [innerText]="customer.country"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="phoneNum"></span>
+        <span class="address">
+          <span [innerText]="customer.phoneNum"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="vatNum"></span>
+        <span class="address">
+          <span [innerText]="customer.vatNum"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="language"></span>
+        <span class="address">
+          <span [innerText]="customer.language"></span>
+        </span>
+      </ion-item>
+    </ion-list>
+
+    <ion-list *ngIf="customer.address !== 0">
+      <ion-list-header>
+        <ion-title>
+          <span class="text-capitalize" translate="addressInfoPage"></span>
+        </ion-title>
+      </ion-list-header>
+      <ion-item lines="full">
+        <span class="address" item-start translate="address"></span>
+        <span class="address-id-name">
+          <span [innerText]="customer.address"></span>
+          <span [innerText]="customer.addressName"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="address"></span>
+        <span class="address">
+          <span [innerText]="customer.delvAddress"></span>&nbsp;
+          <span [innerText]="customer.delvStreetNum"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="delvCity"></span>
+        <span class="address">
+          <span [innerText]="customer.delvZipCode"></span>&nbsp;
+          <span [innerText]="customer.delvCity"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="delvCountry"></span>
+        <span class="address">
+          <span [innerText]="customer.delvCountry"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="delvPhoneNum"></span>
+        <span class="address">
+          <span [innerText]="customer.delvPhoneNum"></span>
+        </span>
+      </ion-item>
+      <ion-item lines="full">
+        <span class="address" item-start translate="delvLanguage"></span>
+        <span class="address">
+          <span [innerText]="customer.delvLanguage"></span>
+        </span>
+      </ion-item>
+    </ion-list>
+
+    <ion-list *ngFor="let deliverySchedule of deliverySchedules">
+      <ion-list-header>
+        <ion-title>
+          <span class="text-capitalize" translate="deliverySchedule"></span>
+        </ion-title>
+      </ion-list-header>
+      <ion-item *ngIf="!deliverySchedule.monAMFr && !deliverySchedule.monAMTo">
+        <div translate="closed"></div>
+      </ion-item>
+      <ion-item *ngIf="deliverySchedule.monAMFr && deliverySchedule.monAMTo">
+        <div>
+          <span translate="deliverFromMonday1"></span> {{ deliverySchedule.monAMFr }} -
+          <span translate="deliverTillMonday1"></span> {{ deliverySchedule.monAMTo }}
+        </div>
+        <div *ngIf="deliverySchedule.monPMFr && deliverySchedule.monPMTo">
+          <span translate="deliverFromMonday2"></span> {{ deliverySchedule.monPMFr }} -
+          <span translate="deliverTillMonday2"></span> {{ deliverySchedule.monPMTo }}
+        </div>
+      </ion-item>
+      <ion-item *ngIf="!deliverySchedule.tueAMFr && !deliverySchedule.tueAMTo">
+        <div translate="closed"></div>
+      </ion-item>
+      <ion-item *ngIf="deliverySchedule.tueAMFr && deliverySchedule.tueAMTo">
+        <div>
+          <span translate="deliverFromTuesday1"></span> {{ deliverySchedule.tueAMFr }} -
+          <span translate="deliverTillTuesday1"></span> {{ deliverySchedule.tueAMTo }}
+        </div>
+        <div *ngIf="deliverySchedule.tuePMFr && deliverySchedule.tuePMTo">
+          <span translate="deliverFromTuesday2"></span> {{ deliverySchedule.tuePMFr }} -
+          <span translate="deliverTillTuesday2"></span> {{ deliverySchedule.tuePMTo }}
+        </div>
+      </ion-item>
+      <ion-item *ngIf="!deliverySchedule.wedAMFr && !deliverySchedule.wedAMTo">
+        <div translate="closed"></div>
+      </ion-item>
+      <ion-item *ngIf="deliverySchedule.wedAMFr && deliverySchedule.wedAMTo">
+        <div>
+          <span translate="deliverFromWednesday1"></span> {{ deliverySchedule.wedAMFr }} -
+          <span translate="deliverTillWednesday1"></span> {{ deliverySchedule.wedAMTo }}
+        </div>
+        <div *ngIf="deliverySchedule.wedPMFr && deliverySchedule.wedPMTo">
+          <span translate="deliverFromWednesday2"></span> {{ deliverySchedule.wedPMFr }} -
+          <span translate="deliverTillWednesday2"></span> {{ deliverySchedule.wedPMTo }}
+        </div>
+      </ion-item>
+      <ion-item *ngIf="!deliverySchedule.thuAMFr && !deliverySchedule.thuAMTo">
+        <div translate="closed"></div>
+      </ion-item>
+      <ion-item *ngIf="deliverySchedule.thuAMFr && deliverySchedule.thuAMTo">
+        <div>
+          <span translate="deliverFromThursday1"></span> {{ deliverySchedule.thuAMFr }} -
+          <span translate="deliverTillThursday1"></span> {{ deliverySchedule.thuAMTo }}
+        </div>
+        <div *ngIf="deliverySchedule.thuPMFr && deliverySchedule.thuPMTo">
+          <span translate="deliverFromThursday2"></span> {{ deliverySchedule.thuPMFr }} -
+          <span translate="deliverTillThursday2"></span> {{ deliverySchedule.thuPMTo }}
+        </div>
+      </ion-item>
+      <ion-item *ngIf="!deliverySchedule.friAMFr && !deliverySchedule.friAMTo">
+        <div translate="closed"></div>
+      </ion-item>
+      <ion-item *ngIf="deliverySchedule.friAMFr && deliverySchedule.friAMTo">
+        <div>
+          <span translate="deliverFromFriday1"></span> {{ deliverySchedule.friAMFr }} -
+          <span translate="deliverTillFriday1"></span> {{ deliverySchedule.friAMTo }}
+        </div>
+        <div *ngIf="deliverySchedule.friPMFr && deliverySchedule.friPMTo">
+          <span translate="deliverFromFriday2"></span> {{ deliverySchedule.friPMFr }} -
+          <span translate="deliverTillFriday2"></span> {{ deliverySchedule.friPMTo }}
+        </div>
+      </ion-item>
+    </ion-list>
+
+    <ion-list *ngIf="contacts && contacts.length > 0">
+      <h2>
+        <span style="padding-left:8px" class="text-capitalize" translate="contactsPage"></span>
+      </h2>
+
+      <ion-card *ngFor="let item of contacts">
+        <ion-item lines="full">
+          <ion-avatar item-start>
+            <img [src]="item.avatar">
+          </ion-avatar>
+          <h2>{{ item.firstName }} {{ item.name }}</h2>
+          <p>
+            <button ion-item tappable *ngIf="item.mailAddress"
+              (click)="goToMail(item.mailAddress)">{{ item.mailAddress }}</button>
+          </p>
+          <p>
+            <button ion-item tappable *ngIf="item.mobileNr"
+              (click)="goToPhone(item.mobileNr)">{{ item.mobileNr }}</button>
+          </p>
+        </ion-item>
+
+        <ion-card-content>
+          <ion-row>
+            <ion-col>
+              <ion-item lines="full">
+                <ion-label><span translate="contacts.ordConf"></span></ion-label>
+                <ion-checkbox [checked]="item.ordConf" disabled="true"></ion-checkbox>
+              </ion-item>
+            </ion-col>
+            <ion-col>
+              <ion-item lines="full">
+                <ion-label><span translate="contacts.bonus"></span></ion-label>
+                <ion-checkbox [checked]="item.bonus" disabled="true"></ion-checkbox>
+              </ion-item>
+            </ion-col>
+            <ion-col align-self-center text-center>
+              <ion-item lines="full">
+                <ion-label><span translate="contacts.invoice"></span></ion-label>
+                <ion-checkbox [checked]="item.invoice" disabled="true"></ion-checkbox>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col>
+              <ion-item lines="full">
+                <ion-label><span translate="contacts.reminder"></span></ion-label>
+                <ion-checkbox [checked]="item.reminder" disabled="true"></ion-checkbox>
+              </ion-item>
+            </ion-col>
+            <ion-col>
+              <ion-item lines="full">
+                <ion-label><span translate="contacts.domiciliation"></span></ion-label>
+                <ion-checkbox [checked]="item.domiciliation" disabled="true"></ion-checkbox>
+              </ion-item>
+            </ion-col>
+            <ion-col align-self-center text-center>
+              <ion-item lines="full">
+                <ion-label><span translate="contacts.comMailing"></span></ion-label>
+                <ion-checkbox [checked]="item.comMailing" disabled="true"></ion-checkbox>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+        </ion-card-content>
+      </ion-card>
+    </ion-list>
+
+    <ion-list *ngIf="notes && notes.length > 0">
+      <ion-list-header>
+        <ion-title>
+          <span class="text-capitalize" translate="notesPage"></span>
+        </ion-title>
+      </ion-list-header>
+      <div *ngFor="let note of notes">
+        <ion-item-divider>
+          <span [innerText]="note.date | date:'fullDate':null:culture+'-be'"></span>
+        </ion-item-divider>
+        <ion-item lines="full">
+          <div
+            style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
+            item-content [innerText]="note.text"></div>
+        </ion-item>
+      </div>
+    </ion-list>
+  </div>
+</ion-content>

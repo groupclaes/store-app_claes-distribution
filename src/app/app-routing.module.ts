@@ -78,6 +78,14 @@ const routes: Routes = [
   {
     path: 'carts/:id',
     loadChildren: () => import('./pages/carts/cart-detail/cart-detail.module').then(m => m.CartDetailPageModule)
+  },
+  {
+    path: 'customers',
+    loadChildren: () => import('./pages/customers/customers.module').then( m => m.CustomersPageModule)
+  },
+  {
+    path: 'notes',
+    loadChildren: () => import('./pages/notes/notes.module').then( m => m.NotesPageModule)
   }
 ]
 

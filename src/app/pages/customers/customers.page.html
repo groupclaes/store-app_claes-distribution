@@ -1,0 +1,54 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>
+      <span translate="customersPage"></span>
+      <span *ngIf="customers">
+        <span> - </span>
+        <span>{{ (customers | slice:0:200).length }}</span>
+        <span *ngIf="(customers | slice:0:200).length !== customers.length">/{{ customers.length }}</span>
+      </span>
+    </ion-title>
+    <ion-buttons slot="end">
+      
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-item lines="full">
+    <ion-searchbar lines="full" [placeholder]="'customer-info.search' | translate" type="text" id="searchInputField" (input)="filterCustomers($event)"></ion-searchbar>
+  </ion-item>
+  <ion-list-header translate="customer-info.customers" class="ion-padding"></ion-list-header>
+  <ion-list *ngIf="customers && (customers.length > 0 || searchTerm.length > 0);else noCustomers">
+    <cdk-virtual-scroll-viewport itemSize="70" style="width:100%; height: calc(100vh - 100px)">
+      <ion-item lines="full" *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)">
+        <ion-label>
+          <div class="customer-grid">
+            <div class="customer-name text-capitalize">
+              <span [innerText]="customer.id" style="margin-right:.5em;"></span>
+              <span [innerText]="customer.name"></span>
+            </div>
+            <div class="customer-address text-capitalize" *ngIf="customer.addressId > 0">
+              <span [innerText]="customer.addressId" style="margin-right:.5em;"></span>
+              <span [innerText]="customer.addressName"></span>
+            </div>
+            <div class="customer-city text-capitalize">
+              <span *ngIf="customer.addressId === 0" [innerText]="customer.city"></span>
+              <span *ngIf="customer.addressId > 0" [innerText]="customer.delvCity"></span>
+            </div>
+          </div>
+        </ion-label>
+        <i slot="end" class="fal fa-fw fa-xs fa-exclamation-triangle" *ngIf="hasUnsavedNotes(customer)"></i>
+      </ion-item>
+    </cdk-virtual-scroll-viewport>
+  </ion-list>
+
+  <ng-template #noCustomers>
+    <ion-item class="ion-padding empty-message" *ngIf="">
+      <span translate="noCustomers"></span>
+    </ion-item>
+  </ng-template>
+</ion-content>
