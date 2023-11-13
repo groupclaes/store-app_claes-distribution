@@ -427,7 +427,45 @@ export class ProductsRepositoryService {
     })
   }
 
-  private calculatePricesOverview(minQuantity: number, customer: Customer, basePrices: IPrice[], extraPrices: IPrice[]): IProductPricesOverview {
+  addToDepartment(id: number, department: number) {
+    return this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      try {
+        const result = await db.query('INSERT INTO departmentProducts (department,product)'
+          + 'SELECT ?1,?2 WHERE NOT EXISTS (SELECT * FROM departmentProducts WHERE department = ?1 AND product = ?2)',
+          [department, id])
+      } catch (err) {
+        this.logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
+      }
+    })
+  }
+
+  removeFromDepartment(id: number, department: number) {
+    return this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      try {
+        const result = await db.query('DELETE FROM departmentProducts WHERE department = ?1 AND product = ?2',
+          [department, id])
+      } catch (err) {
+        this.logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
+      }
+    })
+  }
+
+  addToFavourites(productId: number, userId: number, addressId: number) {
+    return this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      await db.query(`INSERT OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, ?);`,
+        [productId, userId, addressId, false])
+    })
+  }
+
+  removeFromFavourites(productId: number, userId: number, addressId: number) {
+    return this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      await db.query(`DELETE FROM favorites WHERE id=? AND cu=? AND ad=?`,
+        [productId, userId, addressId])
+    })
+  }
+
+  private calculatePricesOverview(minQuantity: number, customer: Customer,
+    basePrices: IPrice[], extraPrices: IPrice[]): IProductPricesOverview {
     this.logger.debug('ProductsRepositoryService.calculatePricesOverview()', minQuantity, customer, basePrices, extraPrices)
     let basePrice = 0
     let prices = []

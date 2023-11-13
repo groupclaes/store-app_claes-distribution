@@ -127,13 +127,13 @@ export class DepartmentsRepositoryService {
 }
 
 export interface IDepartmentT {
-  id: number
-  alias: string
-  products: number
+  id: number;
+  alias: string;
+  products: number;
 }
 
 export interface IDepartmentDetailT {
-  id: number
-  alias: string
-  products: IProductInfoT[]
+  id: number;
+  alias: string;
+  products: IProductInfoT[];
 }

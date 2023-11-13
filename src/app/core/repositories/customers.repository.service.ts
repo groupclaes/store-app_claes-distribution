@@ -1,4 +1,3 @@
-import { Customer } from './../user.service';
 import { Injectable } from '@angular/core'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
