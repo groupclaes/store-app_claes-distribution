@@ -35,6 +35,10 @@ export class ProductsRepositoryService {
   }
 
   getDetail(id: number, customer: Customer, culture: string): Promise<IProductDetailT> {
+
+    this._db.executeQuery<any>(async (db) => await db.query('SELECT itemnum, color FROM products WHERE color != \'#FFFFFF\''))
+      .then(console.log)
+
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     const descriptionString = culture === 'nl-BE' ? 'descriptionNl' : 'descriptionFr'
     const promoString = culture === 'nl-BE' ? 'promoNl' : 'promoFr'
@@ -213,13 +217,12 @@ export class ProductsRepositoryService {
         products.AvailableOn as availableOn,
         ${pr} as isPromo,
         ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        'FFFFFF' as color
+        products.color
       FROM products
       INNER JOIN packingUnits ON products.packId = packingUnits.id
       LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ?1 AND favorites.ad = ?2
       WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
 
-      console.log(filters)
 
       if (filters.category) {
         params.push(filters.category.id)

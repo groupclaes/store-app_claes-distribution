@@ -99,28 +99,23 @@ export class DepartmentsRepositoryService {
         ]
       )
 
-      if (result.values.length === 0) {
+      if (result.values?.length === 0) {
         return undefined
       }
 
       const department = result.values[0] as IDepartmentDetailT
       const resultP = await db.query(
-        `SELECT p.itemnum,
-          p.id,
-          p.${nameString} as name,
-          packingUnits.${nameString} as unit,
-          p.url,
-          p.color
+        `SELECT p.itemnum, p.id, p.${nameString} as name, pu.${nameString} as unit, p.url, p.color
          FROM departmentProducts
-         INNER JOIN products as p ON p.id = departmentProducts.product
-         INNER JOIN packingUnits ON p.packId = packingUnits.id
+         INNER JOIN products p ON p.id = departmentProducts.product
+         INNER JOIN packingUnits pu ON p.packId = pu.id
          WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = p.id) AND departmentProducts.department = ?`,
         [
           id
         ]
       )
 
-      if (resultP.values.length === 0) {
+      if (resultP.values === null || resultP.values.length === 0) {
         department.products = []
       } else {
         department.products = resultP.values as IProductInfoT[]

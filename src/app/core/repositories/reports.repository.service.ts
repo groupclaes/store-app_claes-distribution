@@ -16,7 +16,7 @@ export class ReportsRepositoryService {
       const result = await db.query(
         `SELECT id, ${nameString} as name, extension FROM reports WHERE onlyAgent = ? OR onlyAgent = 'false'`,
         [
-          agentAccess
+          agentAccess ? 1 : 0
         ]
       )
 
@@ -25,12 +25,13 @@ export class ReportsRepositoryService {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IReport {
 
 }
 
 export interface IReportT {
-  id: number
-  name: string
-  extension: string
+  id: number;
+  name: string;
+  extension: string;
 }

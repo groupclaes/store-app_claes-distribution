@@ -19,9 +19,13 @@ export class CartsRepositoryService {
 
   init() {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      await db.execute('CREATE TABLE IF NOT EXISTS carts (id INTEGER PRIMARY KEY, name STRING, customer INTEGER, address INTEGER, serverDate DATETIME, lastChangeDate DATETIME, sendDate DATETIME, send BOOLEAN, sendOk BOOLEAN, active BOOLEAN)')
-      await db.execute('CREATE TABLE IF NOT EXISTS cartSettings (cart INTEGER UNIQUE, reference STRING, nextDelivery BOOLEAN, deliveryDate DATETIME, deliveryMethod STRING, deliveryOption STRING, comments STRING, commentsPlanning STRING, commentsInvoice STRING, commentsDriver STRING, acceptedTerms BOOLEAN, offer BOOLEAN)')
-      await db.execute('CREATE TABLE IF NOT EXISTS cartProducts (cart INTEGER, product INTEGER, amount INTEGER, PRIMARY KEY (cart, product))')
+      await db.execute('CREATE TABLE IF NOT EXISTS carts (id INTEGER PRIMARY KEY, name STRING, customer INTEGER, address INTEGER, '
+        + 'serverDate DATETIME, lastChangeDate DATETIME, sendDate DATETIME, send BOOLEAN, sendOk BOOLEAN, active BOOLEAN)')
+      await db.execute('CREATE TABLE IF NOT EXISTS cartSettings (cart INTEGER UNIQUE, reference STRING, nextDelivery BOOLEAN, '
+        + 'deliveryDate DATETIME, deliveryMethod STRING, deliveryOption STRING, comments STRING, commentsPlanning STRING, '
+        + 'commentsInvoice STRING, commentsDriver STRING, acceptedTerms BOOLEAN, offer BOOLEAN)')
+      await db.execute('CREATE TABLE IF NOT EXISTS cartProducts (cart INTEGER, product INTEGER, amount INTEGER, '
+      + 'PRIMARY KEY (cart, product))')
     })
   }
 
@@ -37,7 +41,7 @@ export class CartsRepositoryService {
         }
       ])
 
-      return result.changes > 0
+      return result.changes?.changes > 0
     })
   }
 
@@ -53,7 +57,7 @@ export class CartsRepositoryService {
         [ninetyDaysAgo, true]
       )
 
-      return result.changes
+      return result.changes?.changes
     })
   }
 
@@ -98,7 +102,7 @@ export class CartsRepositoryService {
         values: [id]
       }])
 
-      return result.changes > 0
+      return result.changes?.changes > 0
     })
   }
 
@@ -176,7 +180,7 @@ export class CartsRepositoryService {
 
           console.log(customer)
 
-          for (let product of cart.products) {
+          for (const product of cart.products) {
             const prices = await this.productsRepo.getPrices(product.id, customer, db)
             if (prices.basePrice > 0) {
               product.prices = prices.prices
@@ -196,7 +200,7 @@ export class CartsRepositoryService {
           const settings = settingsResult.values[0]
           cart.settings = {
             reference: settings.reference,
-            nextDelivery: settings.nextDelivery == 'true',
+            nextDelivery: settings.nextDelivery === 'true',
             deliveryDate: settings.deliveryDate,
             deliveryMethod: settings.deliveryMethod,
             deliveryOption: settings.deliveryOption,
@@ -204,8 +208,8 @@ export class CartsRepositoryService {
             commentsPlanning: settings.commentsPlanning,
             commentsInvoice: settings.commentsInvoice,
             commentsDriver: settings.commentsDriver,
-            acceptedTerms: settings.nextDelivery == 'acceptedTerms',
-            offer: settings.nextDelivery == 'offer'
+            acceptedTerms: settings.nextDelivery === 'acceptedTerms',
+            offer: settings.nextDelivery === 'offer'
           }
         } else {
           await db.run('INSERT INTO cartSettings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -245,7 +249,11 @@ export class CartsRepositoryService {
     })
   }
 
-  loadUnsend(culture: string = 'nl-BE'): Promise<ICartDetail[]> {
+  loadUnsent(culture: string = 'nl-BE'): Promise<ICartDetail[]> {
+    return this.loadCarts(true, culture)
+  }
+
+  loadCarts(unsent: boolean = false, culture: string = 'nl-BE'): Promise<ICartDetail[]> {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
 
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -265,12 +273,12 @@ export class CartsRepositoryService {
           cart.lastChangeDate,
           cart.sendDate
         FROM carts AS cart
-        INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId
-        WHERE cart.send = ?`,
-          [
-            false
-          ]
-        )
+        INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId`
+          + (unsent ? ' WHERE cart.send = ?' : '')
+          + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC',
+        unsent ? [false] : undefined
+      )
+      console.log(result)
 
         if (result.values.length === 0) {
           // return empty array if we didn't find any record
@@ -278,7 +286,7 @@ export class CartsRepositoryService {
         }
 
         // loop through all records to get products in cart
-        for (let cart of result.values) {
+        for (const cart of result.values) {
           cart.products = []
 
           const productsResult = await db.query(`
@@ -339,13 +347,13 @@ export class CartsRepositoryService {
         productId
       ])
 
-      return result.changes > 0
+      return result.changes?.changes > 0
     })
   }
 
   updateProduct(id: number, productId: number, amount: number): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      let result = await db.run(
+      const result = await db.run(
         `UPDATE cartProducts SET amount = ? WHERE cart = ? and product = ?`,
         [
           amount,
@@ -354,7 +362,7 @@ export class CartsRepositoryService {
         ]
       )
 
-      return result.changes > 0
+      return result.changes?.changes > 0
     })
   }
 
@@ -364,12 +372,12 @@ export class CartsRepositoryService {
         `UPDATE carts SET sendDate = ?2, send = ?3 WHERE id = ?1`,
         [
           id,
-          new Date(),
+          new Date().toISOString(),
           true
         ]
       )
 
-      return result.changes > 0
+      return result.changes?.changes > 0
     })
   }
 
@@ -383,14 +391,16 @@ export class CartsRepositoryService {
         ]
       )
 
-      return result.changes > 0
+      console.log(result)
+      return result.changes?.changes > 0
     })
   }
 
   updateSettings(id: number, settings: any): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.run(
-        'UPDATE cartSettings SET reference=?2, nextDelivery=?3, deliveryDate=?4, deliveryMethod=?5, deliveryOption=?6, comments=?7, commentsPlanning=?8, commentsInvoice=?9, commentsDriver=?10, acceptedTerms=?11, offer=?12 WHERE cart = ?1',
+      const result = await db.run('UPDATE cartSettings SET reference=?2, nextDelivery=?3, deliveryDate=?4, '
+        + 'deliveryMethod=?5, deliveryOption=?6, comments=?7, commentsPlanning=?8, commentsInvoice=?9, commentsDriver=?10, '
+        + 'acceptedTerms=?11, offer=?12 WHERE cart = ?1',
         [
           id,
           settings.reference,
@@ -407,51 +417,53 @@ export class CartsRepositoryService {
         ]
       )
 
-      return result.changes > 0
+      return result.changes?.changes > 0
     })
   }
+
+  getSettings() {}
 }
 
 export interface ICartDetail {
-  id: number
-  name: string
-  customer: number
-  customerName?: string
-  address: number
-  addressName?: string
-  serverDate: Date
-  lastChangeDate: Date
-  sendDate: Date
-  send: boolean
-  sendOk: boolean
-  active: boolean
-  products: ICartDetailProductT[]
-  settings?: ICartDetailSettings
+  id: number;
+  name: string;
+  customer: number;
+  customerName?: string;
+  address: number;
+  addressName?: string;
+  serverDate: Date;
+  lastChangeDate: Date;
+  sendDate: Date;
+  send: boolean;
+  sendOk: boolean;
+  active: boolean;
+  products: ICartDetailProductT[];
+  settings?: ICartDetailSettings;
 }
 
 export interface ICartDetailS extends ICartDetail {
-  settings: ICartDetailSettings
-  products: ICartDetailProductA[]
+  settings: ICartDetailSettings;
+  products: ICartDetailProductA[];
 }
 
 export interface ICartDetailProductT extends IProductInfoT {
-  amount: number
+  amount: number;
 }
 
 export interface ICartDetailProductA extends ICartDetailProductT, IProductPricesOverview, IProductOrderInfo {
 }
 
 export interface ICartDetailSettings {
-  reference: string
-  nextDelivery: boolean
-  deliveryDate: string
-  deliveryMethod: string
-  deliveryOption: string
-  comments: string
-  commentsPlanning: string
-  commentsInvoice: string
-  commentsDriver: string
-  commentsMachines?: string
-  acceptedTerms: boolean
-  offer: boolean
+  reference: string;
+  nextDelivery: boolean;
+  deliveryDate: string;
+  deliveryMethod: string;
+  deliveryOption: string;
+  comments: string;
+  commentsPlanning: string;
+  commentsInvoice: string;
+  commentsDriver: string;
+  commentsMachines?: string;
+  acceptedTerms: boolean;
+  offer: boolean;
 }
