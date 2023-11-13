@@ -149,3 +149,14 @@ div.option-state {
     }
   }
 }
+.can-go-back {
+  ion-menu-button { display: none; }
+}
+
+ion-menu ion-backdrop {
+  transform: none !important;
+}
+
+ion-toolbar ion-buttons {
+  font-size: 1.5em
+}
