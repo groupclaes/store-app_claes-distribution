@@ -153,8 +153,7 @@ export class CustomersPage {
       message: this.translate.instant('preparing') /** | translate */
     });
     this._loading.present()
-    this.ref.markForCheck()
-
+      .then(_ => this.ref.markForCheck())
 
     // Set current active customer user
     this.user.activeUser = {
@@ -172,19 +171,16 @@ export class CustomersPage {
     }
 
     // Set a newly active customer
-    await this.cartService.updateActive(customer.id, customer.addressId);
+    await this.cartService.updateActive(customer.id, customer.addressId)
 
-    firstValueFrom(this.settings.DisplayDefaultPage).then(async newRoot => {
-      await this.sync.prepareCurrentExceptions(customer)
+    await this.sync.prepareCurrentExceptions(customer)
+    if (this.user.userinfo.type === 3 || this.user.userinfo.type === 2) {
+      this.logger.debug('Type 3 -- syncing prices and favourites', customer)
+      await this.sync.syncPrices(this.user.credential, 'all', true, customer.id, customer.addressId)
+      await this.sync.syncFavorites(this.user.credential, 'all', true, customer.id, customer.addressId)
+    }
 
-      if (this.user.userinfo.type === 3) {
-        this.logger.debug('Type 3 -- syncing prices and favourites', customer)
-        await this.sync.syncPrices(this.user.credential, 'all', true, customer.id, customer.addressId)
-        await this.sync.syncFavorites(this.user.credential, 'all', true, customer.id, customer.addressId)
-      }
-
-      this._loading.dismiss();
-      this.navCtrl.navigateRoot(newRoot);
-    })
+    this._loading.dismiss();
+    // this.navCtrl.navigateRoot(newRoot);
   }
 }
