@@ -330,6 +330,7 @@ export class SyncService {
 
       if (response && response.prices && response.prices.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+          await db.beginTransaction()
           await db.execute('DROP TABLE IF EXISTS prices')
 
           await db.execute('CREATE TABLE IF NOT EXISTS prices '
@@ -380,8 +381,10 @@ export class SyncService {
             })
             await db.executeSet(sqlStatements)
           }
+
           this.logger.log('inserted prices', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'prices', response.checksumSha)
+          await db.commitTransaction()
         })
       } else {
         this.logger.log(`SyncProvider.syncPrices() -- no changes`)
@@ -1663,7 +1666,7 @@ export class SyncService {
       dataTable,
       checksum,
       new Date().toJSON()
-    ])
+    ], false)
     return res.changes
   }
 
