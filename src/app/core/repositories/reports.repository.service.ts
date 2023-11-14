@@ -14,9 +14,9 @@ export class ReportsRepositoryService {
 
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.query(
-        `SELECT id, ${nameString} as name, extension FROM reports WHERE onlyAgent = ? OR onlyAgent = 'false'`,
+        `SELECT id, ${nameString} as name, extension FROM reports WHERE onlyAgent = ? OR onlyAgent IS FALSE`,
         [
-          agentAccess ? 1 : 0
+          agentAccess
         ]
       )
 
