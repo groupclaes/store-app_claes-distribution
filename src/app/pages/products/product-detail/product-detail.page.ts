@@ -136,7 +136,7 @@ export class ProductDetailPage implements OnInit {
       },
       {
         text: this.translate.instant('messages.changeCustomerDescription'),
-        // handler: () => this.changeCustomerDescription()
+        handler: () => this.changeCustomerDescription()
       },
       {
         text: this.translate.instant(
@@ -452,6 +452,42 @@ export class ProductDetailPage implements OnInit {
     toast.present()
 
     this.ref.markForCheck()
+  }
+
+  async changeCustomerDescription() {
+    const prompt = await this.alertCtrl.create({
+      header: 'Customer description',
+      message: 'Enter the desired description',
+      inputs: [
+        {
+          name: 'description',
+          placeholder: 'Persoonlijke omschrijving'
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Save',
+          handler: (data: { description: string }) => {
+            this.products.changeCustomerDescription(this._product.id, data.description)
+              .then(async () => {
+                const toast = await this.toastCtrl.create({
+                  message: 'De beschrijvving is gewijzigd.', /* | translate */
+                  duration: 1500,
+                  position: 'top'
+                })
+
+                toast.present();
+              })
+          }
+        }
+      ]
+    })
+
+    prompt.present()
   }
 
   // private async showOptionalTextInput(guid: string, type: number) {

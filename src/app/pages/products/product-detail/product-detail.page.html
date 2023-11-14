@@ -23,13 +23,13 @@
     </ion-toolbar>
   </ion-header>
   <article *ngIf="product !== null && !loading">
-    <div class="image-price-container" tappable (click)="openPicturePreview()">
+    <div class="image-price-container">
       <section class="product-image-wrapper">
         <div class="product-image-container">
           <div class="product-image-border">
             <img [title]="product.name" [alt]="product.name" loading="lazy"
               [style]="'background-color:' + product.color" [src]="productImage">
-            <div class="product-image-inset"></div>
+            <div class="product-image-inset"  tappable (click)="openPicturePreview()"></div>
           </div>
         </div>
       </section>
@@ -57,15 +57,15 @@
           <ion-item lines="full" *ngFor="let price of product.prices | reverse" [ngClass]="isCurrentStack(price)"
             tappable (click)="setAmount(price.quantity)">
             <ion-label slot="start">
-              {{ showContentUnit ? price.quantity : price.quantity }}
+              {{ showContentUnit ? price.quantity * this._product.contentQuantity : price.quantity }}
             </ion-label>
             <div>
               <span *ngIf="!showContentUnit">
                 {{ price.amount | currency:'EUR':'symbol-narrow':'0.2-2':culture }}
               </span>
-              <!-- <span *ngIf="showContentUnit">
-                {{ price.priceUnit | currency:'EUR':'symbol-narrow':'0.5-5':culture }}
-              </span> -->
+              <span *ngIf="showContentUnit">
+                {{ (price.amount / this._product.contentQuantity) | currency:'EUR':'symbol-narrow':'0.5-5':culture }}
+              </span>
             </div>
             <ion-badge slot="end" color="danger" *ngIf="price.discount > 0">
               -{{ price.discount | number:'0.2-2' }}%
@@ -211,10 +211,10 @@
           <ion-label translate="itemNum"></ion-label>
           <span [innerHtml]="product.itemnum"></span>
         </ion-item>
-        <!-- <ion-item  lines="full" *ngIf="product.descriptionCustomer">
-          <ion-label>descriptionCustomer</ion-label>
+        <ion-item  lines="full" *ngIf="product.descriptionCustomer">
+          <ion-label translate="descriptionCustomer"></ion-label>
           <span [innerText]="product.descriptionCustomer"></span>
-        </ion-item> -->
+        </ion-item>
         <ion-item lines="full">
           <ion-label translate="packingUnit"></ion-label>
           {{ product.unit | capitalize }}
