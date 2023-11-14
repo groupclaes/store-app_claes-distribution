@@ -52,4 +52,15 @@ export class ProductsService {
       this.user.activeUser.id,
       this.user.activeUser.address)
   }
+
+  async changeCustomerDescription(productId: number, description: string) {
+    const result = await firstValueFrom(this.api.put(`webshop/data/products/${productId}/customer-description`, {
+      userId: this.user.userinfo.userId,
+      description
+    }))
+
+    await this.productRepo.changeCustomerDescription(productId, description)
+  }
 }
+
+

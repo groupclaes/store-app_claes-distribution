@@ -217,7 +217,8 @@ export class ProductsRepositoryService {
         products.AvailableOn as availableOn,
         ${pr} as isPromo,
         ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color
+        products.color,
+        (SELECT description FROM productDescriptionCustomers WHERE id=products.id) as descriptionCustomer
       FROM products
       INNER JOIN packingUnits ON products.packId = packingUnits.id
       LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ?1 AND favorites.ad = ?2
@@ -299,7 +300,6 @@ export class ProductsRepositoryService {
 
   async getPrices(id: number, customer: any, db: SQLiteDBConnection, minQ?: number) {
     this.logger.debug('ProductsRepositoryService.getPrices(' + id + ')')
-    console.log(customer)
 
     let minQuantity = 1
 
@@ -464,6 +464,13 @@ export class ProductsRepositoryService {
     })
   }
 
+  changeCustomerDescription(productId: number, description: string) {
+    return this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      await db.query('INSERT OR REPLACE INTO productDescriptionCustomers (id, description) VALUES (?, ?);',
+        [productId, description])
+    })
+  }
+
   private calculatePricesOverview(minQuantity: number, customer: Customer,
     basePrices: IPrice[], extraPrices: IPrice[]): IProductPricesOverview {
     this.logger.debug('ProductsRepositoryService.calculatePricesOverview()', minQuantity, customer, basePrices, extraPrices)
@@ -605,6 +612,7 @@ export interface IProductDetailT extends IProductInfoT, IProductCats, IProductPr
   allergens: IProductAllergen[]
   departments: IDepartmentT[]
   taxes: IProductTax[]
+  descriptionCustomer: string
 }
 
 export interface IProductAttributeT {
