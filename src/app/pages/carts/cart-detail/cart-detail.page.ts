@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 /* eslint-disable @typescript-eslint/dot-notation */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
@@ -8,6 +9,7 @@ import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailSettings }
   from 'src/app/core/repositories/carts.repository.service'
+import { IAppDeliveryScheduleModel } from 'src/app/core/repositories/customers.repository.service'
 import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shipping-costs.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
@@ -140,8 +142,20 @@ export class CartDetailPage implements OnInit {
           ...cart.settings
         }
       }
-
       this._cart = cart
+
+
+      const deliveryTimes = await firstValueFrom(this.api.get<string[]>(
+        `order/deliverTimes/${this.user.activeUser.id}/${this.user.activeUser.address}`,
+        { userCode: this.user.userinfo.userCode }))
+
+      if (deliveryTimes != null) {
+        const dates: string[] = []
+        for (const date of deliveryTimes) {
+          dates.push(date.split('T')[0])
+        }
+        this.delvDates = dates
+      }
     } catch (err) {
       this.logger.error('CartDetailPage.load(' + id + ') -- error', err)
     } finally {
@@ -155,11 +169,11 @@ export class CartDetailPage implements OnInit {
     const loading = await this.loadingCtrl.create({
       message: this.translate.instant('sendingCart')
     });
-    loading.present();
-    this.ref.markForCheck();
+    loading.present()
+    this.ref.markForCheck()
 
-    this._cart.settings = this.invoiceForm;
-    const sendOk = await this.cart.sendCart(this._cart);
+    this._cart.settings = this.invoiceForm
+    const sendOk = await this.cart.sendCart(this._cart)
     loading.dismiss();
     if (!sendOk) {
       this.toastCtrl.create({
@@ -167,6 +181,8 @@ export class CartDetailPage implements OnInit {
         duration: 10000
       });
     }
+    await this.cart.deleteCart(this._cart)
+
     this.navCtrl.pop();
     this.ref.markForCheck();
   }

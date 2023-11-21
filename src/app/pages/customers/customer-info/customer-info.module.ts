@@ -7,12 +7,14 @@ import { IonicModule } from '@ionic/angular';
 import { CustomerInfoPageRoutingModule } from './customer-info-routing.module';
 
 import { CustomerInfoPage } from './customer-info.page';
+import { TranslateModule } from '@ngx-translate/core';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    TranslateModule.forChild(),
     CustomerInfoPageRoutingModule
   ],
   declarations: [CustomerInfoPage]

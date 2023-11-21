@@ -36,6 +36,15 @@ export class CustomerInfoPage {
     return this.translate.currentLang.split('-')[0]
   }
 
+  get displayVat(): string {
+    if (isNaN(+this.customer.vatNum)) {
+      return this.customer.vatNum
+    }
+
+    const newVat = ('000000000' + this.customer.vatNum)
+    return 'BE' + newVat.substring(newVat.length - 10)
+  }
+
   ionViewWillEnter() {
     if (!this.user.userinfo) {
       this.navCtrl.navigateRoot('/account/login')

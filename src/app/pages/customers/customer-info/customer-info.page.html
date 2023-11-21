@@ -4,7 +4,6 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
     <ion-title translate="customerInfoPage">
-      <span translate="customerInfoPage"></span>
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -18,116 +17,88 @@
         </ion-title>
       </ion-list-header>
       <ion-item lines="full">
-        <span class="customer" item-start translate="customer"></span>
-        <span class="customer-id-name">
-          <span [innerText]="customer.id"></span>
-          <span [innerText]="customer.name"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.customer-id' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="customer.id" />
       </ion-item>
       <ion-item lines="full">
-        <span class="bonus" item-start translate="bonus"></span>
-        <span class="bonus-value">
-          <span [innerText]="customer.bonusPercentage / 100 | percent:'1.1'"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.customer-name' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="customer.name" />
       </ion-item>
       <ion-item lines="full">
-        <span class="promo" item-start translate="promo"></span>
-        <span class="promo-property">
-          <span *ngIf="!customer.promo" translate="no"></span>
-          <span *ngIf="customer.promo" translate="yes"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.bonus' | translate"
+          labelPlacement="fixed" [readonly]="true"
+          [value]="customer.bonusPercentage / 100 | percent:'1.1'"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="fostplus" item-start translate="fostplus"></span>
-        <span class="fostplus-value">
-          <span *ngIf="!customer.fostplus" translate="no"></span>
-          <span *ngIf="customer.fostplus" translate="yes"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.promo' | translate"
+          labelPlacement="fixed" [readonly]="true"
+          [value]="(customer.promo ? 'yes' : 'no') | translate"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="address"></span>
-        <span class="address">
-          <span [innerText]="customer.address"></span>&nbsp;
-          <span [innerText]="customer.streetNum"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.fostplus' | translate"
+          labelPlacement="fixed" [readonly]="true"
+          [value]="(customer.fostplus ? 'yes' : 'no') | translate"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="city"></span>
-        <span class="address">
-          <span [innerText]="customer.zipCode"></span>&nbsp;
-          <span [innerText]="customer.city"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.address' | translate"
+          labelPlacement="fixed" [readonly]="true" 
+          [value]="customer.address + ' ' + customer.streetNum"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="country"></span>
-        <span class="address">
-          <span [innerText]="customer.country"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.city' | translate"
+          labelPlacement="fixed" [readonly]="true" 
+          [value]="customer.zipCode + ' - ' + customer.city"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="phoneNum"></span>
-        <span class="address">
-          <span [innerText]="customer.phoneNum"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.country' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="customer.country"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="vatNum"></span>
-        <span class="address">
-          <span [innerText]="customer.vatNum"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.phoneNum' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="customer.phoneNum"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="language"></span>
-        <span class="address">
-          <span [innerText]="customer.language"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.vatNum' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="displayVat"></ion-input>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-input [label]="'pages.customer-info.fields.language' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="'languages.' + customer.language.toLowerCase() | translate"></ion-input>
       </ion-item>
     </ion-list>
 
-    <ion-list *ngIf="customer.address !== 0">
+    <ion-list *ngIf="customer.addressId !== 0">
       <ion-list-header>
         <ion-title>
           <span class="text-capitalize" translate="addressInfoPage"></span>
         </ion-title>
       </ion-list-header>
       <ion-item lines="full">
-        <span class="address" item-start translate="address"></span>
-        <span class="address-id-name">
-          <span [innerText]="customer.address"></span>
-          <span [innerText]="customer.addressName"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.customer-address' | translate"
+          labelPlacement="fixed" [readonly]="true" 
+          [value]="customer.address + ' - ' + customer.delvAddress"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="address"></span>
-        <span class="address">
-          <span [innerText]="customer.delvAddress"></span>&nbsp;
-          <span [innerText]="customer.delvStreetNum"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.delivery-address' | translate"
+          labelPlacement="fixed" [readonly]="true"
+          [value]="customer.delvAddress + ' ' + customer.delvStreetNum"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="delvCity"></span>
-        <span class="address">
-          <span [innerText]="customer.delvZipCode"></span>&nbsp;
-          <span [innerText]="customer.delvCity"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.city' | translate"
+          labelPlacement="fixed" [readonly]="true"
+          [value]="customer.delvZipCode + ' - ' + customer.delvCity"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="delvCountry"></span>
-        <span class="address">
-          <span [innerText]="customer.delvCountry"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.country' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="customer.delvCountry"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="delvPhoneNum"></span>
-        <span class="address">
-          <span [innerText]="customer.delvPhoneNum"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.phoneNum' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="customer.delvPhoneNum"></ion-input>
       </ion-item>
       <ion-item lines="full">
-        <span class="address" item-start translate="delvLanguage"></span>
-        <span class="address">
-          <span [innerText]="customer.delvLanguage"></span>
-        </span>
+        <ion-input [label]="'pages.customer-info.fields.language' | translate"
+          labelPlacement="fixed" [readonly]="true" [value]="'languages.' + customer.delvLanguage.toLowerCase() | translate"></ion-input>
       </ion-item>
     </ion-list>
 
@@ -229,40 +200,40 @@
           <ion-row>
             <ion-col>
               <ion-item lines="full">
-                <ion-label><span translate="contacts.ordConf"></span></ion-label>
-                <ion-checkbox [checked]="item.ordConf" disabled="true"></ion-checkbox>
+                <ion-checkbox translate="contacts.ordConf"
+                  [checked]="item.ordConf" [disabled]="true"></ion-checkbox>
               </ion-item>
             </ion-col>
             <ion-col>
               <ion-item lines="full">
-                <ion-label><span translate="contacts.bonus"></span></ion-label>
-                <ion-checkbox [checked]="item.bonus" disabled="true"></ion-checkbox>
+                <ion-checkbox  translate="contacts.bonus"
+                  [checked]="item.bonus" [disabled]="true"></ion-checkbox>
               </ion-item>
             </ion-col>
             <ion-col align-self-center text-center>
               <ion-item lines="full">
-                <ion-label><span translate="contacts.invoice"></span></ion-label>
-                <ion-checkbox [checked]="item.invoice" disabled="true"></ion-checkbox>
+                <ion-checkbox translate="contacts.invoice"
+                  [checked]="item.invoice" [disabled]="true"></ion-checkbox>
               </ion-item>
             </ion-col>
           </ion-row>
           <ion-row>
             <ion-col>
               <ion-item lines="full">
-                <ion-label><span translate="contacts.reminder"></span></ion-label>
-                <ion-checkbox [checked]="item.reminder" disabled="true"></ion-checkbox>
+                <ion-checkbox translate="contacts.reminder"
+                  [checked]="item.reminder" disabled="true"></ion-checkbox>
               </ion-item>
             </ion-col>
             <ion-col>
               <ion-item lines="full">
-                <ion-label><span translate="contacts.domiciliation"></span></ion-label>
-                <ion-checkbox [checked]="item.domiciliation" disabled="true"></ion-checkbox>
+                <ion-checkbox translate="contacts.domiciliation"
+                  [checked]="item.domiciliation" disabled="true"></ion-checkbox>
               </ion-item>
             </ion-col>
             <ion-col align-self-center text-center>
               <ion-item lines="full">
-                <ion-label><span translate="contacts.comMailing"></span></ion-label>
-                <ion-checkbox [checked]="item.comMailing" disabled="true"></ion-checkbox>
+                <ion-checkbox translate="contacts.comMailing"
+                  [checked]="item.comMailing" disabled="true"></ion-checkbox>
               </ion-item>
             </ion-col>
           </ion-row>
