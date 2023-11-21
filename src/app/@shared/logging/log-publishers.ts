@@ -49,6 +49,7 @@ export class LogLocalStorage
     } catch (ex) {
       // Display error in console
       console.log(ex)
+      localStorage.removeItem(this.location)
     }
 
     return of(ret)
