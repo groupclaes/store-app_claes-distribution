@@ -13,7 +13,8 @@
             <span translate="leafletPage"></span>
           </ion-label>
         </ion-item>
-        <ion-item tappable button lines="full" (click)="open('/carts')">
+        <ion-item tappable button lines="full" (click)="open('/carts')"
+          [disabled]="isAgent && !hasActiveUser">
           <i slot="start" class='fal fa-fw fa-shopping-basket'></i>
           <ion-label>
             <span translate="cartsPage"></span>

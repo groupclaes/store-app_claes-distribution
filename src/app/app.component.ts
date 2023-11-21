@@ -63,6 +63,10 @@ export class AppComponent {
     return this.user && this.user.userinfo && this.user.multiUser
   }
 
+  get hasActiveUser(): boolean {
+    return this.user?.activeUser?.id != null
+  }
+
   get culture() {
     return this.translate.currentLang
   }
