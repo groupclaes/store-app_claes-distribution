@@ -334,8 +334,14 @@
       "availableReports": "Beschikbare rapporten"
     },
     "notes": {
-      "titles": "Notities",
+      "title": "Notities",
       "saved": "Onafgewerkte notitie",
+      "fields": {
+        "note": "Notitie",
+        "next-visit": "Volgend bezoek",
+        "closed-from": "Gesloten vanaf",
+        "open-from": "Open vanaf"
+      },
       "unsavedNotes": {
         "title": "Onafgewerkte notities voor deze klant",
         "description": "U heeft nog onverzonden notities voor deze klant op dit toestel staan, weet u zeker dat u deze (nog) niet wilt verwerken?"
@@ -344,7 +350,30 @@
         "title": "Weet u dit zeker?",
         "description": "Weet u zeker dat u deze notitie wilt verwijderen?"
       }
+    },
+    "customer-info": {
+      "fields": {
+        "bonus": "Bonus",
+        "customer-address": "Klantadres",
+        "customer-id": "Klantnummer",
+        "customer-name": "Naam",
+        "delivery-address": "Leveradres",
+        "promo": "Promorechtig",
+        "fostplus": "Fostplus",
+        "address": "Adres",
+        "city": "Stad",
+        "country": "Land",
+        "phoneNum": "Tel.",
+        "vatNum": "BTW-nummer",
+        "language": "Taal"
+      }
     }
+  },
+  "languages": {
+    "nl": "Nederlands",
+    "n": "Nederlands",
+    "fr": "Frans",
+    "f": "Frans"
   },
   "tutorial": {
     "slide1Title": "Aanmelden en registreren",

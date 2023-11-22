@@ -4,8 +4,9 @@ import { LoggingProvider } from '../@shared/logging/log.service'
 import { ApiService } from './api.service'
 import { CartsRepositoryService, ICartDetail } from './repositories/carts.repository.service'
 import { AppCredential, Customer } from './user.service'
-import { firstValueFrom } from 'rxjs'
 import { CustomersRepositoryService } from './repositories/customers.repository.service'
+import { firstValueFrom } from 'rxjs'
+import { environment } from 'src/environments/environment'
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +15,8 @@ export class CartService {
   private _carts: ICartDetail[] = []
   private _credential: AppCredential
   private _userId: number
+
+  private _creatingCart = false
 
   constructor(
     public api: ApiService,
@@ -97,17 +100,20 @@ export class CartService {
         cart.products = cart.products.filter(e => e.id !== id)
         await this.repo.removeProduct(this.active.id, id)
         // this.statistics.cartRemove(this._userId, id)
-      } else {
-        cart.products.find(e => e.id === id).amount = amount
-        await this.repo.updateProduct(cartId, id, amount)
+      } else if (amount > -1) {
+        const correctAmount = Math.floor(amount)
+
+        cart.products.find(e => e.id === id).amount = correctAmount
+        await this.repo.updateProduct(cartId, id, correctAmount)
       }
       return
     }
 
+    this._creatingCart = true
+
     if (!this._carts || this.carts.length === 0
-      || (!this.active
-        && !this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
-        || !(this.active.customer === customer && this.active.address === address)) {
+      || (!this.active && !this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
+      || !(this.active?.customer === customer && this.active?.address === address)) {
       this.logger.log('CartService.updateProduct() -- createCart')
       if (!await this.createCart(customer, address, credential)) {
         this.logger.error('CartService.updateProduct() -- createCart failed!')
@@ -118,6 +124,8 @@ export class CartService {
       this._carts.find(e => e.customer === customer && e.address === address && e.send === false).active = true
       this.logger.log('CartService.updateProduct() -- active = true')
     }
+
+    this._creatingCart = false
 
     if (this.active && this.active.products && this.active.products.some(e => e.id === id) && this.active.send === false) {
       this.logger.log('CartService.updateProduct() -- some')
@@ -226,19 +234,27 @@ export class CartService {
     let response: any
     try {
       await this.repo.updateSend(cart.id)
-
-      response = await firstValueFrom(this.api.post('app/carts/complete', {
-        credentials: this._credential,
-        order: cart
-      })).catch(err => {
-        this.logger.error('CartService.sendCart() error', JSON.stringify(err))
-        throw err;
-      })
+      if (!environment.production) {
+        response = await firstValueFrom(this.api.post('app/carts/complete', {
+          credentials: this._credential,
+          order: cart
+        }))
+      } else {
+        response = {
+          result: true
+        }
+      }
     } catch (err) {
       this.logger.error('CartService.sendCart() catch error', JSON.stringify(err))
     } finally {
       if (response && response.result === true) {
         cart.sendOk = true
+        cart.active = false
+
+        const activeCart = this._carts.find(x => x.id === cart.id)
+        if (activeCart != null) {
+          activeCart.active = false
+        }
         return await this.repo.updateSendOk(cart.id)
       }
       return false

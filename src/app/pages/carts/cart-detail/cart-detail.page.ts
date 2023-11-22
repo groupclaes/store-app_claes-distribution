@@ -9,7 +9,6 @@ import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailSettings }
   from 'src/app/core/repositories/carts.repository.service'
-import { IAppDeliveryScheduleModel } from 'src/app/core/repositories/customers.repository.service'
 import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shipping-costs.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
@@ -144,6 +143,8 @@ export class CartDetailPage implements OnInit {
       }
       this._cart = cart
 
+      console.log(this._cart)
+
 
       const deliveryTimes = await firstValueFrom(this.api.get<string[]>(
         `order/deliverTimes/${this.user.activeUser.id}/${this.user.activeUser.address}`,
@@ -174,14 +175,13 @@ export class CartDetailPage implements OnInit {
 
     this._cart.settings = this.invoiceForm
     const sendOk = await this.cart.sendCart(this._cart)
-    loading.dismiss();
+    loading.dismiss()
     if (!sendOk) {
       this.toastCtrl.create({
         message: this.translate.instant('cartSendError'),
         duration: 10000
       });
     }
-    await this.cart.deleteCart(this._cart)
 
     this.navCtrl.pop();
     this.ref.markForCheck();
@@ -216,7 +216,7 @@ export class CartDetailPage implements OnInit {
     }
 
     if (product.stackSize > 1) {
-      if (productAmount > 0 && (productAmount % product.stackSize) != 0) {
+      if (productAmount > 0 && (productAmount % product.stackSize) !== 0) {
         const subr = Math.floor(productAmount / product.stackSize) + 1
 
         productAmount = subr * product.stackSize
@@ -226,15 +226,20 @@ export class CartDetailPage implements OnInit {
       }
     }
 
+    productAmount = Math.floor(productAmount)
+    product.amount = productAmount
+
     if (showAlert) {
       const alert = await this.alertCtrl.create({
         header: this.translate.instant('invalidAmountError'),
         message: this.translate.instant('invalidAmountMessageError') + productAmount
       })
       alert.present()
+
+      return
     }
 
-    this.cart.updateProduct(
+    await this.cart.updateProduct(
       productId,
       productAmount,
       customerId,
@@ -245,7 +250,7 @@ export class CartDetailPage implements OnInit {
     this.ref.markForCheck()
   }
 
-  removeProduct(product: ICartDetailProductA) {
+  async removeProduct(product: ICartDetailProductA) {
     const productId = product.id
     const productAmount = -1
 
@@ -253,7 +258,7 @@ export class CartDetailPage implements OnInit {
     const customerId = this._cart.customer
     const addressId = this._cart.address
 
-    this.cart.updateProduct(
+    await this.cart.updateProduct(
       productId,
       productAmount,
       customerId,

@@ -5,7 +5,7 @@ import { LoggingProvider } from '../@shared/logging/log.service'
 import { StorageProvider } from './storage-provider.service'
 import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from './database.service'
-import { AppCredential, AppCustomerModel } from './user.service'
+import { AppCredential, AppCustomerModel, Customer } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
 
@@ -95,7 +95,7 @@ export class SyncService {
    * @param force if true syncronisation and rebuld of table will be forced
    * @memberof SyncService
    */
-  public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean) {
+  public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean, activeUser?: Customer) {
     this.logger.log(`SyncService.FullSync() -- start`)
     culture = culture || 'all'
 
@@ -117,8 +117,8 @@ export class SyncService {
       ])
 
       const step2 = await Promise.all([
-        this.syncFavorites(credential, culture, forceSync),
-        this.syncPrices(credential, culture, forceSync),
+        this.syncFavorites(credential, culture, forceSync, activeUser?.userId, activeUser?.address),
+        this.syncPrices(credential, culture, forceSync, activeUser?.userId, activeUser?.address),
         this.syncProductExceptions(credential, culture, forceSync),
         this.syncProductTaxes(credential, culture, forceSync),
         this.syncShippingCosts(credential, culture, forceSync),
@@ -330,7 +330,6 @@ export class SyncService {
 
       if (response && response.prices && response.prices.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-          await db.beginTransaction()
           await db.execute('DROP TABLE IF EXISTS prices')
 
           await db.execute('CREATE TABLE IF NOT EXISTS prices '
@@ -384,7 +383,6 @@ export class SyncService {
 
           this.logger.log('inserted prices', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'prices', response.checksumSha)
-          await db.commitTransaction()
         })
       } else {
         this.logger.log(`SyncProvider.syncPrices() -- no changes`)
@@ -735,8 +733,6 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          console.log(response.reports)
-
           response.reports.forEach((report: $TSFixMe) => {
             const nameNl: string = (report.name && report.name.nl) ? report.name.nl : null
             const nameFr: string = (report.name && report.name.fr) ? report.name.fr : null
@@ -755,8 +751,6 @@ export class SyncService {
           await db.executeSet(sqlStatements)
           this.logger.log('inserted reports', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'reports', response.checksumSha)
-
-          console.log(await db.query('SELECT * FROM `reports`'))
         })
       } else {
         this.logger.log(`SyncProvider.syncReports() -- no changes`)
@@ -1306,7 +1300,7 @@ export class SyncService {
 
           for (const customer of response.customers) {
             sqlStatements.push({
-              // 1. id , 2. addressId, 3. addressGroupId, 4. userCode, 5. userType, 
+              // 1. id , 2. addressId, 3. addressGroupId, 4. userCode, 5. userType,
               // 6. name, 7. address, 8. streetNum, 9. zipCode, 10. city, 11. country, '
               // 12. phoneNum, 13. vatNum, 14. language, 15. promo, 16. fostplus, 17. bonusPercentage, '
               // 18 addressName STRING, 19 delvAddress STRING, 20 delvStreetNum STRING, 21 delvZipCode STRING, 22 delvCity STRING, '
@@ -1387,7 +1381,7 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
+          await db.executeSet(sqlStatements)
           this.logger.log('inserted productDescriptionCustomers', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'productDescriptionCustomers', response.checksumSha)
         })
@@ -1666,7 +1660,7 @@ export class SyncService {
       dataTable,
       checksum,
       new Date().toJSON()
-    ], false)
+    ])
     return res.changes
   }
 

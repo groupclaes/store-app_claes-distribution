@@ -84,8 +84,8 @@
               <span translate="availableOn"></span>
               <span [innerText]="product.availableOn | date:'dd/MM/yyyy'"></span>
             </div>
-            <ion-input type="tel" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()"
-              *ngIf="!product.availableOn" [label]="'amount' | translate">
+            <ion-input type="number" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()"
+              *ngIf="!product.availableOn" [label]="'amount' | translate" step="1" min="0">
             </ion-input>
             <ion-badge slot="end" color="light">
               {{ product.unit }}

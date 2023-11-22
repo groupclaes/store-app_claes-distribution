@@ -147,11 +147,12 @@ export class CartsRepositoryService {
         }
 
         const cart = result.values[0] as ICartDetailS
-        console.log(cart)
         const customer = await this.customersRepo.get<Customer>(cart.customer, cart.address)
 
         // loop through all records to get products in cart
         cart.products = []
+        cart.send = (cart.send as any) === 1 ? true : false
+        cart.sendOk = (cart.sendOk as any) === 1 ? true : false
 
         const productsResult = await db.query(`
         SELECT cp.amount,
@@ -200,7 +201,7 @@ export class CartsRepositoryService {
           const settings = settingsResult.values[0]
           cart.settings = {
             reference: settings.reference,
-            nextDelivery: settings.nextDelivery === 'true',
+            nextDelivery: settings.nextDelivery === 'true' || settings.nextDelivery === true,
             deliveryDate: settings.deliveryDate,
             deliveryMethod: settings.deliveryMethod,
             deliveryOption: settings.deliveryOption,
@@ -209,7 +210,8 @@ export class CartsRepositoryService {
             commentsInvoice: settings.commentsInvoice,
             commentsDriver: settings.commentsDriver,
             acceptedTerms: settings.nextDelivery === 'acceptedTerms',
-            offer: settings.nextDelivery === 'offer'
+            // eslint-disable-next-line eqeqeq
+            offer: settings.offer != 0
           }
         } else {
           await db.run('INSERT INTO cartSettings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -278,7 +280,6 @@ export class CartsRepositoryService {
           + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC',
         unsent ? [false] : undefined
       )
-      console.log(result)
 
         if (result.values.length === 0) {
           // return empty array if we didn't find any record
@@ -288,6 +289,8 @@ export class CartsRepositoryService {
         // loop through all records to get products in cart
         for (const cart of result.values) {
           cart.products = []
+          cart.send = cart.send === 1 ? true : false
+          cart.sendOk = cart.sendOk === 1 ? true : false
 
           const productsResult = await db.query(`
           SELECT cp.amount,
@@ -384,7 +387,7 @@ export class CartsRepositoryService {
   updateSendOk(id: number): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        'UPDATE carts SET sendOk = ?2 WHERE id = ?1',
+        'UPDATE carts SET sendOk = ?2, active=0 WHERE id = ?1',
         [
           id,
           true

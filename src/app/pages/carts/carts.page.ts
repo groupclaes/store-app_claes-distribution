@@ -32,6 +32,27 @@ export class CartsPage implements OnInit {
     private navCtrl: NavController
   ) { }
 
+
+  get carts(): ICartDetailCustom[] {
+    return this._carts
+  }
+
+  get menuItemsActive(): boolean {
+    return this.user.multiUser
+  }
+
+  get isAgent(): boolean {
+    return this.user.hasAgentAccess
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
+  get backButtonText(): string {
+    return this.translate.instant('backButtonText')
+  }
+
   ngOnInit() {
     this.load()
   }
@@ -76,6 +97,7 @@ export class CartsPage implements OnInit {
       await this.cart.createCart(this.user.activeUser.id, this.user.activeUser.address, this.user.credential)
       await this.load()
     } catch (err) {
+      console.error(err)
       this.logger.error('CartsPage.create() -- error', err)
     } finally {
       if (this.loading) {
@@ -172,26 +194,6 @@ export class CartsPage implements OnInit {
 
   ionViewWillEnter() {
     this.load(true)
-  }
-
-  get carts(): ICartDetailCustom[] {
-    return this._carts
-  }
-
-  get menuItemsActive(): boolean {
-    return this.user.multiUser
-  }
-
-  get isAgent(): boolean {
-    return this.user.hasAgentAccess
-  }
-
-  get culture(): string {
-    return this.translate.currentLang
-  }
-
-  get backButtonText(): string {
-    return this.translate.instant('backButtonText')
   }
 }
 
