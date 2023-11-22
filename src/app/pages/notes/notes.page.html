@@ -22,49 +22,62 @@
         </ion-icon>
       </span>
     </ion-list-header>
-    <ion-item>
-      <ion-label>
-        <i class="fal fa-sm fa-fw fa-pencil"></i>
-      </ion-label>
-      <ion-textarea type="text" auto-grow="true" rows="4" [(ngModel)]="newNote.text" [legacy]="true"></ion-textarea>
+    <ion-item lines="full">
+      <ion-textarea [label]="'pages.notes.fields.note' | translate" labelPlacement="fixed"
+        type="text" auto-grow="true"
+        rows="4" [(ngModel)]="newNote.text"></ion-textarea>
     </ion-item>
-    <ion-item>
-      <ion-label>
-        <i class="fal fa-fw fa-calendar-day"></i>
-        <span translate="nextVisit"></span>
-      </ion-label>
-      <ion-datetime displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.nextVisit"></ion-datetime>
+    <ion-item lines="full">
+      <ion-label slot="start" [innerText]="'pages.notes.fields.next-visit' | translate"></ion-label>
+      <ion-datetime-button slot="end" datetime="dt-nextVisit"></ion-datetime-button>
     </ion-item>
-    <ion-item>
-      <ion-label>
-        <i class="fal fa-fw fa-door-closed"></i>
-        <span translate="customerCloseFrom"></span>
-      </ion-label>
-      <ion-datetime displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerCloseFrom"></ion-datetime>
+    <ion-item lines="full">
+      <ion-label slot="start" [innerText]="'pages.notes.fields.closed-from' | translate"></ion-label>
+      <ion-datetime-button slot="end" datetime="dt-customerCloseFrom"></ion-datetime-button>
     </ion-item>
-    <ion-item>
-      <ion-label>
-        <i class="fal fa-fw fa-door-open"></i>
-        <span translate="customerOpenFrom"></span>
-      </ion-label>
-      <ion-datetime displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerOpenFrom"></ion-datetime>
+    <ion-item lines="full">
+      <ion-label slot="start" [innerText]="'pages.notes.fields.open-from' | translate"></ion-label>
+      <ion-datetime-button slot="end" datetime="dt-customerOpenFrom"></ion-datetime-button>
     </ion-item>
-    <ion-item>
-      <button ion-button large outline block color="primary" tappable (click)="send(newNote)">
+    <ion-item lines="full" id="note-buttons">
+      <ion-button size="default" color="primary" tappable (click)="send(newNote)">
         <i class="fal fa-fw fa-lg fa-paper-plane"></i>
         <span translate="actions.send"></span>
-      </button>
-      <button ion-button large outline block color="primary" tappable (click)="save(newNote)">
+      </ion-button>
+      <ion-button size="default" color="primary" tappable (click)="save(newNote)">
         <i class="fal fa-fw fa-lg fa-save"></i>
         <span translate="actions.save"></span>
-      </button>
-      <button *ngIf="newNote._savedDate !== null || newNote._isSent === true" ion-button large outline block
-        color="primary" tappable (click)="deleteNote(newNote)">
+      </ion-button>
+      <ion-button *ngIf="newNote._savedDate !== null || newNote._isSent === true"
+        size="default" color="primary" tappable (click)="deleteNote(newNote)">
         <i class="fal fa-fw fa-lg fa-trash"></i>
         <span translate="actions.delete"></span>
-      </button>
+      </ion-button>
     </ion-item>
   </ion-list>
+  <!-- Datetime modals -->
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime *ngIf="newNote" id="dt-nextVisit"
+        displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.nextVisit"
+        presentation="date"></ion-datetime>
+    </ng-template>
+  </ion-modal>
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime *ngIf="newNote" id="dt-customerCloseFrom"
+        displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerCloseFrom"
+        presentation="date"></ion-datetime>
+    </ng-template>
+  </ion-modal>
+  <ion-modal [keepContentsMounted]="true">
+    <ng-template>
+      <ion-datetime *ngIf="newNote" id="dt-customerOpenFrom"
+        displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerOpenFrom"
+        presentation="date"></ion-datetime>
+    </ng-template>
+  </ion-modal>
+  <!-- /Datetime modals -->
   <ion-list *ngFor="let note of notes">
     <ion-list-header class="ion-padding">
       <ion-label [innerText]="note.date | date : 'fullDate' : null : culture"></ion-label>
@@ -72,10 +85,10 @@
         <i class="fal fa-fw fa-lg fa-copy" [ngClass]="note._savedDate ? 'fa-pencil' : 'fa-copy'"></i>
       </ion-button>
     </ion-list-header>
-    <ion-item *ngIf="note._savedDate">
+    <ion-item *ngIf="note._savedDate" lines="full">
       <span translate="pages.notes.saved"></span>
     </ion-item>
-    <ion-item>
+    <ion-item lines="full">
       <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
         item-content [innerText]="note.text"></div>
     </ion-item>

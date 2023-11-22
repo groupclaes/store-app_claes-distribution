@@ -5,6 +5,7 @@ import { AlertController, NavController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
+import { ApiService } from 'src/app/core/api.service';
 import { IVisitNote, CustomersRepositoryService } from 'src/app/core/repositories/customers.repository.service';
 import { StorageProvider } from 'src/app/core/storage-provider.service';
 import { UserService } from 'src/app/core/user.service';
@@ -30,7 +31,7 @@ export class NotesPage {
     private customers: CustomersRepositoryService,
     private route: ActivatedRoute,
     private navCtrl: NavController,
-    private http: HttpClient,
+    private api: ApiService,
     private logger: LoggingProvider) { }
 
   get culture(): string {
@@ -60,7 +61,7 @@ export class NotesPage {
         buttons: [
           {
             text: this.translate.instant('actions.show'),
-            handler: () => { this.navCtrl.navigateForward('/notes/') }
+            handler: () => { this.navCtrl.navigateForward('/notes') }
           },
           {
             text: this.translate.instant('actions.cancel'),
@@ -167,12 +168,12 @@ export class NotesPage {
 
     const newOpenNotes = [];
     try {
-      const result = await firstValueFrom(this.http.post('app/notes/create', note))
+      const result = await firstValueFrom(this.api.post('app/notes/create', note))
       if (result) {
         this.ref.markForCheck();
         for (const oldNote of opennotes) {
           try {
-            const q = await firstValueFrom(this.http.post('app/notes/create', oldNote));
+            const q = await firstValueFrom(this.api.post('app/notes/create', oldNote));
             if (!q) {
               newOpenNotes.push(oldNote)
             }
@@ -185,16 +186,16 @@ export class NotesPage {
           this.navCtrl.navigateRoot('/customers/', { queryParams: { selectedCust: this.route.snapshot.params.selectedCust } });
         }
       }
-    } catch (err) {
-      this.logger.debug('Something wen\'t wrong when posting new note', err)
-      newOpenNotes.push(note);
-    } finally {
+
       this.storage.set(LS_TOSEND_NOTES, newOpenNotes);
       this.storage.set(LS_SAVED_NOTES,
         this.storage.get<IVisitNote[]>(LS_SAVED_NOTES)
           .filter((x: IVisitNote) => x._savedDate !== savedDate));
       this.notes = this.notes.filter(x => x !== note);
       this.ref.markForCheck();
+    } catch (err) {
+      this.logger.debug('Something wen\'t wrong when posting new note', err)
+      newOpenNotes.push(note);
     }
   }
 
