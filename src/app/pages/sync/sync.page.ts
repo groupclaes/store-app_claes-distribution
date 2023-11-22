@@ -27,6 +27,15 @@ export class SyncPage implements OnInit {
     private logger: LoggingProvider
   ) { }
 
+
+  get internalUser(): boolean {
+    return this.user.userinfo.id < 1000
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
   ngOnInit() {
     this.load()
   }
@@ -39,8 +48,15 @@ export class SyncPage implements OnInit {
 
     this.loader.present()
 
-    this.sync.fullSync(this.user.credential, 'all', true)
-      .then(_ => this.loader.dismiss())
+    let promise
+    if (this.user.activeUser != null) {
+      promise = this.sync.fullSync(this.user.credential, 'all', true,
+        this.user.activeUser)
+    } else {
+      promise = this.sync.fullSync(this.user.credential, 'all', true)
+    }
+
+    promise.then(_ => this.loader.dismiss())
       .then(_ => this.load())
   }
 
@@ -59,14 +75,5 @@ export class SyncPage implements OnInit {
       this.loading = false
       this.ref.markForCheck()
     }
-  }
-
-
-  get internalUser(): boolean {
-    return this.user.userinfo.id < 1000
-  }
-
-  get culture(): string {
-    return this.translate.currentLang
   }
 }
