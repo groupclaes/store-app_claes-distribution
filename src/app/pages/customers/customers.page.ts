@@ -98,7 +98,7 @@ export class CustomersPage {
             text: this.translate.instant('no'),
             role: 'cancel',
             handler: () => {
-              this.navCtrl.navigateRoot('/notes/', { queryParams: { selectedCust: customer } })
+              this.navCtrl.navigateRoot('/notes')
               this.ref.markForCheck()
             }
           },
@@ -180,7 +180,12 @@ export class CustomersPage {
       await this.sync.syncFavorites(this.user.credential, 'all', true, customer.id, customer.addressId)
     }
 
-    this._loading.dismiss();
-    // this.navCtrl.navigateRoot(newRoot);
+
+
+    const newRoot = await firstValueFrom(this.settings.DisplayDefaultPage)
+    await this._loading.dismiss()
+    this.ref.markForCheck()
+
+    this.navCtrl.navigateRoot(newRoot)
   }
 }
