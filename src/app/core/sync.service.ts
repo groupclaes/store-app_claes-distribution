@@ -29,6 +29,37 @@ export class SyncService {
     return this._checksum || new Array<Store>()
   }
 
+  dropTables(): Promise<any> {
+    this.logger.info('Dropping all tables')
+    return this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      const tablesToDrop = [
+        'images',
+        'productTexts', 'productAttributes', 'productAllergens',
+        'productExceptions', 'currentExceptions', 'productRelations', 'productTaxes',
+        'products',
+
+        'prices', 'packingUnits', 'favorites', 'attributes',
+        'reports', 'recipes', 'datasheets', 'usageManuals',
+
+        'departments', 'departmentProducts',
+        'categoryAttributes', 'categories',
+
+        'notes', 'contacts', 'shippingCosts', 'deliverySchedules',
+        'customers', 'productDescriptionCustomers', 'recipesModule',
+        'news', 'dataIntegrityChecksums'
+      ]
+
+      for (const table of tablesToDrop) {
+        this.logger.debug('Dropping table', table)
+        try {
+          await db.execute('DROP TABLE IF EXISTS ' + table)
+        } catch (err) {
+          this.logger.error('Could not drop table', table, err.message)
+        }
+      }
+    })
+  }
+
   async checkDB(): Promise<boolean> {
     let ok = false
 
@@ -107,6 +138,20 @@ export class SyncService {
       // We used to do a single full sync (running all calls at the same time)
       // But this concurrency is not handled well in the 'new' Capacitor SQLite library, so we changed this to be in 4 steps
 
+      await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+        this.logger.log('CREATE TABLE IF NOT EXISTS customers')
+        await db.execute('CREATE TABLE IF NOT EXISTS customers '
+          + '(id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, '
+          + 'address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, '
+          + 'language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, '
+          + 'delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, '
+          + 'delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
+        this.logger.log('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
+        await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)', false)
+
+        await this.updateDataIntegrityChecksum(db, 'lastSync', 'distribution-checksum-sha')
+      })
+
       const step1 = await Promise.all([
         this.syncProducts(credential, culture, forceSync),
         this.syncPackingUnits(credential, culture, forceSync),
@@ -152,19 +197,6 @@ export class SyncService {
         return reject('timeout_err')
       }
 
-      await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        this.logger.log('CREATE TABLE IF NOT EXISTS customers')
-        await db.execute('CREATE TABLE IF NOT EXISTS customers '
-          + '(id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, '
-          + 'address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, '
-          + 'language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, '
-          + 'delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, '
-          + 'delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
-        this.logger.log('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
-        await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)', false)
-
-        await this.updateDataIntegrityChecksum(db, 'lastSync', 'distribution-checksum-sha')
-      })
       const checksum = await this.loadIntegrity()
 
       this.logger.log(`SyncProvider.FullSync() -- end`)
