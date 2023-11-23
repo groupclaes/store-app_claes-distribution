@@ -327,6 +327,19 @@
     "okButton": "Ok"
   },
   "pages": {
+    "login": {
+      "offline-message": "Je moet online zijn om je aan te melden"
+    },
+    "register": {
+      "fields": {
+        "registration-code": "Registratiecode",
+        "first-name": "Voornaam",
+        "last-name": "Achternaam",
+        "email": "E-mailadres",
+        "password": "Wachtwoord",
+        "re-password": "Wachtwoord (opnieuw)"
+      }
+    },
     "reports": {
       "requestedReports": "Mijn opgevraagde rapporten",
       "reportExecutedAt": "rapport uitgevoerd om",
@@ -374,35 +387,6 @@
     "n": "Nederlands",
     "fr": "Frans",
     "f": "Frans"
-  },
-  "tutorial": {
-    "slide1Title": "Aanmelden en registreren",
-    "slide1Description1": "Bedankt om onze app te installeren. Hij werkt ook offline, dus gebruik hem gerust als je geen netwerk ter beschikking hebt. <br />Favorieten en afdelingen die je toevoegt in de webshop zullen ook beschikbaar zijn in de app. <br />De winkelmandjes van de webshop en app zijn wel gescheiden.",
-    "slide1Description2": "Ben je al aangemeld op onze webshop? Dan kan je dezelfde inloggegevens gebruiken voor de app.",
-    "slide1Description3": "Ben je nog niet geregistreerd op onze webshop? <br />Kies op de aanmeldingspagina voor 'registreren'.<br /> Je unieke registratiecode vind je op een recente factuur of zendnota. <br />Geen document bij de hand? Geen probleem. Contacteer onze klantendienst (<a href=\"mailto:info@claes-distribution.be\">info@claes-distribution.be</a> of <a href=\"tel:003211456200\">+3211456200</a>) of je vertegenwoordiger en zij bezorgen je de code met plezier.",
-    "slide1Description4": "Nog geen klant bij ons? <br />Klik op de link. Je komt terecht op onze webpagina waar je al je bedrijfsgegevens kan invullen. <br />Je krijgt zo spoedig mogelijk een mail met je registratiecode.",
-    "slide2Title": "Producten en filters",
-    "slide2Description1": "Toon enkel nieuwe producten",
-    "slide2Description2": "Toon alle producten",
-    "slide2Description3": "Toon enkel producten in promo",
-    "slide2Description5": "Toon enkel je favorieten",
-    "slide2Description6": "Toon alle producten behalve je favorieten",
-    "slide2Description8": "Bestelproducten zijn producten  die wij niet op voorraad houden, maar wel op vraag kunnen leveren. De geschatte levertermijn wordt steeds in het productinfoscherm getoond.",
-    "slide2Description9": "Deze filters kan je gemakkelijk combineren om zo bv. enkel jouw favorieten te bekijken die in promotie zijn.",
-    "slide2Description10": "Toon alle producten behalve bestelproducten",
-    "slide2Description11": "<ul>Klik op een product om meer informatie te zien (indien van toepassing) <li>Staffelkortingen</li> <li>Soortgelijke en gerelateerde artikelen</li> <li>Productbeschrijving</li> <li>Info allergenen</li> <li>Datasheets</li> <li>Recepten</li> <li>Aankoophistoriek</li> <li>....</li></ul>",
-    "slide3Title": "Beheer en overzicht van producten",
-    "slide3Description1": "Je kan nu zelf producten toevoegen aan je favorieten.",
-    "slide3Description2": "Klik in het productinfoscherm op de 3 ... naast het winkelmandje <br />  Selecteer de optie 'Toevoegen aan favorieten'.",
-    "slide3Description3": "Op dezelfde manier kan je ook een favoriet product verwijderen uit de lijst.",
-    "slide3Description4": "Gebruik ons assortimentsoverzicht om een product te vinden.",
-    "slide3Description5": "Klik in het menu op assortiment. <br /> Je krijgt een volledig overzicht van alle soorten producten die beschikbaar zijn. Hier kan je eenvoudig een groep aanklikken en alle producten zien.",
-    "slide4Title": "Instellingen",
-    "slide4Description1": "Hier kan je zelf een aantal instellingen bepalen.",
-    "slide4Description2": "Bij 'standaardpagina' kies je de pagina die als eerste opent bij het opstarten van de app.",
-    "slide4Description3": "Stel zelf in hoe de filters van de producten standaard staan en of je in het overzicht altijd een productfoto wil zien.",
-    "slide4Description4": "Voor iOS kan je kiezen tussen een donker of licht thema.",
-    "slide4Description5": "De app start standaard op in de taal van je toestel, maar nadien kan je kiezen tussen Nederlands en Frans."
   },
   "contacts": {
     "ordConf": "Orderbevestiging",

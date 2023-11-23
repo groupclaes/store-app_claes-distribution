@@ -1,0 +1,50 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ 'signupTitle' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Signup</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <form [formGroup]="form" (submit)="doSignup()">
+    <ion-list>
+      <ion-item lines="full">
+        <ion-input [label]="'pages.register.fields.email' | translate" labelPlacement="floating"
+          type="email" formControlName="username" autocomplete="email" name="email"></ion-input>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-input [label]="'pages.register.fields.first-name' | translate" labelPlacement="floating"
+          type="text" formControlName="firstName" autocomplete="given-name" name="given-name"></ion-input>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-input [label]="'pages.register.fields.last-name' | translate" labelPlacement="floating"
+          type="text" formControlName="lastName" autocomplete="family-name" name="family-name"></ion-input>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-input [label]="'pages.register.fields.password' | translate" labelPlacement="floating"
+          type="password" formControlName="password" autocomplete="password" name="password"></ion-input>
+      </ion-item>
+      <ion-item lines="full">
+        <ion-input [label]="'pages.register.fields.registration-code' | translate" labelPlacement="floating"
+          type="text" formControlName="registrationCode" autocomplete="registration-code"
+          name="registrationCode"></ion-input>
+      </ion-item>
+    </ion-list>
+    <div class="ion-padding buttons-grid">
+      <ion-button color="primary" type="submit" block [disabled]="!form.valid">
+        {{ 'signupButton' | translate }}
+      </ion-button>
+      <!-- <button ion-button color="light" type="button" block>
+        {{ 'howtoRegistrationCode' | translate }}
+      </button> -->
+      <ion-button color="light" type="button" tappable (click)="openWebshop()" block>
+        {{ 'noCustomer' | translate }}
+      </ion-button>
+    </div>
+  </form>
+</ion-content>

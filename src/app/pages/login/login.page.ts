@@ -15,6 +15,8 @@ import { SettingsService } from 'src/app/core/settings.service'
 import { take } from 'rxjs/operators'
 import { CartService } from 'src/app/core/cart.service'
 import { firstValueFrom } from 'rxjs'
+import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { Network } from '@capacitor/network'
 
 @Component({
   selector: 'app-login',
@@ -44,7 +46,8 @@ export class LoginPage implements OnInit {
     private checksumRepository: DataIntegrityChecksumsRepositoryService,
     private cartsRepository: CartsRepositoryService,
     private exceptionsRepository: CurrentExceptionsRepositoryService,
-    private cart: CartService
+    private cart: CartService,
+    private log: LoggingProvider
   ) { }
 
   get defaultPage(): Promise<string> {
@@ -115,18 +118,33 @@ export class LoginPage implements OnInit {
   }
 
   async login() {
-    if (this.busy || this.accountForm.invalid) return
+    if (this.busy || this.accountForm.invalid) {
+      return
+    }
 
     this.busy = true
     this.ref.markForCheck()
+
+    const networkStatus = await Network.getStatus()
+    if (!networkStatus.connected) {
+      this.toast(this.translate.instant('pages.login.offline-message'))
+
+
+      this.busy = false
+      this.ref.markForCheck()
+      return
+    }
+
     const oldCredential = this.user.storedCredential
 
-    this.user.login(this.accountForm.value).subscribe(async (customer: ServerCustomer) => {
+    try {
+      const customer = await firstValueFrom(this.user.login(this.accountForm.value))
       await this.cart.init(this.accountForm.value, this.user.userinfo.userId)
       if (customer) {
         // Check if we need to sync
         const syncRequired = await this.syncRequired(oldCredential)
-        if (syncRequired) {
+        this.log.debug('Sync required: ', syncRequired)
+        if (syncRequired !== 'CACHE') {
           this._loading = await this.loadingCtrl.create({
             spinner: 'lines',
             message: this.translate.instant('syncPage')
@@ -135,7 +153,7 @@ export class LoginPage implements OnInit {
           this.ref.markForCheck()
 
           try {
-            await this.user.syncData().catch(() => {
+            await this.user.syncData(syncRequired === 'FORCE').catch(() => {
               this._loading.dismiss()
               this.busy = false
               this.toast(this.translate.instant('syncError'))
@@ -252,15 +270,25 @@ export class LoginPage implements OnInit {
       }
       this.busy = false
       this.ref.markForCheck()
-    }, async (error: HttpErrorResponse) => {
+    } catch (error: any) {
+      await this.handleAuthError(error)
+      this.busy = false
+      this.ref.markForCheck()
+    } finally {
       try {
         // dismiss loading if present
         if (this._loading) {
           this._loading.dismiss()
+          this.ref.markForCheck()
         }
       } catch { }
-      if (error) {
-        if (error.status === 0) {
+    }
+  }
+
+  async handleAuthError(error) {
+    if (error) {
+      if (error.status === 0) {
+        if (this.user.userinfo != null) {
           // there is no connection
           this.ref.markForCheck()
           await this.cart.init(this.accountForm.value, this.user.userinfo.userId)
@@ -272,54 +300,23 @@ export class LoginPage implements OnInit {
             this._loading.present()
             try {
               await this.cartsRepository.deleteOld(90)
-            } catch {
-
-            }
+            } catch { }
             await this.exceptionsRepository.delete()
             this._loading.dismiss()
             this.ref.markForCheck()
           }
           this.navCtrl.navigateRoot(await this.defaultPage)
-        } else if (error.status === 404 || error.status === 401) {
-          this.toast(this.translate.instant('loginError'))
         } else {
-          this.toast(this.translate.instant('unknownError'))
+          this.toast(this.translate.instant('pages.login.offline-message'))
         }
+      } else if (error.status === 404 || error.status === 401) {
+        this.toast(this.translate.instant('loginError'))
       } else {
         this.toast(this.translate.instant('unknownError'))
       }
-      this.busy = false
-      this.ref.markForCheck()
-    })
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-
-  private async syncRequired(oldCredential: AppCredential): Promise<boolean> {
-    if (!oldCredential) {
-      return true
+    } else {
+      this.toast(this.translate.instant('unknownError'))
     }
-    if (this.accountForm.value.username !== oldCredential.username) {
-      return true
-    }
-
-    // check if sync is needed
-    const syncInterval: number = this.storage.get(`app-syncinterval`)
-    const result = await this.checksumRepository.get<any>('lastSync')
-    const res = await this.checksumRepository.get<any>()
-    console.log(res)
-
-    if (!result) {
-      return true
-    }
-
-    console.log(result)
-
-    const lastSync: Date = (result && result.length >= 1) ? new Date(result[0].dateChanged) : new Date(1970, 0)
-
-    return new Date().getTime() - syncInterval > lastSync.getTime()
   }
 
   resetPassword() {
@@ -340,10 +337,38 @@ export class LoginPage implements OnInit {
     this.navCtrl.navigateForward('/account/signup')
   }
 
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  private async syncRequired(oldCredential: AppCredential): Promise<string> {
+    if (!oldCredential) {
+      return 'FORCE'
+    }
+    if (this.accountForm.value.username !== oldCredential.username) {
+      return 'FORCE'
+    }
+
+    // check if sync is needed
+    const syncInterval: number = this.storage.get(`app-syncinterval`)
+    const result = await this.checksumRepository.get<any>('lastSync')
+    const res = await this.checksumRepository.get<any>()
+
+    if (!result) {
+      return 'FORCE'
+    }
+
+
+    const lastSync: Date = (result && result.length >= 1)
+      ? new Date(result[0].dateChanged) : new Date(1970, 0)
+
+    return new Date().getTime() - syncInterval > lastSync.getTime() ? 'SYNC' : 'CACHE'
+  }
   private async toast(message: string, duration: number = 3000) {
     const toast = await this.toastCtrl.create({
-      message: message,
-      duration: duration,
+      message,
+      duration,
       position: 'top'
     })
     await toast.present()
