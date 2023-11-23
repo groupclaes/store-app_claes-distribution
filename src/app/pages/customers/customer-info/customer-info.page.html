@@ -240,23 +240,5 @@
         </ion-card-content>
       </ion-card>
     </ion-list>
-
-    <ion-list *ngIf="notes && notes.length > 0">
-      <ion-list-header>
-        <ion-title>
-          <span class="text-capitalize" translate="notesPage"></span>
-        </ion-title>
-      </ion-list-header>
-      <div *ngFor="let note of notes">
-        <ion-item-divider>
-          <span [innerText]="note.date | date:'fullDate':null:culture+'-be'"></span>
-        </ion-item-divider>
-        <ion-item lines="full">
-          <div
-            style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
-            item-content [innerText]="note.text"></div>
-        </ion-item>
-      </div>
-    </ion-list>
   </div>
 </ion-content>

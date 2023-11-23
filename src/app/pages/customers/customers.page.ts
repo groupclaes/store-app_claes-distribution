@@ -89,8 +89,8 @@ export class CustomersPage {
     if (this.user.hasAgentAccess && this.user.activeUser
       && (this.user.activeUser.id !== customer.id || this.user.activeUser.address !== customer.addressId)) {
       this.alertCtrl.create({
-        header: this.translate.instant('customer-info.alerts.swith-customer.title'), /* | translate */
-        message: (this.translate.instant('customer-info.alerts.swith-customer.message') as string)
+        header: this.translate.instant('customer-info.alerts.switch-customer.title'), /* | translate */
+        message: (this.translate.instant('customer-info.alerts.switch-customer.message') as string)
           .replace('{{ACTIVE_CUSTOMER_NAME}}', this.user.activeUser.name)
           .replace('{{ACTIVE_CUSTOMER_CITY}}', this.user.activeUser.city),
         buttons: [
@@ -152,7 +152,7 @@ export class CustomersPage {
       spinner: 'circular',
       message: this.translate.instant('preparing') /** | translate */
     });
-    this._loading.present()
+    await this._loading.present()
       .then(_ => this.ref.markForCheck())
 
     // Set current active customer user

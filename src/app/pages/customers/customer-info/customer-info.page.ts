@@ -4,7 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
 import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact, IVisitNote }
   from 'src/app/core/repositories/customers.repository.service';
-import { Customer, UserService } from 'src/app/core/user.service';
+import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service';
 import { Md5 } from 'ts-md5';
 
 @Component({
@@ -14,8 +14,7 @@ import { Md5 } from 'ts-md5';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomerInfoPage {
-  customer: Customer;
-  notes: IVisitNote[] = [];
+  customer: AppCustomerModel;
   deliverySchedules: IAppDeliveryScheduleModel[];
   contacts: IContact[];
 
@@ -37,12 +36,17 @@ export class CustomerInfoPage {
   }
 
   get displayVat(): string {
-    if (isNaN(+this.customer.vatNum)) {
-      return this.customer.vatNum
+    const vatString = `${this.customer.vatNum}`
+    if (vatString.length > 2) {
+      if (isNaN(+this.customer.vatNum)) {
+        return this.customer.vatNum
+      }
+
+      const newVat = ('000000000' + vatString)
+      return 'BE' + newVat.substring(newVat.length - 10)
     }
 
-    const newVat = ('000000000' + this.customer.vatNum)
-    return 'BE' + newVat.substring(newVat.length - 10)
+    return this.customer.vatNum
   }
 
   ionViewWillEnter() {
@@ -57,13 +61,12 @@ export class CustomerInfoPage {
   async loadCustomerInfo() {
     if (this.user.activeUser) {
       const result = await this.customerService
-        .get<Customer>(this.user.activeUser.id,
+        .get<AppCustomerModel>(this.user.activeUser.id,
           this.user.activeUser.address)
 
       if (result != null) {
         this.customer = result
         await Promise.all([
-          this.loadNotes(),
           this.loadDeliverySchedules(),
           this.loadContacts()
         ])
@@ -94,22 +97,6 @@ export class CustomerInfoPage {
 
     this.deliverySchedules = deliverySchedules
     this.logger.debug('Received delivery schedules', deliverySchedules)
-  }
-
-  async loadNotes() {
-    this.logger.debug('Loading notes')
-    const notes = await this.customerService.getNotes(this.user.activeUser.id,
-      this.user.activeUser.address)
-
-    for (const note of notes) {
-      note.text = note.text.split(`''`).join(`'`);
-      while (note.text.startsWith('\n')) {
-        note.text = note.text.substring(2);
-      }
-    }
-
-    this.notes = notes;
-    this.logger.debug(`Loaded ${notes.length} notes`, notes)
   }
 
   async loadContacts() {
