@@ -5,7 +5,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from
 import { registerLocaleData } from '@angular/common'
 import localeFrBE from '@angular/common/locales/fr-BE'
 import localeNlBE from '@angular/common/locales/nl-BE'
-import { IonMenu, NavController, Platform } from '@ionic/angular'
+import { IonMenu, LoadingController, NavController, Platform } from '@ionic/angular'
 import { LoggingProvider } from './@shared/logging/log.service'
 import { TranslateService } from '@ngx-translate/core'
 import { StorageProvider } from './core/storage-provider.service'
@@ -29,6 +29,7 @@ export class AppComponent {
     private translate: TranslateService,
     private storage: StorageProvider,
     private navCtrl: NavController,
+    private loadCtrl: LoadingController,
     private ref: ChangeDetectorRef,
     private user: UserService,
     private cart: CartService
@@ -100,13 +101,19 @@ export class AppComponent {
     } else {
       this.translate.use(environment.default_language)
     }
-
-    console.log(environment.default_language, browserLang, this.translate.langs, this.translate.currentLang)
   }
 
   async open(componentName: string) {
     if (componentName === '/account/login') {
-      this.user.logout()
+      const loader = await this.loadCtrl.create({
+        message: this.translate.instant('logout')
+      })
+      await loader.present().then(_ => this.ref.markForCheck())
+      try {
+        await this.user.logout()
+      } finally {
+        loader.dismiss()
+      }
     }
     if (await this.navCtrl.navigateRoot(componentName)) {
       await this.menu.close()
