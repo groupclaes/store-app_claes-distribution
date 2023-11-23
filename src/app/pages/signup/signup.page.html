@@ -1,5 +1,8 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
     <ion-title>{{ 'signupTitle' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -19,11 +22,11 @@
       </ion-item>
       <ion-item lines="full">
         <ion-input [label]="'pages.register.fields.first-name' | translate" labelPlacement="floating"
-          type="text" formControlName="firstName" autocomplete="given-name" name="given-name"></ion-input>
+          type="text" formControlName="given_name" autocomplete="given-name" name="given-name"></ion-input>
       </ion-item>
       <ion-item lines="full">
         <ion-input [label]="'pages.register.fields.last-name' | translate" labelPlacement="floating"
-          type="text" formControlName="lastName" autocomplete="family-name" name="family-name"></ion-input>
+          type="text" formControlName="family_name" autocomplete="family-name" name="family-name"></ion-input>
       </ion-item>
       <ion-item lines="full">
         <ion-input [label]="'pages.register.fields.password' | translate" labelPlacement="floating"
@@ -31,7 +34,7 @@
       </ion-item>
       <ion-item lines="full">
         <ion-input [label]="'pages.register.fields.registration-code' | translate" labelPlacement="floating"
-          type="text" formControlName="registrationCode" autocomplete="registration-code"
+          type="text" formControlName="code" autocomplete="registration-code"
           name="registrationCode"></ion-input>
       </ion-item>
     </ion-list>

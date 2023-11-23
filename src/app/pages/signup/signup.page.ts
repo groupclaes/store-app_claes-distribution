@@ -24,14 +24,16 @@ export class SignupPage {
     fb: FormBuilder) {
 
     this._form = fb.group({
-      firstName: [ '', [ Validators.required, Validators.minLength(2) ] ],
-      lastName: [ '', [ Validators.required, Validators.minLength(2) ] ],
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      given_name: [ '', [ Validators.required, Validators.minLength(2) ] ],
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      family_name: [ '', [ Validators.required, Validators.minLength(2) ] ],
       username: [ '', [
         Validators.required,
         Validators.minLength(2),
         Validators.email ] ],
       password: [ '', [ Validators.required, Validators.minLength(8) ] ],
-      registrationCode: [ '', [
+      code: [ '', [
           Validators.required,
           Validators.minLength(8),
           Validators.maxLength(12) ] ]

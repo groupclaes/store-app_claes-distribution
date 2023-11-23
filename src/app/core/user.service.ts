@@ -46,7 +46,7 @@ export class UserService {
     return request
   }
 
-  signup(credential: AppCredential) {
+  signup(credential: AppRegistrationCredential) {
     let request = this.api.post('appuser/signOn', credential).pipe(share())
 
     request.subscribe((res: any) => {
@@ -72,17 +72,18 @@ export class UserService {
     this._loggedIn(userResponse, credential)
   }
 
-  logout() {
+  async logout() {
     // this.statistics.logout(this._user.userId)
     this._user = null
     this._credential.password = ''
+    await this.sync.dropTables()
     this.storage.set('credential', this._credential)
   }
 
-  syncData(): Promise<boolean> {
+  syncData(force: boolean = false): Promise<boolean> {
     let culture = this.hasAgentAccess ? 'all' : this.translate.currentLang.split('-')[0]
 
-    return this.sync.fullSync(this._credential, culture, false)
+    return this.sync.fullSync(this._credential, culture, force)
   }
 
   get storedCredential(): AppCredential {
@@ -152,6 +153,13 @@ export class UserService {
 export interface AppCredential {
   username: string
   password: string
+}
+export interface AppRegistrationCredential extends AppCredential {
+  code: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  given_name: string;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  last_name: string;
 }
 
 export interface ServerCustomer {
