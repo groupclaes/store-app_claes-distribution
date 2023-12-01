@@ -341,7 +341,7 @@ export class ProductsRepositoryService {
         ]
       )
 
-      if (result.values.length < 0) {
+      if (result.values.length > 0) {
         return this.calculatePricesOverview(minQuantity, customer, base.values, result.values)
       }
 
@@ -358,7 +358,7 @@ export class ProductsRepositoryService {
         ]
       )
 
-      if (result.values.length < 0) {
+      if (result.values.length > 0) {
         return this.calculatePricesOverview(minQuantity, customer, base.values, result.values)
       }
 
@@ -375,7 +375,7 @@ export class ProductsRepositoryService {
         ]
       )
 
-      if (result.values.length < 0) {
+      if (result.values.length > 0) {
         return this.calculatePricesOverview(minQuantity, customer, base.values, result.values)
       }
 
