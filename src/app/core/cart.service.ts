@@ -234,7 +234,7 @@ export class CartService {
     let response: any
     try {
       await this.repo.updateSend(cart.id)
-      if (!environment.production) {
+      if (environment.production) {
         response = await firstValueFrom(this.api.post('app/carts/complete', {
           credentials: this._credential,
           order: cart
