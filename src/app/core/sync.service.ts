@@ -342,7 +342,8 @@ export class SyncService {
     }
   }
 
-  async syncPrices(credential: AppCredential, culture?: string, force?: boolean, customerId?: number, addressId?: number) {
+  async syncPrices(credential: AppCredential, culture?: string, force?: boolean,
+    customerId?: number, addressId?: number) {
     try {
       this.logger.log(`SyncProvider.syncPrices() -- customerId: ${customerId}, addressId: ${addressId}`)
 
