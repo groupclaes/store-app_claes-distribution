@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 import { DatePipe } from '@angular/common'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
@@ -22,7 +23,6 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
 export class ProductsPage implements OnInit {
   @ViewChild(IonContent) content: IonContent
 
-  private _products: IProductT[]
   loading = true
   loadingAdditional = false
   noMoreProducts = false
@@ -33,14 +33,16 @@ export class ProductsPage implements OnInit {
   displayThumbnail = false
   sortOrder: ISortOrder = 'itemNum$ASC'
 
+  private _products: IProductT[]
+
   private _filters: {
-    category: ICategoryT,
-    query: string,
-    newState: 'default' | 'active',
-    promoState: 'default' | 'active',
-    favoriteState: 'default' | 'active' | 'inactive',
-    orderState: 'default' | 'inactive'
-    attributes: AttributesFilter[]
+    category: ICategoryT;
+    query: string;
+    newState: 'default' | 'active';
+    promoState: 'default' | 'active';
+    favoriteState: 'default' | 'active' | 'inactive';
+    orderState: 'default' | 'inactive';
+    attributes: AttributesFilter[];
   } = {
       newState: 'default',
       promoState: 'default',
@@ -98,8 +100,8 @@ export class ProductsPage implements OnInit {
       }
     })
     route.queryParams.subscribe(async (params) => {
-      if (params['category']) {
-        this._filters.category = await categoriesRepository.find(+params['category'], this.culture)
+      if (params.category) {
+        this._filters.category = await categoriesRepository.find(+params.category, this.culture)
         window.clearTimeout(fallback)
         this.loading = false
         this.load()
@@ -152,16 +154,20 @@ export class ProductsPage implements OnInit {
 
   get currentCustomer(): string {
     if (this.user.hasAgentAccess) {
-      return '  -  ' + (this.user.activeUser.addressName != null ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`)
+      return '  -  ' + (this.user.activeUser.addressName != null
+        ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`)
     } else if (this.user.multiUser) {
-      return '  -  ' + (this.user.activeUser.addressName != null ? this.user.activeUser.addressName : this.user.activeUser.name)
+      return '  -  ' + (this.user.activeUser.addressName != null
+            ? this.user.activeUser.addressName : this.user.activeUser.name)
     }
     return ''
   }
 
   get cartLink(): any[] {
     const params: any[] = ['/carts']
-    if (this.cart.active) params.push(this.cart.active.id)
+    if (this.cart.active) {
+      params.push(this.cart.active.id)
+    }
     return params
   }
 
@@ -180,7 +186,7 @@ export class ProductsPage implements OnInit {
           this.cart.active.address === this.user.activeUser.address &&
           this.cart.active.products) {
           // update cart amounts
-          for (let product of this.products) {
+          for (const product of this.products) {
             const pr = this.cart.active.products.find(x => x.id == product.id)
             if (pr) {
               product.amount = pr.amount
@@ -189,7 +195,7 @@ export class ProductsPage implements OnInit {
             }
           }
         } else {
-          for (let product of this.products) {
+          for (const product of this.products) {
             product.amount = null
           }
         }
@@ -204,7 +210,9 @@ export class ProductsPage implements OnInit {
 
   async load(additional?: boolean): Promise<void> {
     if (!additional) {
-      if (this.loading === true) return
+      if (this.loading === true) {
+        return
+      }
       this.page = 0
       this._products = []
       this.noMoreProducts = false
@@ -227,14 +235,14 @@ export class ProductsPage implements OnInit {
 
     const cart = (this.cart || this.cart.active) ? this.cart.active : null
 
-    for (let product of products) {
+    for (const product of products) {
       product.isNew = product.isNew == 1
       product.isPromo = product.isPromo == 1
       product.isFavorite = product.isFavorite == 1
       if (cart) {
-        for (let product of products) {
-          const pr = cart.products.find(x => x.id == product.id)
-          product.amount = (pr !== undefined) ? pr.amount : null
+        for (const cartProduct of products) {
+          const pr = cart.products.find(x => x.id == cartProduct.id)
+          cartProduct.amount = (pr !== undefined) ? pr.amount : null
         }
       }
     }
@@ -410,7 +418,7 @@ export class ProductsPage implements OnInit {
 
   isUnavailable(product: any): boolean {
     if (product.AvailableOn) {
-      return new Date(product.AvailableOn + ".000Z") >= UNAVAILABLE_AFTER
+      return new Date(product.AvailableOn + '.000Z') >= UNAVAILABLE_AFTER
     }
 
     return false
@@ -418,7 +426,8 @@ export class ProductsPage implements OnInit {
 
   favinfo(product: IProductT): string {
     if (product.isFavorite) {
-      return `${this.translate.instant('lastPurchase')}: ${this.datePipe.transform(product.favLastB, 'dd/MM/yyyy', undefined, this.culture)} ${product.favLastA}x`
+      const lastPurchaseDate = this.datePipe.transform(product.favLastB, 'dd/MM/yyyy', undefined, this.culture)
+      return `${this.translate.instant('lastPurchase')}: ${lastPurchaseDate} ${product.favLastA}x`
     }
     return null
   }
@@ -428,7 +437,8 @@ export class ProductsPage implements OnInit {
       if (new Date(product.availableOn).toISOString() === UNAVAILABLE_AFTER.toISOString()) {
         return this.translate.instant('productUnavailable')
       }
-      return `${this.translate.instant('availableOn')} ${this.datePipe.transform(product.availableOn, 'dd/MM/yyyy', undefined, this.culture)}`
+      const availableOn = this.datePipe.transform(product.availableOn, 'dd/MM/yyyy', undefined, this.culture)
+      return `${this.translate.instant('availableOn')} ${availableOn}`
     }
     return ''
   }

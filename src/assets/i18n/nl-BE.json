@@ -330,6 +330,18 @@
     "login": {
       "offline-message": "Je moet online zijn om je aan te melden"
     },
+    "product-detail": {
+      "modals": {
+        "mail": {
+          "cancel": "Annuleer",
+          "confirm": "Bevestig",
+          "title": "E-mail opgeven",
+
+          "label": "Bericht",
+          "placeholder": "Geef een bericht op voor de klant"
+        }
+      }
+    },
     "register": {
       "fields": {
         "registration-code": "Registratiecode",

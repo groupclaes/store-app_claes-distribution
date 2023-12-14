@@ -3,8 +3,11 @@ import { DomSanitizer } from '@angular/platform-browser'
 import { ActivatedRoute } from '@angular/router'
 import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
+import { firstValueFrom } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
+import { OptionalInputModalComponent } from 'src/app/core/components/optional-input-modal/optional-input-modal.component'
 import { ProductsService } from 'src/app/core/products.service'
 import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
 import { IPCMAttachmentEntry, IProductDetailT, IProductPrice, IRecipeModuleEntry, ProductsRepositoryService }
@@ -29,6 +32,7 @@ export class ProductDetailPage implements OnInit {
   pictureOpen = false
 
   departmentAddOpen = false
+  optionalTextModalOpen = false
   selectedDepartment: number = null
   departments: IDepartmentT[]
 
@@ -39,6 +43,7 @@ export class ProductDetailPage implements OnInit {
   usageManuals: IPCMAttachmentEntry[] = []
 
   constructor(
+    private api: ApiService,
     private ref: ChangeDetectorRef,
     private translate: TranslateService,
     private repo: ProductsRepositoryService,
@@ -250,12 +255,12 @@ export class ProductDetailPage implements OnInit {
             window.open(`https://pcm.groupclaes.be/v3/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
           }
         },
-        // {
-        //   text: this.translate.instant('actions.mail'),
-        //   handler: () => {
-        //     this.ShowOptionalTextInput(document.guid, 0);
-        //   }
-        // },
+        {
+          text: this.translate.instant('actions.mail'),
+          handler: () => {
+            this.showMailTextInput(doc.guid, 0);
+          }
+        },
         // {
         //   text: 'Downloaden', /* | translate */
         //   handler: () => { }
@@ -277,10 +282,10 @@ export class ProductDetailPage implements OnInit {
             window.open(`https://pcm.groupclaes.be/v3/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
           }
         },
-        // {
-        //   text: this.translate.instant('actions.mail'),
-        //   handler: () => this.ShowOptionalTextInput(recipe.guid, 1)
-        // },
+        {
+          text: this.translate.instant('actions.mail'),
+          handler: () => this.showMailTextInput(recipe.guid, 1)
+        },
         {
           text: this.translate.instant('actions.show'),
           handler: () => this.navCtrl.navigateForward('/recipe/recipe-detail', { queryParams: { guid: recipe.guid } })
@@ -490,27 +495,82 @@ export class ProductDetailPage implements OnInit {
     prompt.present()
   }
 
-  // private async showOptionalTextInput(guid: string, type: number) {
-  //   const textModal = this.modalCtrl.create(MessageInputModalComponent);
 
-  //   switch (type) {
-  //     case 0:
-  //       textModal.onDidDismiss((result) => {
-  //         if (result != null && result.success === true) {
-  //           this.mailDatasheet(guid, result.text);
-  //         }
-  //       });
-  //       break;
+  async mailRecipe(guid: string, text: string) {
+    try {
+      const apiResult = await firstValueFrom(
+        this.api.post(`app/recipes/mail/${guid}`, this.user.credential, {
+          customer: this.user.activeUser.id,
+          address: this.user.activeUser.address,
+          message: text,
+          culture: this.culture,
+          test: environment.production ? undefined : true
+        }))
+      if (apiResult) {
+        this.alertCtrl.create({
+          header: this.translate.instant('recipeMailSend'),
+          message: this.translate.instant('recipeMailMessageSend')
+        }).then(alert => alert.present())
+        return
+      }
+    } catch (err) {}
 
-  //     case 1:
-  //       textModal.onDidDismiss((result) => {
-  //         if (result != null && result.success === true) {
-  //           this.mailRecipe(guid, result.text);
-  //         }
-  //       });
-  //       break;
-  //   }
+    this.alertCtrl.create({
+      header: this.translate.instant('recipeMailError'),
+      message: this.translate.instant('recipeMailMessageError')
+    }).then(alert => alert.present())
+  }
 
-  //   await textModal.present();
-  // }
+  async mailDatasheet(guid: string, text: string) {
+    try {
+      const apiResult = await firstValueFrom(
+        this.api.post(`app/datasheets/mail/${guid}`, this.user.credential, {
+          customer: this.user.activeUser.id,
+          address: this.user.activeUser.address,
+          message: text,
+          culture: this.culture
+        }))
+      if (apiResult) {
+        this.alertCtrl.create({
+          header: this.translate.instant('datasheetMailSend'),
+          message: this.translate.instant('datasheetMailMessageSend')
+        }).then(alert => alert.present())
+        return
+      }
+    } catch (err) {}
+
+    this.alertCtrl.create({
+      header: this.translate.instant('datasheetMailError'),
+      message: this.translate.instant('datasheetMailMessageError')
+    }).then(alert => alert.present())
+  }
+
+  private async showMailTextInput(guid: string, type: number) {
+    const textModal = await this.modalCtrl.create({
+      component: OptionalInputModalComponent,
+      componentProps: {
+        title: this.translate.instant('pages.product-detail.modals.mail.title'),
+        cancelButton: this.translate.instant('pages.product-detail.modals.mail.cancel'),
+        confirmButton: this.translate.instant('pages.product-detail.modals.mail.confirm'),
+        label: this.translate.instant('pages.product-detail.modals.mail.title'),
+        placeholder: this.translate.instant('pages.product-detail.modals.mail.placeholder')
+      }
+    })
+
+    textModal.present()
+
+    const { data, role } = await textModal.onWillDismiss()
+
+    if (role === 'confirm') {
+      switch (type) {
+        case 0:
+          this.mailDatasheet(guid, data);
+          break
+
+        case 1:
+          this.mailRecipe(guid, data);
+          break
+      }
+    }
+  }
 }
