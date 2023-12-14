@@ -7,6 +7,6 @@ export const environment = {
     'fr-BE'
   ],
   api_url: 'https://api.groupclaes.be/distribution',
-  pcm_url: 'https://pcm.groupclaes.be/v3',
+  pcm_url: 'https://pcm.groupclaes.be/v4',
   database_name: 'distribution'
 }

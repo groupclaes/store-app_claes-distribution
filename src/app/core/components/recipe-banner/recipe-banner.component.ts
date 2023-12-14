@@ -48,7 +48,7 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.http.get<IGetWebContentBannerResponse>('https://pcm.groupclaes.be/v3/website-content/dis/banners/recipes').subscribe(resp => {
+    this.http.get<IGetWebContentBannerResponse>('https://pcm.groupclaes.be/v4/website-content/dis/banners/recipes').subscribe(resp => {
       if (resp.count > 0) {
         const nativeElement: HTMLElement = this.el.nativeElement
         nativeElement.style.display = 'block'

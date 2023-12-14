@@ -56,7 +56,7 @@ export class RecipeDetailPage implements OnInit {
   }
 
   open() {
-    window.open(`https://pcm.groupclaes.be/v3/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
+    window.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
   }
 
   async mail() {

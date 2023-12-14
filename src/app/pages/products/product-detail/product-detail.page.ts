@@ -252,7 +252,7 @@ export class ProductDetailPage implements OnInit {
         {
           text: this.translate.instant('actions.open'),
           handler: () => {
-            window.open(`https://pcm.groupclaes.be/v3/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
+            window.open(`https://pcm.groupclaes.be/v4/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
           }
         },
         {
@@ -279,7 +279,7 @@ export class ProductDetailPage implements OnInit {
         {
           text: this.translate.instant('actions.open'),
           handler: () => {
-            window.open(`https://pcm.groupclaes.be/v3/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
+            window.open(`https://pcm.groupclaes.be/v4/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
           }
         },
         {
