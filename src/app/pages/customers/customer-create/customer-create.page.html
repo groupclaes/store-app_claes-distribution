@@ -1,0 +1,547 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      {{ 'pages.customer-create.title' | translate }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button icon-only tappable (click)="doCreateCustomer()">
+        <i class="fas fa-plus"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+
+<ion-content>
+  <form *ngIf="newCustomerForm" [formGroup]="newCustomerForm" (submit)="doCreateCustomer()">
+    <ion-list>
+      <div class="create-customer-top-grid">
+        <ion-item>
+          <ion-select formControlName="weekNr" interface="popover"
+            labelPlacement="fixed" [label]="'weekNr' | translate">
+            <ion-select-option value="">{{ 'noVisit' | translate }}</ion-select-option>
+            <ion-select-option value="-1">{{ 'noVisitSet' | translate }}</ion-select-option>
+            <ion-select-option value="1">{{ 'weekOne' | translate }}</ion-select-option>
+            <ion-select-option value="2">{{ 'weekTwo' | translate }}</ion-select-option>
+            <ion-select-option value="3">{{ 'weekThree' | translate }}</ion-select-option>
+            <ion-select-option value="4">{{ 'weekFour' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="dayNr" interface="popover"
+            labelPlacement="fixed" [label]="'dayNr' | translate">
+            <ion-select-option value="">{{ 'noVisit' | translate }}</ion-select-option>
+            <ion-select-option value="-1">{{ 'noVisitSet' | translate }}</ion-select-option>
+            <ion-select-option value="1">{{ 'monday' | translate }}</ion-select-option>
+            <ion-select-option value="2">{{ 'tuesday' | translate }}</ion-select-option>
+            <ion-select-option value="3">{{ 'wednesday' | translate }}</ion-select-option>
+            <ion-select-option value="4">{{ 'thursday' | translate }}</ion-select-option>
+            <ion-select-option value="5">{{ 'friday' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+      </div>
+    </ion-list>
+
+    <ion-list-header>
+      {{ 'billingInformation' | translate }}
+    </ion-list-header>
+
+    <ion-list>
+      <div class="create-customer-billing-infpormation-grid">
+
+        <ion-item>
+          <ion-input type="text" 
+            labelPlacement="fixed" [label]="'addressName' | translate"
+            formControlName="customerName"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text"
+            labelPlacement="fixed" [label]="'customerBrandName' | translate"
+            formControlName="customerBrandName"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="customerClassification"
+            labelPlacement="fixed" [label]="'addressClassification' | translate"
+            interface="popover">
+            <ion-select-option value="">{{ 'unknown' | translate }}</ion-select-option>
+            <ion-select-option value="aa">{{ 'aClass' | translate }} - {{ 'aPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ab">{{ 'aClass' | translate }} - {{ 'bPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ac">{{ 'aClass' | translate }} - {{ 'cPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ba">{{ 'bClass' | translate }} - {{ 'aPotential' | translate }}</ion-select-option>
+            <ion-select-option value="bb">{{ 'bClass' | translate }} - {{ 'bPotential' | translate }}</ion-select-option>
+            <ion-select-option value="bc">{{ 'bClass' | translate }} - {{ 'cPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ca">{{ 'cClass' | translate }} - {{ 'aPotential' | translate }}</ion-select-option>
+            <ion-select-option value="cb">{{ 'cClass' | translate }} - {{ 'bPotential' | translate }}</ion-select-option>
+            <ion-select-option value="cc">{{ 'cClass' | translate }} - {{ 'cPotential' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" 
+            labelPlacement="fixed" [label]="'customerCommercialForm' | translate"
+            placeholder="nv, bvba, zelfst ..."
+            formControlName="customerCommercialForm">
+          </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text"
+            labelPlacement="fixed" [label]="'customerContact' | translate"
+            formControlName="customerContact"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" 
+            labelPlacement="fixed" [label]="'addressStreetName' | translate"
+            formControlName="customerStreetName"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text"
+            labelPlacement="fixed" [label]="'addressStreetNumber' | translate"
+            formControlName="customerStreetNumber"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text"
+            labelPlacement="fixed" [label]="'addressZipCode' | translate"
+            formControlName="customerZipCode"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text"
+            labelPlacement="fixed" [label]="'addressCity' | translate"
+            formControlName="customerCity"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="customerCountry"
+            labelPlacement="fixed" [label]="'addressCountry' | translate" interface="popover">
+            <ion-select-option value="be">{{ 'belgium' | translate }}</ion-select-option>
+            <ion-select-option value="nl">{{ 'netherlands' | translate }}</ion-select-option>
+            <ion-select-option value="fr">{{ 'france' | translate }}</ion-select-option>
+            <ion-select-option value="lu">{{ 'luxemburg' | translate }}</ion-select-option>
+            <ion-select-option value="de">{{ 'germany' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressEmail' | translate"
+            formControlName="customerEmail"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressTel' | translate"
+            formControlName="customerTel"></ion-input>z
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressFax' | translate"
+            formControlName="customerFax"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="customerLanguage" labelPlacement="fixed" [label]="'language' | translate"
+            interface="popover">
+            <ion-select-option value="nl">{{ 'nl' | translate }}</ion-select-option>
+            <ion-select-option value="fr">{{ 'fr' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'customerVat' | translate"
+            formControlName="customerVat"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'customerBank' | translate"
+            formControlName="customerBank"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'customerContactFoodsafety' | translate"
+            formControlName="customerContactFoodsafety"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'customerNr' | translate"
+            formControlName="customerNr"></ion-input>
+        </ion-item>
+        <ion-item class="full-width">
+          <ion-input type="text" labelPlacement="fixed" [label]="'customerType' | translate"
+            placeholder="vb. Slagerij - Supermarkt - Grossier - Fabrikant - Groenten + Fruit - Horeca"
+            formControlName="customerType"></ion-input>
+        </ion-item>
+        <ion-item class="full-width">
+          <ion-input type="text" labelPlacement="fixed" [label]="'customerOrganisation' | translate"
+            placeholder="vb. Spar - AD - Keurslager - Topslager - Topklasse - Gb - Contact - Gb Partner "
+            formControlName="customerOrganisation"></ion-input>
+        </ion-item>
+
+      </div>
+    </ion-list>
+
+    <ion-list-header>
+      {{ 'deliverySchedule' | translate }}
+    </ion-list-header>
+
+    <ion-list>
+      <div class="create-customer-delivery-schedule-grid">
+
+        <ion-item>
+          <ion-select formControlName="deliverFromMonday1"
+            labelPlacement="fixed" [label]="'deliverFromMonday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillMonday1"
+            labelPlacement="fixed" [label]="'deliverTillMonday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverFromMonday2"
+            labelPlacement="fixed" [label]="'deliverFromMonday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillMonday2"
+            labelPlacement="fixed" [label]="'deliverTillMonday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="deliverFromTuesday1"
+            labelPlacement="fixed" [label]="'deliverFromTuesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillTuesday1"
+            labelPlacement="fixed" [label]="'deliverTillTuesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverFromTuesday2"
+            labelPlacement="fixed" [label]="'deliverFromTuesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillTuesday2"
+            labelPlacement="fixed" [label]="'deliverTillTuesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="deliverFromWednesday1"
+            labelPlacement="fixed" [label]="'deliverFromWednesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillWednesday1"
+            labelPlacement="fixed" [label]="'deliverTillWednesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverFromWednesday2"
+            labelPlacement="fixed" [label]="'deliverFromWednesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillWednesday2"
+            labelPlacement="fixed" [label]="'deliverTillWednesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="deliverFromThursday1"
+            labelPlacement="fixed" [label]="'deliverFromThursday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillThursday1"
+            labelPlacement="fixed" [label]="'deliverTillThursday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverFromThursday2"
+            labelPlacement="fixed" [label]="'deliverFromThursday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillThursday2"
+            labelPlacement="fixed" [label]="'deliverTillThursday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="deliverFromFriday1"
+            labelPlacement="fixed" [label]="'deliverFromFriday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillFriday1"
+            labelPlacement="fixed" [label]="'deliverTillFriday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverFromFriday2"
+            labelPlacement="fixed" [label]="'deliverFromFriday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="deliverTillFriday2"
+            labelPlacement="fixed" [label]="'deliverTillFriday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+    </ion-list>
+
+    <ion-list-header>
+      {{ 'deliveryInformation' | translate }}
+    </ion-list-header>
+
+    <ion-list>
+      <div class="create-customer-delivery-info-grid">
+
+        <ion-item>
+          <ion-toggle formControlName="addressDefault" checked="false">
+            {{ 'addressDefault' | translate }}</ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressName' | translate"
+            formControlName="addressName"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-select labelPlacement="fixed" [label]="'addressClassification' | translate"
+            formControlName="addressClassification" interface="popover">
+            <ion-select-option value="">{{ 'unknown' | translate }}</ion-select-option>
+            <ion-select-option value="aa">{{ 'aClass' | translate }} - {{ 'aPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ab">{{ 'aClass' | translate }} - {{ 'bPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ac">{{ 'aClass' | translate }} - {{ 'cPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ba">{{ 'bClass' | translate }} - {{ 'aPotential' | translate }}</ion-select-option>
+            <ion-select-option value="bb">{{ 'bClass' | translate }} - {{ 'bPotential' | translate }}</ion-select-option>
+            <ion-select-option value="bc">{{ 'bClass' | translate }} - {{ 'cPotential' | translate }}</ion-select-option>
+            <ion-select-option value="ca">{{ 'cClass' | translate }} - {{ 'aPotential' | translate }}</ion-select-option>
+            <ion-select-option value="cb">{{ 'cClass' | translate }} - {{ 'bPotential' | translate }}</ion-select-option>
+            <ion-select-option value="cc">{{ 'cClass' | translate }} - {{ 'cPotential' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressStreetName' | translate"
+            formControlName="addressStreetName"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressStreetNumber' | translate"
+            formControlName="addressStreetNumber"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressZipCode' | translate"
+            formControlName="addressZipCode"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressCity' | translate"
+            formControlName="addressCity"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressCountry"
+            labelPlacement="fixed" [label]="'addressCountry' | translate" interface="popover">
+            <ion-select-option value="be">
+              <span translate="belgium"></span>
+            </ion-select-option>
+            <ion-select-option value="nl">
+              <span translate="netherlands"></span>
+            </ion-select-option>
+            <ion-select-option value="fr">
+              <span translate="france"></span>
+            </ion-select-option>
+            <ion-select-option value="lu">
+              <span translate="luxemburg"></span>
+            </ion-select-option>
+            <ion-select-option value="de">
+              <span translate="germany"></span>
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressEmail' | translate"
+            formControlName="addressEmail"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressTel' | translate"
+            formControlName="addressTel"></ion-input>z
+        </ion-item>
+        <ion-item>
+          <ion-input type="text" labelPlacement="fixed" [label]="'addressFax' | translate"
+            formControlName="addressFax"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-select labelPlacement="fixed" [label]="'language' | translate"
+            formControlName="addressLanguage" interface="popover">
+            <ion-select-option value="nl">{{ 'nl-BE' | translate }}</ion-select-option>
+            <ion-select-option value="fr">{{ 'fr-BE' | translate }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+      </div>
+    </ion-list>
+
+    <ion-list-header>
+      {{ 'deliverySchedule' | translate }}
+    </ion-list-header>
+
+    <ion-list>
+      <div class="create-customer-address-delivery-schedule-grid">
+
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromMonday1"
+            labelPlacement="fixed" [label]="'deliverFromMonday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillMonday1"
+            labelPlacement="fixed" [label]="'deliverTillMonday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromMonday2"
+            labelPlacement="fixed" [label]="'deliverFromMonday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillMonday2"
+            labelPlacement="fixed" [label]="'deliverTillMonday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromTuesday1"
+            labelPlacement="fixed" [label]="'deliverFromTuesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillTuesday1"
+            labelPlacement="fixed" [label]="'deliverTillTuesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromTuesday2"
+            labelPlacement="fixed" [label]="'deliverFromTuesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillTuesday2"
+            labelPlacement="fixed" [label]="'deliverTillTuesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromWednesday1"
+            labelPlacement="fixed" [label]="'deliverFromWednesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillWednesday1"
+            labelPlacement="fixed" [label]="'deliverTillWednesday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromWednesday2"
+            labelPlacement="fixed" [label]="'deliverFromWednesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillWednesday2"
+            labelPlacement="fixed" [label]="'deliverTillWednesday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromThursday1"
+            labelPlacement="fixed" [label]="'deliverFromThursday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillThursday1"
+            labelPlacement="fixed" [label]="'deliverTillThursday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromThursday2"
+            labelPlacement="fixed" [label]="'deliverFromThursday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillThursday2"
+            labelPlacement="fixed" [label]="'deliverTillThursday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromFriday1"
+            labelPlacement="fixed" [label]="'deliverFromFriday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillFriday1"
+            labelPlacement="fixed" [label]="'deliverTillFriday1' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverFromFriday2"
+            labelPlacement="fixed" [label]="'deliverFromFriday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select formControlName="addressDeliverTillFriday2"
+            labelPlacement="fixed" [label]="'deliverTillFriday2' | translate">
+            <ion-select-option *ngFor="let hour of deliveryHours" [value]="hour">{{ hour }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+      </div>
+    </ion-list>
+
+    <ion-list-header>
+      {{ 'otherRemarks' | translate }}
+    </ion-list-header>
+
+    <ion-list>
+
+      <ion-item>
+        <ion-textarea formControlName="remarks"
+          labelPlacement="fixed" [label]="'remarks' | translate"
+          style="resize: vertical;"></ion-textarea>
+      </ion-item>
+
+    </ion-list>
+
+  </form>
+</ion-content>
