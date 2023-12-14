@@ -313,9 +313,6 @@ export class ProductDetailPage implements OnInit {
         break
     }
   }
-  showActions() {
-    // TODO
-  }
 
   safe(html: string) {
     return this.sanitizer.bypassSecurityTrustHtml(html)
