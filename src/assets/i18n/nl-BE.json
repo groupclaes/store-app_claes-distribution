@@ -330,6 +330,9 @@
     "login": {
       "offline-message": "Je moet online zijn om je aan te melden"
     },
+    "customer-create": {
+      "title": "Klant aanmaken"
+    },
     "product-detail": {
       "modals": {
         "mail": {
