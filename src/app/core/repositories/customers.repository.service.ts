@@ -12,11 +12,11 @@ export class CustomersRepositoryService {
   get<T>(id?: number, address?: number, limit: number = null): Promise<T> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       if (!id && !address) {
-        const result = await db.query(
+        const customers = await db.query(
           'SELECT * FROM customers' + (limit != null ? ' LIMIT ' + limit : '')
         )
 
-        return result.values as T[]
+        return customers.values as T[]
       }
       const result = await db.query(
         `SELECT * FROM customers WHERE id = ?1 AND addressId = ?2` + (limit != null ? ' LIMIT ' + limit : ''),
@@ -52,8 +52,16 @@ export class CustomersRepositoryService {
     })
   }
 
+  async getAllNotes() {
+    return await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const result = await db.query(`SELECT * FROM notes ORDER BY date DESC`)
+
+      return result.values as IVisitNote[]
+    })
+  }
+
   async getNotes(id: number, address: number, limit?: number): Promise<IVisitNote[]> {
-    if (!id || !address) {
+    if (id === null || address === null) {
       return []
     }
 
