@@ -8,6 +8,13 @@ const config: CapacitorElectronConfig = {
     hostname: 'shop.claes-distribution.be'
   },
   bundledWebRuntime: false,
+  plugins: {
+    CapacitorSQLite: {
+      electronWindowsLocation: 'CapacitorDatabases',
+      electronMacLocation: 'CapacitorDatabases',
+      electronLinuxLocation: 'CapacitorDatabases'
+    }
+  },
   electron: {
     // Custom scheme for your app to be served on in the electron window.
     customUrlScheme: 'claes-storeapp',
