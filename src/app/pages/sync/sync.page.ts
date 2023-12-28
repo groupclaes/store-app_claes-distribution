@@ -68,7 +68,6 @@ export class SyncPage implements OnInit {
       const dataIntegrity = await this.repo.get<Store>()
       this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
       this.integrityChecksums = dataIntegrity.filter(e => e.dataTable !== 'lastSync')
-      console.log(dataIntegrity)
     } catch (err) {
       this.logger.error('SyncPage.load() error', err)
     } finally {
