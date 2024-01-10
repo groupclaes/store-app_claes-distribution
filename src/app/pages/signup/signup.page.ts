@@ -5,6 +5,7 @@ import { NavController, ToastController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { StorageProvider } from 'src/app/core/storage-provider.service';
+import { BrowserService } from 'src/app/core/browser.service';
 
 @Component({
   selector: 'app-signup',
@@ -21,6 +22,7 @@ export class SignupPage {
     private toastCtrl: ToastController,
     private translate: TranslateService,
     private storage: StorageProvider,
+    private browser: BrowserService,
     fb: FormBuilder) {
 
     this._form = fb.group({
@@ -70,6 +72,6 @@ export class SignupPage {
   }
 
   openWebshop() {
-    window.open('https://shop.claes-distribution.be/login?action=signup', '_system', 'location=yes')
+    this.browser.open('https://shop.claes-distribution.be/login?action=signup', '_system', 'location=yes')
   }
 }

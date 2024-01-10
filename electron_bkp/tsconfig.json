@@ -12,5 +12,5 @@
     "allowJs": true,
     "rootDir": ".",
     "skipLibCheck": true
-  }
+  },
 }

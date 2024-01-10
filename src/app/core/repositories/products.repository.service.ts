@@ -52,7 +52,8 @@ export class ProductsRepositoryService {
         throw new Error('Product not found!')
       }
 
-      const pr = `EXISTS (SELECT * FROM prices WHERE prices.product = p.id AND ( ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 ) OR ( prices.customer = ?2 AND ( prices.address = ?3 OR prices.address = 0 ) AND prices.[group] = 0 ) OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ?4 ) ) AND prices.promo = 1)`
+      const queryParams = [customer.id, customer.address, customer.addressGroup, customer.id, customer.address, id]
+      const isPromo = `EXISTS (SELECT * FROM prices WHERE prices.product = p.id AND ( ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 ) OR ( prices.customer = ? AND ( prices.address = ? OR prices.address = 0 ) AND prices.[group] = 0 ) OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ? ) ) AND prices.promo = 1)`
 
       const productResult = await db.query(`SELECT p.id,
         p.itemnum,
@@ -77,7 +78,7 @@ export class ProductsRepositoryService {
         fav.buy as favA,
         fav.lastA as favLastA,
         fav.lastB as favLastB,
-        ${pr} as isPromo,
+        ${isPromo} as isPromo,
         p.${nameString} as name,
         pu.${nameString} as unit,
         puc.${nameString} as contentUnit,
@@ -89,15 +90,8 @@ export class ProductsRepositoryService {
       INNER JOIN packingUnits AS pu ON p.packId = pu.id
       INNER JOIN productTexts ON p.id = productTexts.id
       LEFT JOIN packingUnits AS puc ON p.contentUnit = puc.id
-      LEFT OUTER JOIN favorites AS fav ON fav.id = p.id AND fav.cu = ?2 AND fav.ad = ?3
-      WHERE p.id = ?1`,
-        [
-          id,
-          customer.id,
-          customer.address,
-          customer.addressGroup
-        ]
-      )
+      LEFT OUTER JOIN favorites AS fav ON fav.id = p.id AND fav.cu = ? AND fav.ad = ?
+      WHERE p.id = ?`, queryParams)
 
       const product = productResult.values[0] as IProductDetailT
 
@@ -117,7 +111,7 @@ export class ProductsRepositoryService {
       FROM productRelations AS rel
       INNER JOIN products ON rel.product = products.id
       INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ?1 AND rel.type = 2 AND products.id != ?1`, [id])
+      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ? AND rel.type = 2 AND products.id != ?`, [id, id])
 
       const similarProductsA = await db.query(`SELECT products.${nameString} as name,
         products.itemnum,
@@ -138,7 +132,7 @@ export class ProductsRepositoryService {
       FROM productRelations AS rel
       INNER JOIN products ON rel.product = products.id
       INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ?1 AND rel.type = 1 AND products.id != ?1`, [id])
+      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ? AND rel.type = 1 AND products.id != ?`, [id, id])
 
       const promoProducts = await db.query(`SELECT products.${nameString} as name,
         products.itemnum,
@@ -149,7 +143,7 @@ export class ProductsRepositoryService {
       FROM productRelations AS rel
       INNER JOIN products ON rel.product = products.id
       INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ?1 AND rel.type = 3 AND products.id != ?1`, [id])
+      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ? AND rel.type = 3 AND products.id != ?`, [id, id])
 
       const allergens = await db.query(`SELECT code, value FROM productAllergens WHERE product = ? AND LENGTH(code) > 0`, [id])
 
@@ -199,7 +193,14 @@ export class ProductsRepositoryService {
   query(culture: string = 'nl-BE', page: number = 0, items: number = 48, filters: any, sortOrder: ISortOrder, params: number[]) {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const pr = `( SELECT promo FROM prices WHERE prices.product = products.id AND ( ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 ) OR ( prices.customer = ?1 AND ( prices.address = ?2 OR prices.address = 0 ) AND prices.[group] = 0 ) OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ?3 ) ) AND prices.stack = 1 ORDER BY address DESC, customer DESC, [group] DESC LIMIT 1 )`
+      const queryParams = [params[0], params[1], ...params, params[0], params[1]]
+      const isPromo = `(SELECT promo FROM prices WHERE prices.product = products.id 
+          AND ( 
+            ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 )
+            OR ( prices.customer = ? AND ( prices.address = ? OR prices.address = 0 )
+            AND prices.[group] = 0 )
+          OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ? ) )
+          AND prices.stack = 1 ORDER BY address DESC, customer DESC, [group] DESC LIMIT 1 )`
 
       let query = `SELECT products.id,
         products.nameNl,
@@ -211,23 +212,24 @@ export class ProductsRepositoryService {
         products.[type],
         products.isNew,
         packingUnits.${nameString} as unit,
-        EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ?1 AND favorites.ad = ?2 AND ( favorites.hi = 0 OR favorites.hi IS NULL )) as isFavorite,
+        EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ? AND ( favorites.hi = 0 OR favorites.hi IS NULL )) as isFavorite,
         favorites.lastB as favLastB,
         favorites.lastA as favLastA,
         products.AvailableOn as availableOn,
-        ${pr} as isPromo,
+        ${isPromo} as isPromo,
         ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
         products.color,
         (SELECT description FROM productDescriptionCustomers WHERE id=products.id) as descriptionCustomer
       FROM products
       INNER JOIN packingUnits ON products.packId = packingUnits.id
-      LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ?1 AND favorites.ad = ?2
+      LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?
       WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
 
 
       if (filters.category) {
-        params.push(filters.category.id)
-        query += ` AND (products.c1 = ?4 OR products.c2 = ?4 OR products.c3 = ?4 OR products.c4 = ?4 OR products.c5 = ?4 OR products.c6 = ?4)`
+        query += ` AND (products.c1 = ? OR products.c2 = ? OR products.c3 = ? OR products.c4 = ? OR products.c5 = ? OR products.c6 = ?)`
+        queryParams.push(filters.category.id, filters.category.id, filters.category.id,
+          filters.category.id, filters.category.id, filters.category.id)
       }
       if (filters.orderState === 'inactive') {
         query += ` AND ( products.[type] != "B" )`
@@ -236,10 +238,12 @@ export class ProductsRepositoryService {
         query += ` AND ( products.isNew = 1 )`
       }
       if (filters.favoriteState === 'active') {
-        query += ` AND EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ?1 AND favorites.ad = ?2 AND ( favorites.hi = 0 OR favorites.hi IS NULL ))`
+        query += ` AND EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ? AND ( favorites.hi = 0 OR favorites.hi IS NULL ))`
+        queryParams.push(params[0], params[1])
       }
       if (filters.favoriteState === 'inactive') {
-        query += ` AND ( ( favorites.hi = 1 ) OR NOT EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ?1 AND favorites.ad = ?2) )`
+        query += ` AND ( ( favorites.hi = 1 ) OR NOT EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?) )`
+        queryParams.push(params[0], params[1])
       }
       if (filters.promoState === 'active') {
         query += ` AND ( isPromo = 1 )`
@@ -291,7 +295,7 @@ export class ProductsRepositoryService {
       this.logger.debug('ProductsRepositoryService.query() -- running statement')
       const result = await db.query(
         query,
-        params
+        queryParams
       )
 
       return result.values as IProductT[]
@@ -431,8 +435,8 @@ export class ProductsRepositoryService {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       try {
         const result = await db.query('INSERT INTO departmentProducts (department,product)'
-          + 'SELECT ?1,?2 WHERE NOT EXISTS (SELECT * FROM departmentProducts WHERE department = ?1 AND product = ?2)',
-          [department, id])
+          + 'SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM departmentProducts WHERE department = ? AND product = ?)',
+          [department, id, department, id])
       } catch (err) {
         this.logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
       }
@@ -442,7 +446,7 @@ export class ProductsRepositoryService {
   removeFromDepartment(id: number, department: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       try {
-        const result = await db.query('DELETE FROM departmentProducts WHERE department = ?1 AND product = ?2',
+        const result = await db.query('DELETE FROM departmentProducts WHERE department = ? AND product = ?',
           [department, id])
       } catch (err) {
         this.logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
@@ -452,8 +456,8 @@ export class ProductsRepositoryService {
 
   addToFavourites(productId: number, userId: number, addressId: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      await db.query(`INSERT OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, ?);`,
-        [productId, userId, addressId, false])
+      await db.query(`INSERT OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, 0);`,
+        [productId, userId, addressId])
     })
   }
 

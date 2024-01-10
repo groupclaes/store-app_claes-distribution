@@ -266,7 +266,7 @@ export class SyncService {
               nameNl,
               nameFr,
               product.type,
-              product.isNew,
+              product.isNew ? 1 : 0,
               product.c1,
               product.c2,
               product.c3,
@@ -383,7 +383,7 @@ export class SyncService {
                     price.price,
                     price.pricepromo,
                     price.stack,
-                    price.promo,
+                    price.promo ? 1 : 0,
                     price.discount,
                     price.customer,
                     price.address,
@@ -403,7 +403,7 @@ export class SyncService {
                   price.price,
                   price.pricepromo,
                   price.stack,
-                  price.promo,
+                  price.promo ? 1 : 0,
                   price.discount,
                   price.customer,
                   price.address,
@@ -499,7 +499,7 @@ export class SyncService {
               sqlStatements = []
               array.forEach((favorite: $TSFixMe) => {
                 sqlStatements.push({
-                  statement: 'INSERT OR IGNORE INTO favorites VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)',
+                  statement: 'INSERT OR IGNORE INTO favorites VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                   values: [
                     favorite.id,
                     favorite.cu,
@@ -509,7 +509,7 @@ export class SyncService {
                     favorite.ret,
                     favorite.lastB,
                     favorite.lastA,
-                    favorite.hi
+                    favorite.hi ? 1 : 0
                   ]
                 })
               })
@@ -519,7 +519,7 @@ export class SyncService {
           } else {
             response.favorites.forEach((favorite: $TSFixMe) => {
               sqlStatements.push({
-                statement: 'INSERT OR IGNORE INTO favorites VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)',
+                statement: 'INSERT OR IGNORE INTO favorites VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 values: [
                   favorite.id,
                   favorite.cu,
@@ -529,7 +529,7 @@ export class SyncService {
                   favorite.ret,
                   favorite.lastB,
                   favorite.lastA,
-                  favorite.hi
+                  favorite.hi ? 1 : 0
                 ]
               })
             })
@@ -579,7 +579,7 @@ export class SyncService {
                 excecption.customer,
                 excecption.address,
                 excecption.addressGroup,
-                excecption.deny,
+                excecption.deny ? 1 : 0,
                 excecption.list
               ]
             })
@@ -776,7 +776,7 @@ export class SyncService {
                 report.extension,
                 nameNl,
                 nameFr,
-                report.onlyAgent ? true : false
+                report.onlyAgent ? 1 : 0
               ]
             })
           })
@@ -1215,17 +1215,17 @@ export class SyncService {
                 contact.name,
                 contact.mailAddress,
                 contact.mobileNr,
-                contact.ordConf,
-                contact.bonus,
-                contact.invoice,
-                contact.reminder,
-                contact.domicilation,
-                contact.comMailing
+                contact.ordConf ? 1 : 0,
+                contact.bonus ? 1 : 0,
+                contact.invoice ? 1 : 0,
+                contact.reminder ? 1 : 0,
+                contact.domicilation ? 1 : 0,
+                contact.comMailing ? 1 : 0
               ]
             })
           }
 
-          await db.executeSet(sqlStatements, true)
+          await db.executeSet(sqlStatements, true, undefined, false)
           this.logger.log('inserted contacts', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'contacts', response.checksumSha)
         })
@@ -1354,8 +1354,8 @@ export class SyncService {
                 customer.phoneNum, // 12
                 customer.vatNum, // 13
                 customer.language, // 14
-                customer.promo, // 15
-                customer.fostplus, // 16
+                customer.promo ? 1 : 0, // 15
+                customer.fostplus ? 1 : 0, // 16
                 customer.bonusPercentage, // 17
                 customer.addressName, // 18
                 customer.delvAddress, // 19
@@ -1369,7 +1369,7 @@ export class SyncService {
             })
           }
 
-          const result = await db.executeSet(sqlStatements, true)
+          const result = await db.executeSet(sqlStatements)
 
           this.logger.log('inserted customers', response.checksumSha, result.changes)
           await this.updateDataIntegrityChecksum(db, 'customers', response.checksumSha)
@@ -1506,9 +1506,9 @@ export class SyncService {
                 newsItem.titleFr,
                 newsItem.contentNl,
                 newsItem.contentFr,
-                newsItem.promo,
-                newsItem.spotlight,
-                newsItem.template,
+                newsItem.promo ? 1 : 0,
+                newsItem.spotlight ? 1 : 0,
+                newsItem.template ? 1 : 0,
                 newsItem.date
               ]
             })

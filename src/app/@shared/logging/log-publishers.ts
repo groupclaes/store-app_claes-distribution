@@ -1,4 +1,4 @@
-import { LogEntry } from './log.service'
+import { LogEntry, LogLevel } from './log.service'
 import { HttpClient } from '@angular/common/http'
 import { Observable, of } from 'rxjs'
 import { map } from 'rxjs/operators'
@@ -12,7 +12,22 @@ export abstract class LogPublisher {
 export class LogConsole extends LogPublisher {
   log(entry: LogEntry): Observable<boolean> {
     // Log to console
-    console.log(entry.buildLogString())
+    switch (entry.level) {
+      case LogLevel.All:
+      case LogLevel.Info:
+        console.log(entry.buildLogString())
+        break
+      case LogLevel.Warn:
+        console.warn(entry.buildLogString())
+        break
+      case LogLevel.Fatal:
+      case LogLevel.Error:
+        console.trace(entry.buildLogString())
+        break
+      case LogLevel.Debug:
+        console.trace(entry.buildLogString())
+        break
+    }
     return of(true)
   }
 

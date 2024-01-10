@@ -33,10 +33,10 @@ export class CartsRepositoryService {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.executeSet([
         {
-          statement: 'UPDATE carts SET active = true WHERE id = ?',
+          statement: 'UPDATE carts SET active = 1 WHERE id = ?',
           values: [id]
         }, {
-          statement: 'UPDATE carts SET active = false WHERE id != ?',
+          statement: 'UPDATE carts SET active = 0 WHERE id != ?',
           values: [id]
         }
       ])
@@ -52,9 +52,10 @@ export class CartsRepositoryService {
         .toISOString()
       console.log(`deleting carts older than ${days} days`)
 
+      // How about you just eat a dick and work, alright?!
       const result = await db.run(
-        'DELETE FROM carts WHERE sendDate < ? AND sendOK = ?',
-        [ninetyDaysAgo, true]
+        'DELETE FROM carts WHERE sendDate < ? AND sendOK = 1',
+        [ninetyDaysAgo]
       )
 
       return result.changes?.changes
@@ -63,7 +64,7 @@ export class CartsRepositoryService {
 
   create(cart: any): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      await db.execute('UPDATE carts SET active = false')
+      await db.execute('UPDATE carts SET active = 0')
 
       if (cart.lastChangeDate) {
         cart.lastChangeDate = cart.lastChangeDate.toISOString()
@@ -79,9 +80,9 @@ export class CartsRepositoryService {
           cart.serverDate,
           cart.lastChangeDate,
           cart.sendDate,
-          cart.send,
-          cart.sendOk,
-          cart.active
+          cart.send ? 1 : 0,
+          cart.sendOk ? 1 : 0,
+          cart.active ? 1 : 0
         ]
       )
 
@@ -108,7 +109,7 @@ export class CartsRepositoryService {
 
   failedCount(): Promise<number> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query('SELECT id FROM carts WHERE send = ?1 AND sendOk = ?2', [true, false])
+      const result = await db.query('SELECT id FROM carts WHERE send = 1 AND sendOk = 0')
 
       return result.values?.length || 0
     })
@@ -214,19 +215,19 @@ export class CartsRepositoryService {
             offer: settings.offer != 0
           }
         } else {
-          await db.run('INSERT INTO cartSettings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+          await db.run(`INSERT INTO cartSettings VALUES (?, '', 0, NULL, 'deliver', 'fastest', '', '', '', '', 0, 0)`, [
             cart.id,
-            '', // reference
-            false, // nextDelivery
-            null, // deliveryDate
-            'deliver', // deliveryMethod
-            'fastest', // deliveryOption
-            '', // comments
-            '', // commentsPlanning
-            '', // commentsInvoice
-            '', // commentsDriver
-            false, // acceptedTerms,
-            false // offer
+            // '', // reference
+            // 0, // nextDelivery
+            // null, // deliveryDate
+            // 'deliver', // deliveryMethod
+            // 'fastest', // deliveryOption
+            // '', // comments
+            // '', // commentsPlanning
+            // '', // commentsInvoice
+            // '', // commentsDriver
+            // 0, // acceptedTerms,
+            // 0 // offer
           ])
           cart.settings = {
             reference: '',
@@ -276,9 +277,8 @@ export class CartsRepositoryService {
           cart.sendDate
         FROM carts AS cart
         INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId`
-          + (unsent ? ' WHERE cart.send = ?' : '')
-          + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC',
-        unsent ? [false] : undefined
+          + (unsent ? ' WHERE cart.send = 0' : '')
+          + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC'
       )
 
         if (result.values.length === 0) {
@@ -372,11 +372,10 @@ export class CartsRepositoryService {
   updateSend(id: number): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        `UPDATE carts SET sendDate = ?2, send = ?3 WHERE id = ?1`,
+        `UPDATE carts SET sendDate = ?, send = 1 WHERE id = ?`,
         [
-          id,
           new Date().toISOString(),
-          true
+          id
         ]
       )
 
@@ -387,27 +386,24 @@ export class CartsRepositoryService {
   updateSendOk(id: number): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        'UPDATE carts SET sendOk = ?2, active=0 WHERE id = ?1',
+        'UPDATE carts SET sendOk = 1, active=0 WHERE id = ?',
         [
-          id,
-          true
+          id
         ]
       )
 
-      console.log(result)
       return result.changes?.changes > 0
     })
   }
 
   updateSettings(id: number, settings: any): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.run('UPDATE cartSettings SET reference=?2, nextDelivery=?3, deliveryDate=?4, '
-        + 'deliveryMethod=?5, deliveryOption=?6, comments=?7, commentsPlanning=?8, commentsInvoice=?9, commentsDriver=?10, '
-        + 'acceptedTerms=?11, offer=?12 WHERE cart = ?1',
+      const result = await db.run('UPDATE cartSettings SET reference=?, nextDelivery=?, deliveryDate=?, '
+        + 'deliveryMethod=?, deliveryOption=?, comments=?, commentsPlanning=?, commentsInvoice=?, commentsDriver=?, '
+        + 'acceptedTerms=?, offer=? WHERE cart = ?',
         [
-          id,
           settings.reference,
-          settings.nextDelivery,
+          settings.nextDelivery ? 1 : 0,
           settings.deliveryDate,
           settings.deliveryMethod,
           settings.deliveryOption,
@@ -415,8 +411,9 @@ export class CartsRepositoryService {
           settings.commentsPlanning,
           settings.commentsInvoice,
           settings.commentsDriver,
-          settings.acceptedTerms,
-          settings.offer
+          settings.acceptedTerms ? 1 : 0,
+          settings.offer ? 1 : 0,
+          id
         ]
       )
 

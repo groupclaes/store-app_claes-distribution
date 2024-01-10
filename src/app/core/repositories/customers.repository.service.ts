@@ -19,7 +19,7 @@ export class CustomersRepositoryService {
         return customers.values as T[]
       }
       const result = await db.query(
-        `SELECT * FROM customers WHERE id = ?1 AND addressId = ?2` + (limit != null ? ' LIMIT ' + limit : ''),
+        `SELECT * FROM customers WHERE id = ? AND addressId = ?` + (limit != null ? ' LIMIT ' + limit : ''),
         [ id, address ]
       )
 
@@ -37,15 +37,16 @@ export class CustomersRepositoryService {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       // Debug
       let query = 'SELECT * FROM customers '
-      + `WHERE LOWER(name) LIKE '%' || ?1 || '%' OR LOWER(addressName) LIKE '%' || ?1 || '%' `
-      + `OR LOWER(city) LIKE '%' || ?1 || '%' OR LOWER(delvCity) LIKE '%' || ?1 || '%'`
+      + `WHERE (LOWER(name) LIKE '%' || ? || '%') OR (LOWER(addressName) LIKE '%' || ? || '%') `
+      + `OR (LOWER(city) LIKE '%' || ? || '%') OR (LOWER(delvCity) LIKE '%' || ? || '%')`
 
       if (!isNaN(custnum) && custnum > 0) {
         query += ` OR id = ${custnum} OR address = ${custnum}`
       }
 
-      const result = await db.query(query,
-        [ searchQuery.toLowerCase() ]
+      searchQuery = searchQuery.toLowerCase()
+      const result = await db.query(query, 
+        [searchQuery, searchQuery, searchQuery, searchQuery]
       )
 
       return result.values as T[]
