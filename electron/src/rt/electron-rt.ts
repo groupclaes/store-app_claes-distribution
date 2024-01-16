@@ -1,6 +1,14 @@
 import { randomBytes } from 'crypto';
-import { ipcRenderer, contextBridge } from 'electron';
+import { ipcRenderer, contextBridge, shell } from 'electron';
 import { EventEmitter } from 'events';
+
+
+contextBridge.exposeInMainWorld('electron', {
+  shell: {
+    openExternal: shell.openExternal
+  }
+});
+
 
 ////////////////////////////////////////////////////////
 // eslint-disable-next-line @typescript-eslint/no-var-requires
