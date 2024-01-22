@@ -291,6 +291,7 @@ export class CartsRepositoryService {
           cart.products = []
           cart.send = cart.send === 1 ? true : false
           cart.sendOk = cart.sendOk === 1 ? true : false
+          cart.active = cart.active === 1 ? true : false
 
           const productsResult = await db.query(`
           SELECT cp.amount,
