@@ -6,6 +6,7 @@ import { UserService } from 'src/app/core/user.service'
 import { ReportsRepositoryService } from 'src/app/core/repositories/reports.repository.service'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
+import { BrowserService } from 'src/app/core/browser.service'
 
 @Component({
   selector: 'app-reports',
@@ -26,7 +27,8 @@ export class ReportsPage implements OnInit {
     private ref: ChangeDetectorRef,
     private logger: LoggingProvider,
     private reportsRepository: ReportsRepositoryService,
-    private cart: CartService
+    private cart: CartService,
+    private browser: BrowserService
     // private statistics: StatisticsProvider
   ) { }
 
@@ -224,7 +226,7 @@ export class ReportsPage implements OnInit {
 
   downloadReport(reportGuid: string): void {
     // this.statistics.reportDownload(this.user.userinfo.userId, reportGuid)
-    window.open(
+    this.browser.open(
       `${this.api.url}/reports/queue/${reportGuid}?userCode=${this.user.userinfo.userCode}`,
       '_system',
     )

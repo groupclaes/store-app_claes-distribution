@@ -10,6 +10,7 @@ import { LoggingProvider } from './@shared/logging/log.service'
 import { TranslateService } from '@ngx-translate/core'
 import { StorageProvider } from './core/storage-provider.service'
 import { CartService } from './core/cart.service'
+import { BrowserService } from './core/browser.service'
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
 
@@ -32,7 +33,8 @@ export class AppComponent {
     private loadCtrl: LoadingController,
     private ref: ChangeDetectorRef,
     private user: UserService,
-    private cart: CartService
+    private cart: CartService,
+    private browser: BrowserService
   ) {
     logger.log('MyApp.constructor() -- started.')
 
@@ -122,7 +124,7 @@ export class AppComponent {
 
   openLeaflet(): void {
     // this.statistics.leafletView(this.user.userinfo.userId)
-    window.open(
+    this.browser.open(
       `https://pcm.groupclaes.be/v4/content/dis/website/month-leaflet/100/${this.culture.split('-')[0]}`,
       '_system', 'location=yes')
   }

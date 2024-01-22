@@ -23,10 +23,6 @@ const routes: Routes = [
     loadChildren: () => import('./pages/categories/categories.module').then(m => m.CategoriesPageModule)
   },
   {
-    path: 'tutorial',
-    loadChildren: () => import('./pages/tutorial/tutorial.module').then(m => m.TutorialPageModule)
-  },
-  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'

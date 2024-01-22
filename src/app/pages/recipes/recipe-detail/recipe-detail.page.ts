@@ -4,6 +4,7 @@ import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
+import { BrowserService } from 'src/app/core/browser.service'
 import { RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
@@ -28,7 +29,8 @@ export class RecipeDetailPage implements OnInit {
     private logger: LoggingProvider,
     private alertCtrl: AlertController,
     private api: ApiService,
-    route: ActivatedRoute
+    route: ActivatedRoute,
+    private browser: BrowserService
   ) {
     this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail
@@ -56,7 +58,7 @@ export class RecipeDetailPage implements OnInit {
   }
 
   open() {
-    window.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
+    this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
   }
 
   async mail() {

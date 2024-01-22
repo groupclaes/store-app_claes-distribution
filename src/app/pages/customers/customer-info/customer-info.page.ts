@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { AlertController, NavController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
+import { BrowserService } from 'src/app/core/browser.service';
 import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact, IVisitNote }
   from 'src/app/core/repositories/customers.repository.service';
 import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service';
@@ -24,7 +25,8 @@ export class CustomerInfoPage {
     private navCtrl: NavController,
     private alertCtrl: AlertController,
     private ref: ChangeDetectorRef,
-    private logger: LoggingProvider) { }
+    private logger: LoggingProvider,
+    private browser: BrowserService) { }
 
 
   get backButtonText(): string {
@@ -127,6 +129,6 @@ export class CustomerInfoPage {
   }
 
   private openBrowserUrl(url: string) {
-    return window.open(url, '_system', 'hidden=yes,location=yes')
+    return this.browser.open(url, '_system', 'hidden=yes,location=yes')
   }
 }

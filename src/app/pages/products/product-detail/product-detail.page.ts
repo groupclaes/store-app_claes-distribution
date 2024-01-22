@@ -6,6 +6,7 @@ import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
+import { BrowserService } from 'src/app/core/browser.service'
 import { CartService } from 'src/app/core/cart.service'
 import { OptionalInputModalComponent } from 'src/app/core/components/optional-input-modal/optional-input-modal.component'
 import { ProductsService } from 'src/app/core/products.service'
@@ -59,7 +60,8 @@ export class ProductDetailPage implements OnInit {
     public modalCtrl: ModalController,
     settings: SettingsService,
     route: ActivatedRoute,
-    private actionSheetCtrl: ActionSheetController
+    private actionSheetCtrl: ActionSheetController,
+    private browser: BrowserService
   ) {
     logger.log('ProductDetailPage -- constructor()')
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
@@ -252,7 +254,7 @@ export class ProductDetailPage implements OnInit {
         {
           text: this.translate.instant('actions.open'),
           handler: () => {
-            window.open(`https://pcm.groupclaes.be/v4/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
+            this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
           }
         },
         {
@@ -279,7 +281,7 @@ export class ProductDetailPage implements OnInit {
         {
           text: this.translate.instant('actions.open'),
           handler: () => {
-            window.open(`https://pcm.groupclaes.be/v4/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
+            this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
           }
         },
         {
@@ -302,13 +304,13 @@ export class ProductDetailPage implements OnInit {
   openRecipe(recipe: IRecipeModuleEntry) {
     switch (this.culture) {
       case 'fr-BE':
-        window.open(`https://recettes.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
+        this.browser.open(`https://recettes.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
           '_system', 'location=yes')
         break
 
       case 'nl-BE':
       default:
-        window.open(`https://recepten.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
+        this.browser.open(`https://recepten.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
           '_system', 'location=yes')
         break
     }
