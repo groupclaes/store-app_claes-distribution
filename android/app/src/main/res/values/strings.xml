@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">store-app</string>
+    <string name="title_activity_main">store-app</string>
+    <string name="package_name">be.claesdistribution.shop</string>
+    <string name="custom_url_scheme">be.claesdistribution.shop</string>
+</resources>
