@@ -33,10 +33,10 @@ export class CartsRepositoryService {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.executeSet([
         {
-          statement: 'UPDATE carts SET active = true WHERE id = ?',
+          statement: 'UPDATE carts SET active = 1 WHERE id = ?',
           values: [id]
         }, {
-          statement: 'UPDATE carts SET active = false WHERE id != ?',
+          statement: 'UPDATE carts SET active = 0 WHERE id != ?',
           values: [id]
         }
       ])
@@ -45,16 +45,24 @@ export class CartsRepositoryService {
     })
   }
 
+  removeAllActive() {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const result = await db.query('UPDATE carts SET active = 0')
+
+      return result.values?.length > 0
+    })
+  }
+
   deleteOld(days: number) {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const date = new Date()
       const ninetyDaysAgo = new Date(date.getTime() - (days * 24 * 60 * 60 * 1000))
         .toISOString()
-      console.log(`deleting carts older than ${days} days`)
+      this.logger.log(`deleting carts older than ${days} days`)
 
       const result = await db.run(
         'DELETE FROM carts WHERE sendDate < ? AND sendOK = ?',
-        [ninetyDaysAgo, true]
+        [ninetyDaysAgo, 1]
       )
 
       return result.changes?.changes
@@ -63,7 +71,7 @@ export class CartsRepositoryService {
 
   create(cart: any): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      await db.execute('UPDATE carts SET active = false')
+      await db.execute('UPDATE carts SET active = 0')
 
       if (cart.lastChangeDate) {
         cart.lastChangeDate = cart.lastChangeDate.toISOString()
@@ -79,9 +87,9 @@ export class CartsRepositoryService {
           cart.serverDate,
           cart.lastChangeDate,
           cart.sendDate,
-          cart.send,
-          cart.sendOk,
-          cart.active
+          cart.send ? 1 : 0,
+          cart.sendOk ? 1 : 0,
+          cart.active ? 1 : 0
         ]
       )
 
@@ -136,9 +144,7 @@ export class CartsRepositoryService {
         FROM carts AS cart
         INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId
         WHERE cart.id = ?`,
-          [
-            id
-          ]
+          [ id ]
         )
 
         if (result.values.length === 0) {
@@ -151,6 +157,7 @@ export class CartsRepositoryService {
 
         // loop through all records to get products in cart
         cart.products = []
+        cart.active = (cart.active as any) === 1 ? true : false
         cart.send = (cart.send as any) === 1 ? true : false
         cart.sendOk = (cart.sendOk as any) === 1 ? true : false
 
@@ -178,8 +185,6 @@ export class CartsRepositoryService {
 
         if (productsResult.values?.length > 0) {
           cart.products = productsResult.values
-
-          console.log(customer)
 
           for (const product of cart.products) {
             const prices = await this.productsRepo.getPrices(product.id, customer, db)
@@ -217,7 +222,7 @@ export class CartsRepositoryService {
           await db.run('INSERT INTO cartSettings VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
             cart.id,
             '', // reference
-            false, // nextDelivery
+            0, // nextDelivery
             null, // deliveryDate
             'deliver', // deliveryMethod
             'fastest', // deliveryOption
@@ -225,8 +230,8 @@ export class CartsRepositoryService {
             '', // commentsPlanning
             '', // commentsInvoice
             '', // commentsDriver
-            false, // acceptedTerms,
-            false // offer
+            0, // acceptedTerms,
+            0 // offer
           ])
           cart.settings = {
             reference: '',
@@ -245,7 +250,7 @@ export class CartsRepositoryService {
 
         return cart
       } catch (err) {
-        console.log(err)
+        console.error(err)
         throw err
       }
     })
@@ -263,22 +268,22 @@ export class CartsRepositoryService {
       try {
         const result = await db.query(
           `SELECT cart.id,
-          cart.name,
-          cart.customer,
-          c.name as customerName,
-          cart.address,
-          c.addressName,
-          cart.send,
-          cart.sendOk,
-          cart.active,
-          cart.serverDate,
-          cart.lastChangeDate,
-          cart.sendDate
-        FROM carts AS cart
-        INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId`
-          + (unsent ? ' WHERE cart.send = ?' : '')
-          + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC',
-        unsent ? [false] : undefined
+            cart.name,
+            cart.customer,
+            c.name as customerName,
+            cart.address,
+            c.addressName,
+            cart.send,
+            cart.sendOk,
+            cart.active,
+            cart.serverDate,
+            cart.lastChangeDate,
+            cart.sendDate
+          FROM carts AS cart
+          INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId`
+            + (unsent ? ' WHERE cart.send = ?' : '')
+            + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC',
+          unsent ? [0] : undefined
       )
 
         if (result.values.length === 0) {
@@ -321,7 +326,7 @@ export class CartsRepositoryService {
         return result.values as ICartDetail[]
 
       } catch (err) {
-        console.log(err)
+        console.error(err)
         throw err
       }
     })
@@ -377,7 +382,7 @@ export class CartsRepositoryService {
         [
           id,
           new Date().toISOString(),
-          true
+          1
         ]
       )
 
@@ -388,14 +393,11 @@ export class CartsRepositoryService {
   updateSendOk(id: number): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        'UPDATE carts SET sendOk = ?2, active=0 WHERE id = ?1',
+        'UPDATE carts SET sendOk = 1, active=0 WHERE id = ?1',
         [
-          id,
-          true
+          id
         ]
       )
-
-      console.log(result)
       return result.changes?.changes > 0
     })
   }

@@ -176,6 +176,7 @@ export class ProductsPage implements OnInit {
   }
 
   async ionViewWillEnter() {
+    await this.cart.loadCarts()
     try {
       this.logger.log('ProductsPage.ionViewWillEnter() -- start')
       if (this._products && this._products.length > 0) {

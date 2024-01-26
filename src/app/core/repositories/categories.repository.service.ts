@@ -48,7 +48,7 @@ export class CategoriesRepositoryService {
       }
       categories = result.values as ICategoryT[]
 
-      for (let category of categories) {
+      for (const category of categories) {
         result = await db.query(
           `SELECT categories.id, categories.parentId, categories.${nameString} as name, COUNT(products.id) as products
            FROM categories
