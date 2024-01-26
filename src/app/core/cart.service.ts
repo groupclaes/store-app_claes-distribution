@@ -47,10 +47,6 @@ export class CartService {
     return this._carts
   }
 
-  set carts(value: ICartDetail[]) {
-    this._carts = value
-  }
-
   async verifyDb() {
     await this.repo.init()
   }
@@ -65,7 +61,7 @@ export class CartService {
   async getHistoryCarts() {
     this.logger.log('CartService.loadCarts() -- start')
     const carts = await this.repo.loadCarts(false, this.culture)
-    this.logger.log(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
+    this.logger.log(`CartService.loadCarts() -- there are ${carts.length} rows in carts!`)
     this.logger.log('CartService.loadCarts() -- end')
 
     return carts
@@ -161,7 +157,7 @@ export class CartService {
   async updateActive(customer: number, address: number) {
     this.logger.log('CartService.updateActive() -- start', customer, address)
 
-    if (this.active && this.active.customer === customer && this.active.address === address && !this.active.send) {
+    if (this.active && this.active.customer === customer && this.active.address === address && this.active.send === false) {
       this.logger.log('CartService.updateActive() -- case 1', 'do nothing')
     } else if (this._carts && this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) {
       // there is a cart for the user
@@ -234,12 +230,15 @@ export class CartService {
     let response: any
     try {
       await this.repo.updateSend(cart.id)
+      cart.send = true
       if (environment.production) {
         response = await firstValueFrom(this.api.post('app/carts/complete', {
           credentials: this._credential,
           order: cart
         }))
+        this.logger.debug('Sent cart to backend')
       } else {
+        console.error('\n\nMocking cart send, not actually sending!\n\n')
         response = {
           result: true
         }
@@ -251,10 +250,9 @@ export class CartService {
         cart.sendOk = true
         cart.active = false
 
-        const activeCart = this._carts.find(x => x.id === cart.id)
-        if (activeCart != null) {
-          activeCart.active = false
-        }
+        this.repo.removeAllActive()
+          .then(_ => this._carts.forEach(x => x.active = false))
+          .then(_ => this.logger.debug('Set all carts as inactive'))
         return await this.repo.updateSendOk(cart.id)
       }
       return false

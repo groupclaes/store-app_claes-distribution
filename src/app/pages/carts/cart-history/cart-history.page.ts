@@ -69,6 +69,7 @@ export class CartHistoryPage {
 
     this.isloading = false;
     this._carts = await this.cartService.getHistoryCarts();
+    console.log('Loaded history carts')
     this.ref.markForCheck();
   }
 
