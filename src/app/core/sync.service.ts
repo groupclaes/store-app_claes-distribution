@@ -1060,7 +1060,9 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS notes')
           await db.execute('CREATE TABLE IF NOT EXISTS notes (customer INTEGER, address INTEGER, date DATETIME, text STRING NULL)')
-
+          await db.execute('CREATE TABLE IF NOT EXISTS unsentNotes ('
+          + 'id INTEGER PRIMARY KEY AUTOINCREMENT, customer INTEGER, address INTEGER, date DATETIME, text STRING NULL,'
+          + 'nextVisit DATETIME NULL, customerCloseFrom DATETIME NULL, customerOpenFrom DATETIME NULL, toSend BOOLEAN)')
           this.logger.log('dropped notes')
 
           const sqlStatements: capSQLiteSet[] = []
@@ -1087,6 +1089,7 @@ export class SyncService {
 
       return true
     } catch (err) {
+      this.logger.error('Couldn\'t sync notes', JSON.stringify(err))
     }
   }
 

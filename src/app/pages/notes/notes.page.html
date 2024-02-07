@@ -48,7 +48,7 @@
         <i class="fal fa-fw fa-lg fa-save"></i>
         <span translate="actions.save"></span>
       </ion-button>
-      <ion-button *ngIf="newNote._savedDate !== null || newNote._isSent === true"
+      <ion-button *ngIf="isUnsentNote(newNote)"
         size="default" color="primary" tappable (click)="deleteNote(newNote)">
         <i class="fal fa-fw fa-lg fa-trash"></i>
         <span translate="actions.delete"></span>
@@ -82,15 +82,25 @@
     <ion-list-header class="ion-padding">
       <ion-label [innerText]="note.date | date : 'fullDate' : null : culture"></ion-label>
       <ion-button (click)="addNote(note)">
-        <i class="fal fa-fw fa-lg fa-copy" [ngClass]="note._savedDate ? 'fa-pencil' : 'fa-copy'"></i>
+        <i class="fal fa-fw fa-lg fa-pencil" *ngIf="isUnsentNote(note);else copybutton"></i>
+        <ng-template #copybutton>
+          <i class="fal fa-fw fa-lg fa-copy" ></i>
+        </ng-template>
       </ion-button>
     </ion-list-header>
-    <ion-item *ngIf="note._savedDate" lines="full">
+    <ion-item *ngIf="isUnsentNote(note)" lines="full">
       <span translate="pages.notes.saved"></span>
+    </ion-item>
+    <ion-item *ngIf="development && note.id && note.toSend" lines="full">
+      <span translate="pages.notes.to-be-sent"></span>
     </ion-item>
     <ion-item lines="full">
       <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
         item-content [innerText]="note.text"></div>
+    </ion-item>
+    <ion-item lines="full">
+      <ion-label>Debug</ion-label>
+      <ion-label>{{ note | json }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

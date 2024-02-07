@@ -233,7 +233,7 @@ export interface AppCustomerModel {
   delvCity: string
   delvCountry: string
   delvPhoneNum: string
-  delvLanguage: string
+  delvLanguage: string;
 }
 
 export type CustomerUserType = 1 /*: norml user */ |

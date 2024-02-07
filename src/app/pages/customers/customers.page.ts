@@ -3,13 +3,14 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { AlertController, LoadingController, NavController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { CartService } from 'src/app/core/cart.service';
-import { CustomersRepositoryService, IVisitNote } from 'src/app/core/repositories/customers.repository.service';
+import { CustomersRepositoryService } from 'src/app/core/repositories/customers.repository.service';
 import { SettingsService } from 'src/app/core/settings.service';
 import { AppCustomerModel, UserService } from 'src/app/core/user.service';
 import { SyncService } from 'src/app/core/sync.service';
 import { ActivatedRoute } from '@angular/router';
 import { StorageProvider } from 'src/app/core/storage-provider.service';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
+import { NotesRepositoryService } from 'src/app/core/repositories/notes.repository.service';
 
 export const LS_SAVED_NOTES = 'saved_notes';
 
@@ -36,9 +37,9 @@ export class CustomersPage {
     private ref: ChangeDetectorRef,
     private translate: TranslateService,
     private sync: SyncService,
-    private storage: StorageProvider,
     private route: ActivatedRoute,
-    private logger: LoggingProvider) { }
+    private logger: LoggingProvider,
+    private notesRepository: NotesRepositoryService) { }
 
   get createCustomerAllowed(): boolean {
     return (this.user.userinfo) ? this.user.userinfo.type === 2 || this.user.userinfo.type === 3 : false;
@@ -52,15 +53,14 @@ export class CustomersPage {
     return this._query || '';
   }
 
-  ionViewWillEnter() {
+  async ionViewWillEnter() {
     if (!this.user.userinfo) {
       this.navCtrl.navigateRoot('/account/login')
+    } else if (this.route.snapshot.queryParams.selectedCust != null) {
+      console.log('Selected customer provided, following up ', this.route.snapshot.queryParams.selectedCust.id)
+      await this.followUp(this.route.snapshot.queryParams.selectedCust)
     } else {
-      if (this.route.snapshot.params.selectedCust != null) {
-        this.followUp(this.route.snapshot.params.selectedCust)
-      } else {
-        this.loadCustomers().then(x => this.ref.markForCheck())
-      }
+      this.loadCustomers().then(x => this.ref.markForCheck())
     }
   }
 
@@ -78,6 +78,9 @@ export class CustomersPage {
       for (const customer of customers) {
         customer.promo = customer.promo === 1
         customer.fostplus = customer.fostplus === 1
+
+        this.notesRepository.hasUnsentNotes(customer.id, customer.address)
+          .then(result => customer.hasUnsentNotes = result)
       }
     }
     this.logger.debug('Received customers', customers.length)
@@ -98,7 +101,7 @@ export class CustomersPage {
             text: this.translate.instant('no'),
             role: 'cancel',
             handler: () => {
-              this.navCtrl.navigateRoot('/notes')
+              this.navCtrl.navigateRoot('/notes', { queryParams: { createNote: true, selectedCust: customer } })
               this.ref.markForCheck()
             }
           },
@@ -132,15 +135,8 @@ export class CustomersPage {
       120);
   }
 
-  hasUnsavedNotes(user: AppCustomerModel): boolean {
-    const notes: IVisitNote[] = this.storage.get(LS_SAVED_NOTES);
-
-    if (!notes || notes.length < 1 || !user) {
-      return false;
-    }
-
-    return notes.filter(x => x.customer === user.id
-        && x.address === user.addressId).length > 0;
+  hasUnsavedNotes(customer: AppCustomerModel): Promise<boolean> {
+    return this.notesRepository.hasUnsentNotes(customer.id, customer.addressId)
   }
 
   sleep(ms: number): Promise<void> {

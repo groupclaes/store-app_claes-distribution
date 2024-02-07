@@ -364,6 +364,7 @@
     "notes": {
       "title": "Notities",
       "saved": "Onafgewerkte notitie",
+      "to-be-sent": "Wordt verzonden",
       "fields": {
         "note": "Notitie",
         "next-visit": "Volgend bezoek",
@@ -377,7 +378,8 @@
       "confirmDelete": {
         "title": "Weet u dit zeker?",
         "description": "Weet u zeker dat u deze notitie wilt verwijderen?"
-      }
+      },
+      "deletedResult": "Er werden {{SENT}} notities verzonden ({{FAILED}} naar wachtrij)"
     },
     "customer-info": {
       "fields": {

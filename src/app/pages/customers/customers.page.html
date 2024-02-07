@@ -43,7 +43,7 @@
             </div>
           </div>
         </ion-label>
-        <i slot="end" class="fal fa-fw fa-xs fa-exclamation-triangle" *ngIf="hasUnsavedNotes(customer)"></i>
+        <i slot="end" class="fal fa-fw fa-xs fa-exclamation-triangle" *ngIf="customer.hasUnsentNotes"></i>
       </ion-item>
     </cdk-virtual-scroll-viewport>
   </ion-list>

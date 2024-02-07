@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AlertController, NavController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
 import { BrowserService } from 'src/app/core/browser.service';
-import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact, IVisitNote }
+import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact }
   from 'src/app/core/repositories/customers.repository.service';
 import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service';
 import { Md5 } from 'ts-md5';

@@ -45,34 +45,11 @@ export class CustomersRepositoryService {
       }
 
       searchQuery = searchQuery.toLowerCase()
-      const result = await db.query(query, 
+      const result = await db.query(query,
         [searchQuery, searchQuery, searchQuery, searchQuery]
       )
 
       return result.values as T[]
-    })
-  }
-
-  async getAllNotes() {
-    return await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT * FROM notes ORDER BY date DESC`)
-
-      return result.values as IVisitNote[]
-    })
-  }
-
-  async getNotes(id: number, address: number, limit?: number): Promise<IVisitNote[]> {
-    if (id === null || address === null) {
-      return []
-    }
-
-    return await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT date, text FROM notes WHERE customer = ? AND address = ? `
-        + `ORDER BY date DESC`
-        + (limit != null ? ` LIMIT ${limit}` : ''),
-        [ id, address ])
-
-      return result.values as IVisitNote[]
     })
   }
 
@@ -101,22 +78,6 @@ export class CustomersRepositoryService {
       return result.values as IAppDeliveryScheduleModel[]
     })
   }
-}
-
-export interface IVisitNote {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  Id: number;
-  date: Date;
-  text: string;
-  nextVisit?: string;
-  customer: number;
-  address: number;
-  customerCloseFrom?: string;
-  customerOpenFrom?: string;
-
-
-  _savedDate: Date;
-  _isSent: boolean;
 }
 
 export interface IContact {

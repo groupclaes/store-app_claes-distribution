@@ -1,19 +1,13 @@
-import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Network } from '@capacitor/network';
-import { AlertController, NavController } from '@ionic/angular';
+import { AlertController, NavController, ToastController } from '@ionic/angular';
 import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
 import { ApiService } from 'src/app/core/api.service';
-import { IVisitNote, CustomersRepositoryService } from 'src/app/core/repositories/customers.repository.service';
-import { StorageProvider } from 'src/app/core/storage-provider.service';
-import { SyncService } from 'src/app/core/sync.service';
+import { IUnsentVisitNote, IVisitNote, NotesRepositoryService } from 'src/app/core/repositories/notes.repository.service';
 import { UserService } from 'src/app/core/user.service';
-
-export const LS_SAVED_NOTES = 'saved_notes';
-export const LS_TOSEND_NOTES = 'notesToSend';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-notes',
@@ -22,64 +16,81 @@ export const LS_TOSEND_NOTES = 'notesToSend';
 })
 export class NotesPage {
   showCreate = false;
+  isEditing = false;
   notes: IVisitNote[]
-  newNote: IVisitNote
+  newNote: IUnsentVisitNote
 
-  constructor(private storage: StorageProvider,
-    private user: UserService,
+  constructor(private user: UserService,
     private translate: TranslateService,
     private alert: AlertController,
     private ref: ChangeDetectorRef,
-    private customers: CustomersRepositoryService,
     private route: ActivatedRoute,
     private navCtrl: NavController,
     private api: ApiService,
     private logger: LoggingProvider,
-    private sync: SyncService) { }
+    private notesRepository: NotesRepositoryService,
+    private toast: ToastController) { }
 
   get culture(): string {
     return this.translate.currentLang
   }
 
-  private get savedNotes(): IVisitNote[] {
-    return this.getCustomerSavedNotes({
-      customer: this.user.activeUser.id,
-      address: this.user.activeUser.address
-    } as IVisitNote)
+  get development() {
+    return !environment.production
   }
 
-  ionViewDidEnter() {
+  ionViewWillEnter() {
+    return this.loadNotes()
+  }
+
+  async ionViewDidEnter() {
     if (!this.user.userinfo) {
       this.navCtrl.navigateRoot('LoginPage')
     } else {
-      this.loadNotes().then(_ => this.ref.markForCheck())
+      await this.loadNotes()
+
+      // eslint-disable-next-line eqeqeq
+      if (this.route.snapshot.queryParams.createNote === true) {
+        const lastUnsent = await this.notesRepository.getLastUnsentNote(this.user.activeUser.id, this.user.activeUser.address)
+        if (lastUnsent != null && lastUnsent.date.toLocaleDateString() === new Date().toLocaleDateString()) {
+          // Check if last note is made today, otherwise create new
+          this.addNote(lastUnsent)
+        } else {
+          this.addNote()
+        }
+      }
+
+      this.ref.markForCheck()
     }
   }
 
   ionViewWillLeave() {
-    if (this.savedNotes.length > 0) {
-      this.alert.create({
-        header: this.translate.instant('pages.notes.unsavedNotes.title'),
-        subHeader: this.translate.instant('pages.notes.unsavedNotes.description'),
-        buttons: [
-          {
-            text: this.translate.instant('actions.show'),
-            handler: () => { this.navCtrl.navigateRoot('/notes') }
-          },
-          {
-            text: this.translate.instant('actions.cancel'),
-            role: 'cancel'
-          }
-        ]
-      }).then(alert => alert.present())
+    if (this.route.snapshot.queryParams.selectedCust == null) {
+      const hasUnsentNotes = this.notesRepository.hasUnsentNotes(this.user.activeUser.id,
+        this.user.activeUser.address)
+
+      if (hasUnsentNotes) {
+        this.alert.create({
+          header: this.translate.instant('pages.notes.unsavedNotes.title'),
+          subHeader: this.translate.instant('pages.notes.unsavedNotes.description'),
+          buttons: [
+            {
+              text: this.translate.instant('actions.show'),
+              handler: () => { this.navCtrl.navigateRoot('/notes') }
+            },
+            {
+              text: this.translate.instant('actions.cancel'),
+              role: 'cancel'
+            }
+          ]
+        }).then(alert => alert.present())
+      }
     }
   }
 
   addNote(noteSource?: IVisitNote) {
-
     this.newNote = {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      Id: null,
+      id: null,
       date: noteSource ? noteSource.date : new Date(),
       text: noteSource ? noteSource.text : '',
       customer: this.user.activeUser.id,
@@ -87,35 +98,40 @@ export class NotesPage {
       nextVisit: new Date(new Date().getTime() + 28 * 24 * 60 * 60 * 1000).toISOString(),
       customerCloseFrom: null,
       customerOpenFrom: null,
-      _savedDate: null,
-      _isSent: false
+      toSend: false
     }
+    if (noteSource != null && 'id' in noteSource) {
+      if ('toSend' in noteSource && !noteSource.toSend) {
+        this.newNote.id = noteSource.id as number;
+      }
 
-    if (noteSource) {
-      if (noteSource._isSent !== null) {
-        this.newNote._isSent = noteSource._isSent
-      }
-      if (noteSource._savedDate !== null) {
-        this.newNote._savedDate = noteSource._savedDate
-      }
+      // IUnsentVisitNote
+      this.newNote.customerCloseFrom = (noteSource as IUnsentVisitNote).customerCloseFrom
+      this.newNote.customerOpenFrom = (noteSource as IUnsentVisitNote).customerOpenFrom
     }
 
     this.showCreate = true
     this.ref.markForCheck()
   }
 
-  deleteNote(note: IVisitNote) {
+  deleteNote(note: IUnsentVisitNote) {
     this.alert.create({
       header: this.translate.instant('pages.notes.confirmDelete.title'),
       subHeader: this.translate.instant('pages.notes.confirmDelete.description'),
       buttons: [
         {
           text: this.translate.instant('actions.delete'),
-          handler: () => {
-            this.storage.set(LS_SAVED_NOTES, this.getFilteredNotes(note))
+          handler: async () => {
+            try {
+              await this.notesRepository.deleteUnsentNote(note.id)
+              await this.loadNotes()
 
-            this.showCreate = false
-            this.loadNotes()
+              this.newNote = undefined
+              this.showCreate = false
+              this.ref.markForCheck()
+            } catch (err) {
+              this.logger.error('Couldn\'t delete unsent note', JSON.stringify(err))
+            }
           }
         },
         {
@@ -128,104 +144,100 @@ export class NotesPage {
 
 
   async loadNotes() {
-    const notes = await this.customers.getNotes(this.user.activeUser.id,
-      this.user.activeUser.address)
-    const result: IVisitNote[] = [];
-
-    for (const note of notes) {
-      note.text = note.text.split(`''`).join(`'`)
-      while (note.text.startsWith('\n')) {
-        note.text = note.text.substring(2)
-      }
-
-
-      result.push(note)
-    }
-
-    result.unshift(...this.savedNotes);
-
-    this.notes = result;
-    this.ref.markForCheck();
-  }
-
-  save(note: IVisitNote) {
-    const savedNotes = this.getFilteredNotes(note)
-
-    note._savedDate = new Date();
-    savedNotes.push(note)
-    console.log(savedNotes)
-
-    this.showCreate = false
-    this.newNote = undefined
-    this.ref.markForCheck()
-
-    this.storage.set(LS_SAVED_NOTES, savedNotes)
-    this.loadNotes()
-  }
-
-  async send(note: IVisitNote) {
-    this.showCreate = false
-    this.newNote = undefined
-    this.ref.markForCheck()
-
-    const savedDate = note._savedDate;
-    const opennotes: any[] = this.storage.get(LS_TOSEND_NOTES) || [];
-
-    const newOpenNotes = [];
     try {
-      const result = await firstValueFrom(this.api.post('app/notes/create', note))
-      if (result) {
-        this.ref.markForCheck()
-        for (const oldNote of opennotes) {
-          try {
-            const q = await firstValueFrom(this.api.post('app/notes/create', oldNote));
-            if (!q) {
-              newOpenNotes.push(oldNote)
-            }
-          } catch {
-            newOpenNotes.push(oldNote)
-          }
+      const result = await this.notesRepository.getUnsentNotes(this.user.activeUser.id,
+        this.user.activeUser.address) as IVisitNote[]
+      console.log(result)
+
+      const notes = await this.notesRepository.getCustomerNotes(this.user.activeUser.id,
+        this.user.activeUser.address)
+
+      // Trim notes and add to the result
+      for (const note of notes) {
+        note.text = note.text.split(`''`).join(`'`)
+        while (note.text.startsWith('\n')) {
+          note.text = note.text.substring(2)
         }
 
-        this.storage.set(LS_SAVED_NOTES,
-          this.storage.get<IVisitNote[]>(LS_SAVED_NOTES)
-            .filter((x: IVisitNote) => x._savedDate !== savedDate))
-        this.notes = this.notes.filter(x => x._savedDate !== note._savedDate)
-
-        note._isSent = true
-        delete note._savedDate
-
-        this.navCtrl.navigateRoot('/customers', { queryParams: { selectedCust: this.route.snapshot.params.selectedCust } })
-
-        Network.getStatus().then(async status => {
-          if (status.connected) {
-            this.sync.syncNotes(this.user.credential, this.user.userinfo.language, true)
-          }
-        })
-      } else {
-        console.error(result)
+        result.push(note)
       }
-
-      this.storage.set(LS_TOSEND_NOTES, newOpenNotes);
-      this.ref.markForCheck();
+      this.notes = result
+      this.ref.markForCheck()
     } catch (err) {
-      this.logger.debug('Something wen\'t wrong when posting new note', err)
-      newOpenNotes.push(note);
-      this.storage.set(LS_TOSEND_NOTES, newOpenNotes);
+      this.logger.error('Couldn\'t fetch notes for customer', JSON.stringify(err))
     }
   }
 
-  private getFilteredNotes(note: IVisitNote): IVisitNote[] {
-    const savedNotes: IVisitNote[] = this.storage.get(LS_SAVED_NOTES) || []
+  async save(note: IUnsentVisitNote) {
+    await this.notesRepository.saveNote(note, false)
 
-    return savedNotes.filter(x => (x.customer !== note.customer && x.address !== note.address) || x._savedDate !== note._savedDate)
+    this.showCreate = false
+    this.newNote = undefined
+    this.ref.markForCheck()
+
+    if (!this.completUserSwitch()) {
+      return this.loadNotes()
+    }
   }
 
-  private getCustomerSavedNotes(noteToExclude: IVisitNote): IVisitNote[] {
-    const savedNotes: IVisitNote[] = this.storage.get(LS_SAVED_NOTES) || [];
+  async send(note: IUnsentVisitNote) {
+    this.showCreate = false
+    this.newNote = undefined
+    this.ref.markForCheck()
 
-    return savedNotes.filter(x => (x.customer === noteToExclude.customer && x.address === noteToExclude.address)
-      && x._savedDate !== noteToExclude._savedDate)
+    await this.notesRepository.saveNote(note, true)
+
+    try {
+      // Try to send all unsent notes
+      const unsentNotes = await this.notesRepository.getUnsentNotes(this.user.activeUser.id,
+        this.user.activeUser.address)
+
+      let counterSent = 0
+      let counterFailed = 0
+      for (const unsentNote of unsentNotes) {
+        if (unsentNote.toSend) {
+          try {
+            const result = await firstValueFrom(this.api.post('app/notes/create', unsentNote))
+            if (result) {
+              await this.notesRepository.deleteUnsentNote(unsentNote.id)
+              counterSent++
+            } else {
+              this.logger.error('Couldn\'t send backlog note ', result)
+              counterFailed++
+            }
+          } catch (err) {
+            counterFailed++
+            this.logger.debug('Something wen\'t wrong when sending note', JSON.stringify(err))
+          }
+        }
+      }
+
+      this.toast.create({
+        message: (this.translate.instant('pages.notes.deletedResult') as string)
+          .replace('{{SENT}}', counterSent + '')
+          .replace('{{FAILED}}', counterFailed + ''),
+        duration: 5000
+      }).then(x => x.present())
+
+      if (!this.completUserSwitch()) {
+        await this.loadNotes()
+      }
+    } catch (err) {
+      this.logger.debug('Something wen\'t wrong when posting new note', JSON.stringify(err))
+    }
+  }
+
+  isUnsentNote(note: IVisitNote) {
+    return 'id' in note && 'toSend' in note
+      && note.id != null && note.toSend === false
+  }
+
+  completUserSwitch() {
+    if (this.route.snapshot.queryParams.selectedCust != null) {
+      this.navCtrl.navigateRoot('/customers', { queryParams: { selectedCust: this.route.snapshot.queryParams.selectedCust } })
+      return true
+    }
+
+    return false
   }
 }
-
