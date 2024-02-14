@@ -243,4 +243,12 @@
       </ion-item-group>
     </ion-list>
   </div>
+
+  <div *ngIf="debugging">
+    <ion-item></ion-item>
+    <ion-item >
+      <ion-label>DEBUG</ion-label>
+      <ion-label>{{ currentCart | json }}</ion-label>
+    </ion-item>
+  </div>
 </ion-content>

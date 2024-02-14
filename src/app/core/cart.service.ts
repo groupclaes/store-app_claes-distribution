@@ -240,22 +240,25 @@ export class CartService {
       } else {
         console.error('\n\nMocking cart send, not actually sending!\n\n')
         response = {
-          result: true
+          result: false
         }
       }
     } catch (err) {
       this.logger.error('CartService.sendCart() catch error', JSON.stringify(err))
     } finally {
       if (response && response.result === true) {
-        cart.sendOk = true
-        cart.active = false
-
         this.repo.removeAllActive()
           .then(_ => this._carts.forEach(x => x.active = false))
           .then(_ => this.logger.debug('Set all carts as inactive'))
-        return await this.repo.updateSendOk(cart.id)
+        return await this.repo.updateSendOk(cart)
+      } else {
+        await this.repo.updateSendOk(cart, false)
       }
       return false
     }
+  }
+
+  cancelSend(cart: ICartDetail): Promise<boolean> {
+    return this.repo.updateSend(cart.id, false)
   }
 }

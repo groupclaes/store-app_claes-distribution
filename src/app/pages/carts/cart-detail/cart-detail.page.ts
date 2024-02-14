@@ -12,6 +12,7 @@ import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailS
 import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shipping-costs.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-cart-detail',
@@ -56,6 +57,10 @@ export class CartDetailPage implements OnInit {
     route.params.subscribe(params => {
       this.load(+params.id)
     })
+  }
+
+  get debugging() {
+    return !environment.production
   }
 
 
@@ -116,13 +121,12 @@ export class CartDetailPage implements OnInit {
   }
 
   get isHistory() {
-    return this._history;
+    return this._history && this._cart.send && this._cart.sendOk;
   }
 
   ngOnInit() {
     this.route.queryParams.subscribe(x => {
       this._history = x['history'] === 'true';
-      console.log(x)
     })
   }
 
@@ -143,8 +147,13 @@ export class CartDetailPage implements OnInit {
       }
       this._cart = cart
 
-      console.log(this._cart)
+      // Started editing, disable sending.
+      if (cart.send === true && !cart.sendOk) {
 
+        if (this.cart.cancelSend(cart)) {
+          cart.send = false
+        }
+      }
 
       const deliveryTimes = await firstValueFrom(this.api.get<string[]>(
         `order/deliverTimes/${this.user.activeUser.id}/${this.user.activeUser.address}`,
@@ -180,7 +189,7 @@ export class CartDetailPage implements OnInit {
       this.toastCtrl.create({
         message: this.translate.instant('cartSendError'),
         duration: 10000
-      });
+      }).then(x => x.present());
     }
 
     this.navCtrl.pop();

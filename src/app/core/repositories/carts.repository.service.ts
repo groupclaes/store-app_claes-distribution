@@ -261,6 +261,10 @@ export class CartsRepositoryService {
     return this.loadCarts(true, culture)
   }
 
+  loadSentFailed() {
+    //
+  }
+
   loadCarts(unsent: boolean = false, culture: string = 'nl-BE'): Promise<ICartDetail[]> {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
 
@@ -282,9 +286,9 @@ export class CartsRepositoryService {
             cart.sendDate
           FROM carts AS cart
           INNER JOIN customers AS c ON cart.customer = c.id AND cart.address = c.addressId`
-            + (unsent ? ' WHERE cart.send = ?' : '')
+            + (unsent !== undefined ? ' WHERE cart.send = ?' : '')
             + ' ORDER BY cart.sendOK ASC, cart.sendDate DESC',
-          unsent ? [0] : undefined
+          (unsent !== undefined) ? [unsent ? 0 : 1] : undefined
       )
 
         if (result.values.length === 0) {
@@ -376,12 +380,13 @@ export class CartsRepositoryService {
     })
   }
 
-  updateSend(id: number): Promise<boolean> {
+  updateSend(id: number, send: boolean = true): Promise<boolean> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        `UPDATE carts SET sendDate = ?, send = 1 WHERE id = ?`,
+        `UPDATE carts SET sendDate = ?, send = ? WHERE id = ?`,
         [
           new Date().toISOString(),
+          send ? 1 : 0,
           id
         ]
       )
@@ -390,12 +395,21 @@ export class CartsRepositoryService {
     })
   }
 
-  updateSendOk(id: number): Promise<boolean> {
+  updateSendOk(cart: ICartDetail | number, sendOk: boolean = true): Promise<boolean> {
+    let cartObject
+    if (!(cart instanceof Number)) {
+      cartObject = (cart as ICartDetail)
+
+      cartObject.active = false
+      cartObject.sendOk = sendOk
+    }
+
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(
-        'UPDATE carts SET sendOk = 1, active=0 WHERE id = ?',
+        'UPDATE carts SET sendOk = ?, active=0 WHERE id = ?',
         [
-          id
+          sendOk ? 1 : 0,
+          (cartObject != null) ? cartObject.id : cart
         ]
       )
       return result.changes?.changes > 0
