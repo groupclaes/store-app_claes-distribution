@@ -14,9 +14,6 @@ import { environment } from 'src/environments/environment'
 export class CartService {
   private _carts: ICartDetail[] = []
   private _credential: AppCredential
-  private _userId: number
-
-  private _creatingCart = false
 
   constructor(
     public api: ApiService,
@@ -79,7 +76,6 @@ export class CartService {
       this.logger.error('CartService.init() error', err)
     } finally {
       this._credential = credential
-      this._userId = userId
 
       this.logger.log('CartService.init() -- end')
     }
@@ -105,8 +101,6 @@ export class CartService {
       return
     }
 
-    this._creatingCart = true
-
     if (!this._carts || this.carts.length === 0
       || (!this.active && !this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
       || !(this.active?.customer === customer && this.active?.address === address)) {
@@ -120,8 +114,6 @@ export class CartService {
       this._carts.find(e => e.customer === customer && e.address === address && e.send === false).active = true
       this.logger.log('CartService.updateProduct() -- active = true')
     }
-
-    this._creatingCart = false
 
     if (this.active && this.active.products && this.active.products.some(e => e.id === id) && this.active.send === false) {
       this.logger.log('CartService.updateProduct() -- some')
