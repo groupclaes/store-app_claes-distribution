@@ -35,7 +35,7 @@ export class NotesPage {
     return this.translate.currentLang
   }
 
-  get development() {
+  get debugging() {
     return !environment.production
   }
 
@@ -66,25 +66,25 @@ export class NotesPage {
 
   ionViewWillLeave() {
     if (this.route.snapshot.queryParams.selectedCust == null) {
-      const hasUnsentNotes = this.notesRepository.hasUnsentNotes(this.user.activeUser.id,
-        this.user.activeUser.address)
-
-      if (hasUnsentNotes) {
-        this.alert.create({
-          header: this.translate.instant('pages.notes.unsavedNotes.title'),
-          subHeader: this.translate.instant('pages.notes.unsavedNotes.description'),
-          buttons: [
-            {
-              text: this.translate.instant('actions.show'),
-              handler: () => { this.navCtrl.navigateRoot('/notes') }
-            },
-            {
-              text: this.translate.instant('actions.cancel'),
-              role: 'cancel'
-            }
-          ]
-        }).then(alert => alert.present())
-      }
+      this.notesRepository.hasUnsentNotes(this.user.activeUser.id, this.user.activeUser.address)
+        .then(hasUnsentNotes => {
+          if (hasUnsentNotes) {
+            this.alert.create({
+              header: this.translate.instant('pages.notes.unsavedNotes.title'),
+              subHeader: this.translate.instant('pages.notes.unsavedNotes.description'),
+              buttons: [
+                {
+                  text: this.translate.instant('actions.show'),
+                  handler: () => { this.navCtrl.navigateRoot('/notes') }
+                },
+                {
+                  text: this.translate.instant('actions.cancel'),
+                  role: 'cancel'
+                }
+              ]
+            }).then(alert => alert.present())
+          }
+        })
     }
   }
 
