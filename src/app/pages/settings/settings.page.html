@@ -85,4 +85,13 @@
       </ion-select>
     </ion-item>
   </ion-list>
+  <ion-list>
+    <br>
+    <ion-list-header lines="full">
+      <h3>Debugging</h3>
+    </ion-list-header>
+    <ion-item lines="full">
+      <ion-toggle (ionChange)="toggleDebug()" [checked]="debugging">Enable debugging</ion-toggle>
+    </ion-item>
+  </ion-list>
 </ion-content>

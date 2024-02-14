@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { TranslateService } from '@ngx-translate/core'
 import { Subscription } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { environment } from 'src/environments/environment'
 
 @Component({
   selector: 'app-settings',
@@ -35,6 +36,10 @@ export class SettingsPage implements OnInit, OnDestroy {
 
   get languages() {
     return this.translate.langs
+  }
+
+  get debugging() {
+    return !environment.production
   }
 
   ngOnInit() {
@@ -109,6 +114,11 @@ export class SettingsPage implements OnInit, OnDestroy {
   toggleOrder(): void {
     this.displayDefaultFilters.order = !this.displayDefaultFilters.order
     this.settings.setDefaultFilters(this.displayDefaultFilters)
+    this.ref.markForCheck()
+  }
+
+  toggleDebug(): void {
+    environment.production = !environment.production
     this.ref.markForCheck()
   }
 
