@@ -5,7 +5,7 @@
   "homepage": "https://www.claes-distribution.be",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --disable-host-check --host 0.0.0.0",
+    "start": "ionic serve -p=4200 -- --disable-host-check --host 0.0.0.0",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
