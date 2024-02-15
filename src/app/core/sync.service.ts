@@ -5,7 +5,7 @@ import { LoggingProvider } from '../@shared/logging/log.service'
 import { StorageProvider } from './storage-provider.service'
 import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from './database.service'
-import { AppCredential, AppCustomerModel, Customer } from './user.service'
+import { AppCustomerModel, Customer, ISsoCredential } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
 
@@ -126,7 +126,7 @@ export class SyncService {
    * @param force if true syncronisation and rebuld of table will be forced
    * @memberof SyncService
    */
-  public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean, activeUser?: Customer) {
+  public async fullSync(credential: ISsoCredential, culture?: string, forceSync?: boolean, activeUser?: Customer) {
     this.logger.log(`SyncService.FullSync() -- start`)
     culture = culture || 'all'
 
@@ -153,40 +153,40 @@ export class SyncService {
       })
 
       const step1 = await Promise.all([
-        this.syncProducts(credential, culture, forceSync),
-        this.syncPackingUnits(credential, culture, forceSync),
-        this.syncAttributes(credential, culture, forceSync),
-        this.syncProductRelations(credential, culture, forceSync),
-        this.syncCategories(credential, culture, forceSync),
-        this.syncCategoryAttributes(credential, culture, forceSync)
+        this.syncProducts(culture, forceSync),
+        this.syncPackingUnits(culture, forceSync),
+        this.syncAttributes(culture, forceSync),
+        this.syncProductRelations(culture, forceSync),
+        this.syncCategories(culture, forceSync),
+        this.syncCategoryAttributes(culture, forceSync)
       ])
 
       const step2 = await Promise.all([
-        this.syncFavorites(credential, culture, forceSync, activeUser?.userId, activeUser?.address),
-        this.syncPrices(credential, culture, forceSync, activeUser?.userId, activeUser?.address),
-        this.syncProductExceptions(credential, culture, forceSync),
-        this.syncProductTaxes(credential, culture, forceSync),
-        this.syncShippingCosts(credential, culture, forceSync),
-        this.syncProductDescriptionCustomers(credential, culture, forceSync),
-        this.syncNews(credential, culture, forceSync)
+        this.syncFavorites(culture, forceSync, activeUser?.userId, activeUser?.address),
+        this.syncPrices(culture, forceSync, activeUser?.userId, activeUser?.address),
+        this.syncProductExceptions(culture, forceSync),
+        this.syncProductTaxes(culture, forceSync),
+        this.syncShippingCosts(culture, forceSync),
+        this.syncProductDescriptionCustomers(culture, forceSync),
+        this.syncNews(culture, forceSync)
       ])
 
       const step3 = await Promise.all([
-        this.syncReports(credential, culture, forceSync),
-        this.syncRecipes(credential, culture, forceSync),
-        this.syncDatasheets(credential, culture, forceSync),
-        this.syncUsageManuals(credential, culture, forceSync),
-        this.syncRecipesModule(credential, culture, forceSync)
+        this.syncReports(culture, forceSync),
+        this.syncRecipes(culture, forceSync),
+        this.syncDatasheets(culture, forceSync),
+        this.syncUsageManuals(culture, forceSync),
+        this.syncRecipesModule(culture, forceSync)
       ])
 
       const step4 = await Promise.all([
-        this.syncContacts(credential, culture, forceSync),
-        this.syncDeliverySchedules(credential, culture, forceSync),
-        this.syncCustomers(credential, culture, forceSync),
-        this.syncNotes(credential, culture, forceSync)
+        this.syncContacts(culture, forceSync),
+        this.syncDeliverySchedules(culture, forceSync),
+        this.syncCustomers(culture, forceSync),
+        this.syncNotes(culture, forceSync)
       ])
 
-      await this.syncDepartments(credential, culture, forceSync)
+      await this.syncDepartments(culture, forceSync)
 
       const results = step1.concat(step2, step3, step4)
 
@@ -204,15 +204,14 @@ export class SyncService {
     })
   }
 
-  async syncProducts(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProducts(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProducts()`)
-      const response = await this.api.post<any>('app/products', credential, {
-        culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'products')?.checksum ?? ''
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+      const response = await firstValueFrom(this.api.get<any>('app/products', {
+          culture,
+          checksum: force ? '' : this.checksum.find(e => e.dataTable === 'products')?.checksum ?? ''
+        })
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.products && response.products.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -342,7 +341,7 @@ export class SyncService {
     }
   }
 
-  async syncPrices(credential: AppCredential, culture?: string, force?: boolean,
+  async syncPrices(culture?: string, force?: boolean,
     customerId?: number, addressId?: number) {
     try {
       this.logger.log(`SyncProvider.syncPrices() -- customerId: ${customerId}, addressId: ${addressId}`)
@@ -357,9 +356,8 @@ export class SyncService {
         params.addressId = addressId ?? 0
       }
 
-      const response = await firstValueFrom(this.api.post<any>('app/prices', credential, params)
+      const response = await firstValueFrom(this.api.get<any>('app/prices', params)
         .pipe(timeout(TIMEOUT_INTERVAL)))
-      console.log(params, response)
 
       if (response && response.prices && response.prices.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -426,16 +424,15 @@ export class SyncService {
     }
   }
 
-  async syncPackingUnits(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncPackingUnits(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncPackingUnits()`)
 
-      const response = await this.api.post<any>('app/packing-units', credential, {
-        culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'packingUnits')?.checksum ?? ''
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+      const response = await firstValueFrom(this.api.get<any>('app/packing-units', {
+          culture,
+          checksum: force ? '' : this.checksum.find(e => e.dataTable === 'packingUnits')?.checksum ?? ''
+        })
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.packingUnits && response.packingUnits.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -470,18 +467,18 @@ export class SyncService {
     }
   }
 
-  async syncFavorites(credential: AppCredential, culture?: string, force?: boolean, customerId?: number, addressId?: number) {
+  async syncFavorites(culture?: string, force?: boolean,
+    customerId?: number, addressId?: number) {
     try {
       this.logger.log(`SyncProvider.syncFavorites()`)
 
-      const response = await this.api.post<any>('app/favorites', credential, {
-        culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'favorites')?.checksum ?? '',
-        customerId,
-        addressId
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+      const response = await firstValueFrom(this.api.get<any>('app/favorites', {
+          culture,
+          checksum: force ? '' : this.checksum.find(e => e.dataTable === 'favorites')?.checksum ?? '',
+          customerId,
+          addressId
+        })
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.favorites && response.favorites.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -547,16 +544,15 @@ export class SyncService {
     }
   }
 
-  async syncProductExceptions(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductExceptions(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductExceptions()`)
 
-      const response = await this.api.post<any>('app/product-exceptions', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/product-exceptions', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productExceptions')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.productExceptions && response.productExceptions.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -599,16 +595,15 @@ export class SyncService {
     }
   }
 
-  async syncAttributes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncAttributes(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncAttributes()`)
 
-      const response = await this.api.post<any>('app/attributes', credential, {
-        culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'attributes')?.checksum ?? ''
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+      const response = await firstValueFrom(this.api.get<any>('app/attributes', {
+          culture,
+          checksum: force ? '' : this.checksum.find(e => e.dataTable === 'attributes')?.checksum ?? ''
+        })
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.attributes && response.attributes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -654,16 +649,15 @@ export class SyncService {
     }
   }
 
-  async syncCategoryAttributes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncCategoryAttributes(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncCategoryAttributes()`)
 
-      const response = await this.api.post<any>('app/category-attributes', credential, {
-        culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'categoryAttributes')?.checksum ?? ''
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+      const response = await firstValueFrom(this.api.get<any>('app/category-attributes', {
+          culture,
+          checksum: force ? '' : this.checksum.find(e => e.dataTable === 'categoryAttributes')?.checksum ?? ''
+        })
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.categoryAttributes && response.categoryAttributes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -696,19 +690,19 @@ export class SyncService {
 
       return true
     } catch (err) {
+
     }
   }
 
-  async syncProductRelations(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductRelations(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductRelations()`)
 
-      const response = await this.api.post<any>('app/product-relations', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/product-relations', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productRelations')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.productRelations && response.productRelations.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -745,11 +739,11 @@ export class SyncService {
     }
   }
 
-  async syncReports(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncReports(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncReports()`)
 
-      const response = await firstValueFrom(this.api.post<any>('app/reports', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/reports', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'reports')?.checksum ?? ''
       })
@@ -795,16 +789,16 @@ export class SyncService {
     }
   }
 
-  async syncRecipes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncRecipes(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncRecipes()`)
 
-      const response = await this.api.post<any>('app/recipes', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/recipes', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipes')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
+        
 
       if (response && response.recipes && response.recipes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -841,16 +835,16 @@ export class SyncService {
     }
   }
 
-  async syncDatasheets(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncDatasheets(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncDatasheets()`)
 
-      const response = await this.api.post<any>('app/datasheets', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/datasheets', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'datasheets')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
+        
 
       if (response && response.datasheets && response.datasheets.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -888,16 +882,16 @@ export class SyncService {
     }
   }
 
-  async syncUsageManuals(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncUsageManuals(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncUsageManuals()`)
 
-      const response = await this.api.post<any>('app/usage-manuals', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/usage-manuals', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'usageManuals')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
+        
 
       if (response && response.usageManuals && response.usageManuals.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -935,16 +929,15 @@ export class SyncService {
     }
   }
 
-  async syncDepartments(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncDepartments(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncDepartments()`)
 
-      const response = await this.api.post<any>('app/departments', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/departments', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'departments')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.departments && response.departments.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -990,16 +983,15 @@ export class SyncService {
     }
   }
 
-  async syncCategories(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncCategories(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncCategories()`)
 
-      const response = await this.api.post<any>('app/categories', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/categories', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'categories')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.categories && response.categories.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1045,16 +1037,15 @@ export class SyncService {
     }
   }
 
-  async syncNotes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncNotes(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncNotes()`)
 
-      const response = await this.api.post<any>('app/notes', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/notes', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'notes')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.notes && response.notes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1093,16 +1084,15 @@ export class SyncService {
     }
   }
 
-  async syncProductTaxes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductTaxes(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductTaxes()`)
 
-      const response = await this.api.post<any>('app/productTaxes', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/productTaxes', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productTaxes')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.productTaxes && response.productTaxes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1138,16 +1128,15 @@ export class SyncService {
     }
   }
 
-  async syncShippingCosts(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncShippingCosts(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncShippingCosts()`)
 
-      const response = await this.api.post<any>('app/shippingCosts', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/shippingCosts', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'shippingCosts')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.shippingCosts && response.shippingCosts.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1184,16 +1173,16 @@ export class SyncService {
     }
   }
 
-  async syncContacts(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncContacts(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncContacts()`)
 
-      const response = await this.api.post<any>('app/contacts', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/contacts', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'contacts')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
+        
 
       if (response && response.contacts && response.contacts.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1241,16 +1230,15 @@ export class SyncService {
     }
   }
 
-  async syncDeliverySchedules(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncDeliverySchedules(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncDeliverySchedules()`)
 
-      const response = await this.api.post<any>('app/delivery-schedules', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/delivery-schedules', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'deliverySchedules')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.deliverySchedules && response.deliverySchedules.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1308,16 +1296,15 @@ export class SyncService {
     }
   }
 
-  async syncCustomers(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncCustomers(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncCustomers()`)
 
-      const response = await this.api.post<any>('app/customers', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/customers', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'customers')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.customers && response.customers.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1387,16 +1374,15 @@ export class SyncService {
     }
   }
 
-  async syncProductDescriptionCustomers(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductDescriptionCustomers(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductDescriptionCustomers()`)
 
-      const response = await this.api.post<any>('app/product-description-customers', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/product-description-customers', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productDescriptionCustomers')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.productDescriptionCustomers && response.productDescriptionCustomers.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1430,16 +1416,15 @@ export class SyncService {
     }
   }
 
-  async syncRecipesModule(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncRecipesModule(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncRecipesModule()`)
 
-      const response = await this.api.post<any>('app/recipes-module', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/recipes-module', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipesModule')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
+        .pipe(timeout(TIMEOUT_INTERVAL)))
 
       if (response && response.recipes && response.recipes.length > 0) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -1477,11 +1462,11 @@ export class SyncService {
     }
   }
 
-  async syncNews(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncNews(culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncNews()`)
 
-      const response = await firstValueFrom(this.api.post<any>('app/news', credential, {
+      const response = await firstValueFrom(this.api.get<any>('app/news', {
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'news')?.checksum ?? ''
       })

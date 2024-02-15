@@ -1,4 +1,4 @@
-import { AppCredential, ServerCustomer, UserService } from '../../core/user.service'
+import { AppCredential, UserService } from '../../core/user.service'
 import { environment } from './../../../environments/environment'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'

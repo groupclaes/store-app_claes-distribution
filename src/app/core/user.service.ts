@@ -5,6 +5,12 @@ import { LoggingProvider } from '../@shared/logging/log.service'
 import { ApiService } from './api.service'
 import { StorageProvider } from './storage-provider.service'
 import { SyncService } from './sync.service'
+import { firstValueFrom } from 'rxjs'
+import { environment } from 'src/environments/environment'
+import { Network } from '@capacitor/network'
+
+const LS_CREDENTIAL = 'store-app.credential'
+
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +18,8 @@ import { SyncService } from './sync.service'
 export class UserService {
   private _user: Customer
   private _selectedCustomer: Customer
-  private _credential: AppCredential
+  private _credential: ISsoCredential
+  private _token: string
 
   constructor(
     private translate: TranslateService,
@@ -24,77 +31,15 @@ export class UserService {
     this.logger.log('User -- constructor()')
   }
 
-  login(credential: AppCredential) {
-    let request = this.api.postLogin(credential).pipe(share())
-
-    request.subscribe((res: ServerCustomer) => {
-      if (res) {
-        // this.statistics.login(res.Id)
-        this._loggedIn(res, credential)
-      }
-    }, err => {
-      this.logger.error('signup ERROR', err)
-      const userResponse = this.storage.get<ServerCustomer>('user')
-      const storedCredential = this.storage.get<AppCredential>('credential')
-      if (storedCredential && userResponse) {
-        if (storedCredential.username == credential.username && storedCredential.password == credential.password) {
-          this._loggedIn(userResponse, credential)
-        }
-      }
-    })
-
-    return request
-  }
-
-  signup(credential: AppRegistrationCredential) {
-    let request = this.api.post('appuser/signOn', credential).pipe(share())
-
-    request.subscribe((res: any) => {
-      if (res) {
-        this._loggedIn(res, credential)
-      }
-    }, err => {
-      this.logger.error('signup ERROR', err)
-    })
-
-    return request
-  }
-
-  resetPassword(credential: AppCredential) {
-    return this.api.post(`appuser/forgot-password/now`, {
-      username: credential.username
-    }, {
-      culture: this.translate.currentLang.split('-')[0]
-    })
-  }
-
-  loginLocal(userResponse: ServerCustomer, credential: AppCredential) {
-    this._loggedIn(userResponse, credential)
-  }
-
-  async logout() {
-    // this.statistics.logout(this._user.userId)
-    this._user = null
-    this._credential.password = ''
-    await this.sync.dropTables()
-    this.storage.set('credential', this._credential)
-  }
-
-  syncData(force: boolean = false): Promise<boolean> {
-    let culture = this.hasAgentAccess ? 'all' : this.translate.currentLang.split('-')[0]
-
-    return this.sync.fullSync(this._credential, culture, force)
-  }
-
-  get storedCredential(): AppCredential {
-    return this.storage.get<AppCredential>('credential')
+  get storedCredential(): ISsoCredential {
+    return this.storage.get<ISsoCredential>(LS_CREDENTIAL)
   }
 
   get storedUser(): ServerCustomer {
     return this.storage.get<ServerCustomer>('user')
   }
 
-  get credential(): AppCredential {
+  get credential(): ISsoCredential {
     return this._credential || null
   }
 
@@ -115,39 +60,195 @@ export class UserService {
   }
 
   get multiUser(): boolean {
-    return this._user && (this._user.type === 2 || this._user.type === 3 || this._user.type === 4)
+    return this._credential && (this._credential.userType > 1 && this._credential.userType < 5)
   }
 
   get hasAgentAccess(): boolean {
-    return this._user && (this._user.type === 2 || this._user.type === 3)
+    return this._credential && (this._credential.userType === 2 || this._credential.userType === 3)
   }
 
   get hasSuperUserAccess(): boolean {
-    return this._user && this._user.type === 3
+    return this._credential.isAgent && this._credential.userType === 3
   }
 
-  private _loggedIn(userResponse: ServerCustomer, credential: AppCredential) {
-    this.logger.log('UserService -- _loggedIn() called')
-    this._user = {
-      userId: userResponse.Id,
-      id: userResponse.CustomerId,
-      name: userResponse.CustomerName,
-      address: userResponse.AddressId,
-      addressName: userResponse.AddressName,
-      addressGroup: userResponse.AddressGroupId,
-      type: userResponse.UserType,
-      city: userResponse.City,
-      promo: userResponse.Promo,
-      bonus: userResponse.BonusPercentage,
-      fostplus: userResponse.Fostplus,
-      userCode: userResponse.UserCode
+  /**
+   * Authenticate online to the SSO service
+   * @param credential 
+   * @returns 
+   */
+  async login(credential: ISsoLoginRequest): Promise<ISsoCredential | ISsoLoginResponse> {
+    const connectionStatus = await Network.getStatus()
+    if (connectionStatus.connected) {
+      try {
+        this.logger.log('UserService.login() -- logging in online')
+        const response = await firstValueFrom(this.api.post<ISsoLoginResponse>(environment.sso_url, credential))
+        if (response.token != null) {
+          const ssoCredential = this._completeLogin(response.token)
+          if (ssoCredential != null) {
+            return ssoCredential
+          }
+
+          return { error: 'Invalid token receive', verified: false, token: null}
+        } else {
+          this.logger.error('UserService.login() -- Online login failed', { username: credential.username })
+
+          return response
+        }
+      } catch (err) {
+        this.logger.error('UserService.login() -- Online login error occurred, trying offline',
+          credential.username, JSON.stringify(err))
+        return { error: 'offline', verified: false, token: null }
+      }
     }
+  }
+
+  /**
+   * Try local cache with existing login
+   */
+  async loginLocal(): Promise<ISsoLoginResponse> {
+    const cachedCredential = this.storage.get<string>(LS_CREDENTIAL)
+    if (cachedCredential != null) {
+      if (this._completeLogin(cachedCredential, false)) {
+        return { error: null, verified: true, token: null }
+      } else {
+        return { error: null, verified: false, token: null }
+      }
+    }
+
+    return { error: 'Invalid or expired credential found', verified: false, token: null }
+  }
+  // signup(credential: AppRegistrationCredential) {
+  //   let request = this.api.post('appuser/signOn', credential).pipe(share())
+
+  //   request.subscribe((res: any) => {
+  //     if (res) {
+  //       this._loggedIn(res, credential)
+  //     }
+  //   }, err => {
+  //     this.logger.error('signup ERROR', err)
+  //   })
+
+  //   return request
+  // }
+
+  resetPassword(credential: ISsoLoginRequest) {
+    return this.api.post(`appuser/forgot-password/now`, {
+      username: credential.username
+    }, {
+      culture: this.translate.currentLang.split('-')[0]
+    })
+  }
+
+  async logout() {
+    // this.statistics.logout(this._user.userId)
+    this._user = null
+    this._credential = null
+    await this.sync.dropTables()
+    this.storage.remove(LS_CREDENTIAL)
+  }
+
+  syncData(force: boolean = false): Promise<boolean> {
+    let culture = this.hasAgentAccess ? 'all' : this.translate.currentLang.split('-')[0]
+
+    return this.sync.fullSync(this._credential, culture, force)
+  }
+
+  private _completeLogin(token: string, storeToDisk: boolean = true) {
+    this.logger.debug('UserService._completeLogin() -- called')
+    const ssoCredential = JSON.parse(atob(token.split('.')[1])) as ISsoCredential
+    this.logger.debug('UserService._completeLogin() -- Decoded credentials from token', ssoCredential)
+
+    if (ssoCredential.sub != null && ssoCredential.exp != null) {
+      const expires = new Date(ssoCredential.exp * 1000)
+      if (expires > new Date()) {
+        this._credential = ssoCredential
+        // Not expired
+
+        if (storeToDisk) {
+          this.logger.debug('UserService._completeLogin() -- Stored token to local storage')
+          this.storage.set(LS_CREDENTIAL, token)
+        }
+
+
+        const user = ssoCredential.users[0]
+
+        this._user = {
+          userId: ssoCredential.sub,
+          id: ssoCredential.id,
+          name: ssoCredential.username,
+          address: user.addressId,
+          addressName: null,
+          addressGroup: user.addressGroupId,
+          type: ssoCredential.userType,
+          city: null,
+          promo: user.promo,
+          bonus: user.bonusPercentage,
+          fostplus: user.fostplus,
+          userCode: ssoCredential.userCode
+        }
+
+        this.api.setToken(token)
+        return ssoCredential
+      }
+    }
+    return null
+  }
+
+  private _loggedIn(userResponse: ServerCustomer, credential: ISsoCredential, store: boolean = true) {
+    this.logger.log('UserService -- _loggedIn() called')
 
     this._credential = credential
 
+    if (store) {
+      this.storage.set(LS_CREDENTIAL, credential)
+    }
     this.storage.set('user', userResponse)
-    this.storage.set('credential', credential)
+    this.storage.set(LS_CREDENTIAL, credential)
   }
+}
+
+export interface ISsoLoginResponse {
+  error: string,
+  verified: boolean
+  token: string
+}
+
+export interface ISsoLoginRequest {
+  username: string
+  password: string
+}
+
+export interface ISsoUser {
+  userCode: number,
+  customerId: number,
+  addressId: number,
+  addressGroupId: number,
+  promo: boolean,
+  bonusPercentage: number,
+  fostplus: boolean
+}
+
+export interface ISsoCredential {
+  verified: boolean,
+  username: string,
+  id: number,
+  userCode: number,
+  userType: CustomerUserType,
+  status: number,
+  acceptedTermsVersion: number,
+  version: number,
+  users: Array<ISsoUser>,
+  /**
+   * Legacy user token
+   */
+  token: string,
+  isAgent: boolean,
+  agentId: number,
+  iat: number,
+  exp: number,
+  aud: Array<string>,
+  iss: string,
+  sub: string | number
 }
 
 export interface AppCredential {
@@ -178,7 +279,7 @@ export interface ServerCustomer {
 }
 
 export interface Customer {
-  userId?: number
+  userId?: string
   id: number
   name: string
   address: number

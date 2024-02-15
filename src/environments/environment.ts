@@ -10,6 +10,7 @@ export const environment = {
     'nl-BE',
     'fr-BE'
   ],
+  sso_url: 'https://sso.claes-distribution.be/v1/login',
   api_url: 'https://api.groupclaes.be/test/distribution',
   pcm_url: 'https://pcm.groupclaes.be/v4',
   database_name: 'distribution-test'

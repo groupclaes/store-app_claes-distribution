@@ -8,30 +8,54 @@ import { Observable } from 'rxjs'
   providedIn: 'root'
 })
 export class ApiService {
+  private token: string
+
   url: string = environment.api_url
   constructor(public http: HttpClient) { }
 
   get<T>(endpoint: string, params?: any): Observable<T> {
-    return this.http.get<T>(this.url + '/' + endpoint, { params })
+    return this.http.get<T>(this.url + '/' + endpoint, {
+      params,
+      headers: { authorization: this.token }
+    })
   }
 
   post<T>(endpoint: string, body: any, params?: any): Observable<T> {
-    return this.http.post<T>(this.url + '/' + endpoint, body, { params })
+    return this.http.post<T>(this.url + '/' + endpoint, body, {
+      params,
+      headers: { authorization: this.token }
+    })
   }
 
   put<T>(endpoint: string, body: any, params?: any): Observable<T> {
-    return this.http.put<T>(this.url + '/' + endpoint, body, { params })
+    return this.http.put<T>(this.url + '/' + endpoint, body, {
+      params,
+      headers: { authorization: this.token }
+    })
   }
 
   delete<T>(endpoint: string, params?: any): Observable<T> {
-    return this.http.delete<T>(this.url + '/' + endpoint, { params })
+    return this.http.delete<T>(this.url + '/' + endpoint, {
+      params,
+      headers: { authorization: this.token }
+    })
   }
 
   patch<T>(endpoint: string, body: any, params?: any): Observable<T> {
-    return this.http.patch<T>(this.url + '/' + endpoint, body, { params })
+    return this.http.patch<T>(this.url + '/' + endpoint, body, {
+      params,
+      headers: { authorization: this.token }
+    })
   }
 
-  postLogin(credential: AppCredential): Observable<ServerCustomer> {
-    return this.http.post<ServerCustomer>(`${this.url}/appuser/login`, credential)
+  /**
+   * Set the token for API requests
+   * 
+   * @private
+   * @param token 
+   */
+  setToken(token: string) {
+    if (token != null && token.length > 12)
+    this.token = 'Bearer ' + token
   }
 }
