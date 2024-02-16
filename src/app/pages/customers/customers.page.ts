@@ -78,9 +78,6 @@ export class CustomersPage {
       for (const customer of customers) {
         customer.promo = customer.promo === 1
         customer.fostplus = customer.fostplus === 1
-
-        this.notesRepository.hasUnsentNotes(customer.id, customer.address)
-          .then(result => customer.hasUnsentNotes = result)
       }
     }
     this.logger.debug('Received customers', customers.length)
@@ -135,17 +132,13 @@ export class CustomersPage {
       120);
   }
 
-  hasUnsavedNotes(customer: AppCustomerModel): Promise<boolean> {
-    return this.notesRepository.hasUnsentNotes(customer.id, customer.addressId)
-  }
-
   sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private async followUp(customer: AppCustomerModel) {
     this._loading = await this.loadCtrl.create({
-      spinner: 'circular',
+      spinner: 'lines',
       message: this.translate.instant('preparing') /** | translate */
     });
     await this._loading.present()

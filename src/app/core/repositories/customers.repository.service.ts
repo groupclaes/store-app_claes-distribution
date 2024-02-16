@@ -36,7 +36,9 @@ export class CustomersRepositoryService {
 
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       // Debug
-      let query = 'SELECT * FROM customers '
+      let query = 'SELECT c.*, '
+      + 'EXISTS (SELECT 1 FROM unsentNotes n WHERE n.customer = c.id AND n.address = c.addressId) AS `hasUnsentNotes` '
+      + 'FROM customers c '
       + `WHERE (LOWER(name) LIKE '%' || ? || '%') OR (LOWER(addressName) LIKE '%' || ? || '%') `
       + `OR (LOWER(city) LIKE '%' || ? || '%') OR (LOWER(delvCity) LIKE '%' || ? || '%')`
 
