@@ -49,7 +49,7 @@
         <span translate="actions.save"></span>
       </ion-button>
       <ion-button *ngIf="isUnsentNote(newNote)"
-        size="default" color="red" tappable (click)="deleteNote(newNote)">
+        size="default" color="danger" tappable (click)="deleteNote(newNote)">
         <i class="fal fa-fw fa-lg fa-trash"></i>
         <span translate="actions.delete"></span>
       </ion-button>
