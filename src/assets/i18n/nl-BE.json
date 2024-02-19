@@ -343,6 +343,20 @@
 
           "label": "Bericht",
           "placeholder": "Geef een bericht op voor de klant"
+        },
+        "remove-department": {
+          "cancel": "Annuleer",
+          "confirm": "Verwijder",
+          "title": "Weet je zeker dat je {{PRODUCT}} uit de afdeling {{DEPARTMENT}} wil verwijderen?",
+
+          "removed": "{{PRODUCT}} is uit {{DEPARTMENT}} verwijderd"
+        },
+        "remove-favourite": {
+          "cancel": "Annuleer",
+          "confirm": "Verwijder",
+          "title": "Weet je zeker dat je {{PRODUCT}} uit jouw favorieten wil verwijderen?",
+
+          "removed": "{{PRODUCT}} is uit jouw favorieten verwijderd"
         }
       }
     },

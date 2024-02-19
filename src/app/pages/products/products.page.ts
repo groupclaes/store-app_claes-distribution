@@ -4,7 +4,8 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChil
 import { ActivatedRoute } from '@angular/router'
 import { AlertController, IonContent, ModalController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { take } from 'rxjs/operators'
+import { Observable, Subject, of } from 'rxjs'
+import { debounce, debounceTime, take } from 'rxjs/operators'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
@@ -21,6 +22,9 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductsPage implements OnInit {
+  private _products: IProductT[]
+  private _updateCartProduct = new Subject<{productId: number, amount: number}>()
+
   @ViewChild(IonContent) content: IonContent
 
   loading = true
@@ -33,7 +37,8 @@ export class ProductsPage implements OnInit {
   displayThumbnail = false
   sortOrder: ISortOrder = 'itemNum$ASC'
 
-  private _products: IProductT[]
+  updateCartProduct: Observable<{productId: number, amount: number}>
+    = this._updateCartProduct.asObservable().pipe(debounceTime(500))
 
   private _filters: {
     category: ICategoryT;
@@ -107,6 +112,13 @@ export class ProductsPage implements OnInit {
         this.load()
       }
     })
+
+    this.updateCartProduct.subscribe(async ({ productId, amount }) => {
+      await this.cart.updateProduct(productId, amount,
+        this.user.activeUser.id, this.user.activeUser.address,
+        this.user.credential)
+      this.ref.markForCheck()
+    })
   }
 
 
@@ -175,10 +187,10 @@ export class ProductsPage implements OnInit {
 
   }
 
-  async ionViewWillEnter() {
+  async ionViewDidEnter() {
     await this.cart.loadCarts()
     try {
-      this.logger.log('ProductsPage.ionViewWillEnter() -- start')
+      this.logger.log('ProductsPage.ionViewDidEnter() -- start')
       if (this._products && this._products.length > 0) {
         await this.cart.updateActive(this.user.activeUser.id, this.user.activeUser.address)
         if (
@@ -202,9 +214,9 @@ export class ProductsPage implements OnInit {
         }
       }
     } catch (err) {
-      this.logger.error('ProductsPage.ionViewWillEnter() -- error', err)
+      this.logger.error('ProductsPage.ionViewDidEnter() -- error', err)
     } finally {
-      this.logger.log('ProductsPage.ionViewWillEnter() -- end')
+      this.logger.log('ProductsPage.ionViewDidEnter() -- end')
       this.ref.detectChanges()
     }
   }
@@ -372,8 +384,7 @@ export class ProductsPage implements OnInit {
       alert.present()
     }
 
-    this.cart.updateProduct(productId, productAmount, customerId, addressId, credential)
-    this.ref.markForCheck()
+    this._updateCartProduct.next({ productId, amount: productAmount})
   }
 
   newState = (product: $TSFixMe) => product.isNew ? 'active' : 'inactive'

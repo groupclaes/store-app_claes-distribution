@@ -53,63 +53,65 @@
 
 <ion-content [fullscreen]="true">
   <ion-list *ngIf="products.length > 0 && !loading">
-    <ion-item lines="full" tabbapble [routerLink]="[product.id]" *ngFor="let product of products; let i = index">
-      <ion-avatar *ngIf="displayThumbnail" slot="start">
-        <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
-          [style]="'background-color:' + product.color" width="32" height="32">
-      </ion-avatar>
+    <cdk-virtual-scroll-viewport itemSize="21" style="width:100%; height: calc(100vh - 100px)">
+      <ion-item lines="full" tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; let i = index">
+        <ion-avatar *ngIf="displayThumbnail" slot="start">
+          <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
+            [style]="'background-color:' + product.color" width="32" height="32">
+        </ion-avatar>
 
-      <ion-label class="ion-text-wrap">
-        <div class="product-options" style="display:flex">
-          <ion-badge color="secondary" *ngIf="newState(product) === 'active'" translate="newItem"></ion-badge>
-          {{ newState(product) === 'active' ? '&nbsp;' : '' }}
-          <ion-badge color="danger" *ngIf="promoState(product) === 'active'" translate="promoItem"></ion-badge>
-          {{ promoState(product) === 'active' ? '&nbsp;' : '' }}
-          <ion-badge color="warning" *ngIf="favoriteState(product) === 'active'" translate="favoriteItem"></ion-badge>
-          {{ favoriteState(product) === 'active' ? '&nbsp;' : '' }}
-          <ion-badge color="success" *ngIf="orderState(product) === 'active'" translate="orderItem"></ion-badge>
-        </div>
-        {{ product.unit | capitalize }} - {{ product.name }}
-        <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
-          {{ favinfo(product) }}
-        </div>
-        <ion-badge color="light" *ngIf="product.availableOn">
-          {{ availableDescription(product) }}
-        </ion-badge>
-      </ion-label>
-      <!-- <div class="w-full product-listitem-grid">
-        <div class="product-options">
-          <div class="option-state new-toggle">
-            <span [ngClass]="newState(product)" translate="newToggleButton"></span>
+        <ion-label class="ion-text-wrap">
+          <div class="product-options" style="display:flex">
+            <ion-badge color="secondary" *ngIf="newState(product) === 'active'" translate="newItem"></ion-badge>
+            {{ newState(product) === 'active' ? '&nbsp;' : '' }}
+            <ion-badge color="danger" *ngIf="promoState(product) === 'active'" translate="promoItem"></ion-badge>
+            {{ promoState(product) === 'active' ? '&nbsp;' : '' }}
+            <ion-badge color="warning" *ngIf="favoriteState(product) === 'active'" translate="favoriteItem"></ion-badge>
+            {{ favoriteState(product) === 'active' ? '&nbsp;' : '' }}
+            <ion-badge color="success" *ngIf="orderState(product) === 'active'" translate="orderItem"></ion-badge>
           </div>
-          <div class="option-state promo-toggle">
-            <span [ngClass]="promoState(product)" translate="promoToggleButton"></span>
-          </div>
-          <div class="option-state favorite-toggle">
-            <span [ngClass]="favoriteState(product)" translate="favoriteToggleButton"></span>
-          </div>
-          <div class="option-state order-toggle">
-            <span [ngClass]="orderState(product)" translate="orderToggleButton"></span>
-          </div>
-        </div>
-        <div class="product-name">
-          {{ product.name }}
+          {{ product.unit | capitalize }} - {{ product.name }}
           <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
             {{ favinfo(product) }}
           </div>
           <ion-badge color="light" *ngIf="product.availableOn">
             {{ availableDescription(product) }}
           </ion-badge>
+        </ion-label>
+        <!-- <div class="w-full product-listitem-grid">
+          <div class="product-options">
+            <div class="option-state new-toggle">
+              <span [ngClass]="newState(product)" translate="newToggleButton"></span>
+            </div>
+            <div class="option-state promo-toggle">
+              <span [ngClass]="promoState(product)" translate="promoToggleButton"></span>
+            </div>
+            <div class="option-state favorite-toggle">
+              <span [ngClass]="favoriteState(product)" translate="favoriteToggleButton"></span>
+            </div>
+            <div class="option-state order-toggle">
+              <span [ngClass]="orderState(product)" translate="orderToggleButton"></span>
+            </div>
+          </div>
+          <div class="product-name">
+            {{ product.name }}
+            <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
+              {{ favinfo(product) }}
+            </div>
+            <ion-badge color="light" *ngIf="product.availableOn">
+              {{ availableDescription(product) }}
+            </ion-badge>
+          </div>
+          <div class="product-packing-unit">
+            {{ product.unit | capitalize }}
+          </div>
+        </div> -->
+        <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
+          <input [ngModel]="product.amount" [disabled]="product.availableOn !== null" placeholder="0" class="control-color"
+            type="tel" [tabindex]="i+1" (input)="changeProductAmount($event, product)" />
         </div>
-        <div class="product-packing-unit">
-          {{ product.unit | capitalize }}
-        </div>
-      </div> -->
-      <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
-        <input [ngModel]="product.amount" [disabled]="product.availableOn !== null" placeholder="0" class="control-color"
-          type="tel" [tabindex]="i+1" (input)="changeProductAmount($event, product)" />
-      </div>
-    </ion-item>
+      </ion-item>
+    </cdk-virtual-scroll-viewport>
   </ion-list>
 
   <div *ngIf="(!products.length && loading) || loading || loadingAdditional">

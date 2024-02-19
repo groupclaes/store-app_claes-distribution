@@ -136,11 +136,7 @@ export class ProductDetailPage implements OnInit {
   }
 
   get actionSheetButtons() {
-    const buttons = [
-      {
-        text: this.translate.instant('messages.addToDepartment'),
-        handler: () => this.openAddProductToDepartment()
-      },
+    let buttons: Array<any> = [
       {
         text: this.translate.instant('messages.changeCustomerDescription'),
         handler: () => this.changeCustomerDescription()
@@ -157,6 +153,16 @@ export class ProductDetailPage implements OnInit {
         handler: () => { }
       }
     ]
+
+    if (this.departments.length > 0) {
+      buttons = [
+        {
+          text: this.translate.instant('messages.addToDepartment'),
+          handler: () => this.openAddProductToDepartment()
+        },
+        ...buttons
+      ]
+    }
 
     return buttons
   }
@@ -372,17 +378,40 @@ export class ProductDetailPage implements OnInit {
 
   async removeFromDepartment(departmentId: number) {
     if (departmentId != null) {
-      await this.products.removeFromDepartment(this.product.id, departmentId)
-      this.product.departments = this.product.departments.filter(x => x.id !== departmentId)
+      const departmentAlias = this.product.departments.find(x => x.id === departmentId).alias
+      const message: string = (this.translate.instant('pages.product-detail.modals.remove-department.title') as string)
+        .replace('{{PRODUCT}}', this.product.name)
+        .replace('{{DEPARTMENT}}', departmentAlias)
 
-      const toast = await this.toastCtrl.create({
-        message: 'Het product werd uit de afdeling verwijderd.', /* | translate */
-        duration: 3000,
-        position: 'top'
+      const alert = await this.alertCtrl.create({
+        message,
+        buttons: [
+          {
+            text: this.translate.instant('pages.product-detail.modals.remove-department.cancel'),
+            role: 'cancel'
+          },
+          {
+            text: this.translate.instant('pages.product-detail.modals.remove-department.confirm'),
+            handler: async () => {
+              await this.products.removeFromDepartment(this.product.id, departmentId)
+              this.product.departments = this.product.departments.filter(x => x.id !== departmentId)
+        
+              const toast = await this.toastCtrl.create({
+                message: (this.translate.instant('pages.product-detail.modals.remove-department.removed') as string)
+                  .replace('{{PRODUCT}}', this.product.name)
+                  .replace('{{DEPARTMENT}}', departmentAlias), /* | translate */
+                duration: 3000,
+                position: 'top'
+              })
+              toast.present()
+
+              this.ref.markForCheck()
+            }
+          }
+        ]
       })
-      toast.present()
 
-      this.ref.markForCheck()
+      await alert.present()
     } else {
       const toast = await this.toastCtrl.create({
         message: 'Er is geen Geen afdeling geselecteerd.', /* | translate */
@@ -443,19 +472,35 @@ export class ProductDetailPage implements OnInit {
   }
 
   async removeFromFavourites() {
-    await this.products.removeFromFavourites(this._product.id)
-    this._product.isFavorite = false
-
-
-    const toast = await this.toastCtrl.create({
-      message: 'Het product is verwijderd uit uw favorieten.', /* | translate */
-      duration: 3000,
-      position: 'top'
+    const alert = await this.alertCtrl.create({
+      message: (this.translate.instant('pages.product-detail.modals.remove-favourite.title') as string)
+        .replace('{{PRODUCT}}', this.product.name),
+      buttons: [
+        {
+          text: this.translate.instant('pages.product-detail.modals.remove-favourite.cancel'),
+          role: 'cancel'
+        },
+        {
+          text: this.translate.instant('pages.product-detail.modals.remove-favourite.confirm'),
+          handler: async () => {
+            await this.products.removeFromFavourites(this._product.id)
+            this._product.isFavorite = false
+        
+            const toast = await this.toastCtrl.create({
+              message: (this.translate.instant('pages.product-detail.modals.remove-favourite.removed') as string)
+                .replace('{{PRODUCT}}', this.product.name), /* | translate */
+              duration: 3000,
+              position: 'top'
+            })
+        
+            toast.present()
+            this.ref.markForCheck()
+          }
+        }
+      ]
     })
 
-    toast.present()
-
-    this.ref.markForCheck()
+    alert.present()
   }
 
   async changeCustomerDescription() {
