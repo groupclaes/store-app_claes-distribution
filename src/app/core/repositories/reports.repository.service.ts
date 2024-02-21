@@ -16,7 +16,7 @@ export class ReportsRepositoryService {
       const result = await db.query(
         `SELECT id, ${nameString} as name, extension FROM reports WHERE onlyAgent = ? OR onlyAgent IS FALSE`,
         [
-          agentAccess
+          agentAccess ? 1 : 0
         ]
       )
 
