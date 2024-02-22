@@ -8,7 +8,7 @@
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
-      <ion-button tappable class="icon-only" id="open-action-sheet" style="font-size: 1.5em">
+      <ion-button *ngIf="product" tappable class="icon-only" [id]="'open-action-sheet-' + product.id" style="font-size: 1.5em">
         <i class="fal fa-fw fa-ellipsis-h"></i>
       </ion-button>
     </ion-buttons>
@@ -342,7 +342,7 @@
         </ion-item>
       </ion-list>
     </section>
-    <ion-action-sheet trigger="open-action-sheet" [header]="'actions.title' | translate" [buttons]="actionSheetButtons"></ion-action-sheet>
+    <ion-action-sheet *ngIf="product" [trigger]="'open-action-sheet-' + product.id" [header]="'actions.title' | translate" [buttons]="actionSheetButtons"></ion-action-sheet>
   </article>
   <ion-modal [isOpen]="pictureOpen" style="--max-width:800px;--max-height:800px;--width:100%; --height:calc(100vw + 40px);"
     (didDismiss)="pictureOpen = false">
