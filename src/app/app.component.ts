@@ -14,6 +14,8 @@ import { BrowserService } from './core/browser.service'
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
 
+const LS_LANGUAGE = 'CLAES_STORE_LANGUAGE'
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -34,7 +36,8 @@ export class AppComponent {
     private ref: ChangeDetectorRef,
     private user: UserService,
     private cart: CartService,
-    private browser: BrowserService
+    private browser: BrowserService,
+    private store: StorageProvider
   ) {
     logger.log('MyApp.constructor() -- started.')
 
@@ -94,14 +97,20 @@ export class AppComponent {
 
   async initTranslate() {
     this.translate.setDefaultLang(environment.default_language)
-    const browserLang = this.translate.getBrowserCultureLang()
 
     this.translate.addLangs(environment.supported_languages)
 
-    if (browserLang && this.translate.langs.some(e => e === browserLang)) {
-      this.translate.use(browserLang)
+    const storedLanguage =  this.store.get<string>(LS_LANGUAGE)
+    if (this.translate.langs.findIndex(e => e === storedLanguage) > -1) {
+      this.translate.use(storedLanguage)
     } else {
-      this.translate.use(environment.default_language)
+      const browserLang = this.translate.getBrowserCultureLang()
+
+      if (browserLang && this.translate.langs.some(e => e === browserLang)) {
+        this.translate.use(browserLang)
+      } else {
+        this.translate.use(environment.default_language)
+      }
     }
   }
 

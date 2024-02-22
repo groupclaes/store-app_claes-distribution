@@ -6,6 +6,9 @@ import { TranslateService } from '@ngx-translate/core'
 import { Subscription } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { environment } from 'src/environments/environment'
+import { StorageProvider } from 'src/app/core/storage-provider.service';
+
+const LS_LANGUAGE = 'CLAES_STORE_LANGUAGE'
 
 @Component({
   selector: 'app-settings',
@@ -31,7 +34,8 @@ export class SettingsPage implements OnInit, OnDestroy {
     private translate: TranslateService,
     private settings: SettingsService,
     private ref: ChangeDetectorRef,
-    private logger: LoggingProvider
+    private logger: LoggingProvider,
+    private store: StorageProvider
   ) {
   }
 
@@ -135,6 +139,7 @@ export class SettingsPage implements OnInit, OnDestroy {
       console.log(language)
 
       this.translate.use(language)
+      this.store.set(LS_LANGUAGE, language)
     }
   }
 }
