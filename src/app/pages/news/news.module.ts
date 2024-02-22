@@ -11,7 +11,7 @@ import { RouterModule } from '@angular/router'
     CommonModule,
     FormsModule,
     IonicModule,
-    TranslateModule.forChild(),
+    TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
       path: '', component: NewsPage
     }])

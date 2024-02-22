@@ -13,7 +13,7 @@ import { CoreModule } from 'src/app/core/core.module'
     FormsModule,
     IonicModule,
     CoreModule,
-    TranslateModule.forChild(),
+    TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
       path: '', component: CategoriesPage
     }])

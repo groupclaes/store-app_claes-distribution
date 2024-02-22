@@ -15,7 +15,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling'
     IonicModule,
     ScrollingModule,
     CoreModule,
-    TranslateModule.forChild(),
+    TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
       path: '',
       component: ProductsPage

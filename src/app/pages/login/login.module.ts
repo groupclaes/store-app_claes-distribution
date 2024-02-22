@@ -14,7 +14,7 @@ import { RouterModule } from '@angular/router'
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
-    TranslateModule.forChild(),
+    TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([
       { path: '', component: LoginPage }
     ])

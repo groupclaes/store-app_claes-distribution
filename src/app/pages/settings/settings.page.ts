@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 /* eslint-disable @typescript-eslint/member-delimiter-style */
 import { SettingsService } from 'src/app/core/settings.service'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core'
@@ -128,6 +129,12 @@ export class SettingsPage implements OnInit, OnDestroy {
   }
 
   changeLanguage($event: any) {
-    this.translate.use($event.detail.value).subscribe(x => this.ref.markForCheck())
+    const language = $event.detail.value
+    if (language != null) {
+      console.log(this.translate.getLangs())
+      console.log(language)
+
+      this.translate.use(language)
+    }
   }
 }

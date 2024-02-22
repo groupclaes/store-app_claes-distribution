@@ -8,11 +8,7 @@ import { SettingsService } from 'src/app/core/settings.service';
 import { AppCustomerModel, UserService } from 'src/app/core/user.service';
 import { SyncService } from 'src/app/core/sync.service';
 import { ActivatedRoute } from '@angular/router';
-import { StorageProvider } from 'src/app/core/storage-provider.service';
 import { LoggingProvider } from 'src/app/@shared/logging/log.service';
-import { NotesRepositoryService } from 'src/app/core/repositories/notes.repository.service';
-
-export const LS_SAVED_NOTES = 'saved_notes';
 
 @Component({
   selector: 'app-customers',
@@ -38,8 +34,7 @@ export class CustomersPage {
     private translate: TranslateService,
     private sync: SyncService,
     private route: ActivatedRoute,
-    private logger: LoggingProvider,
-    private notesRepository: NotesRepositoryService) { }
+    private logger: LoggingProvider) { }
 
   get createCustomerAllowed(): boolean {
     return (this.user.userinfo) ? this.user.userinfo.type === 2 || this.user.userinfo.type === 3 : false;
@@ -62,6 +57,9 @@ export class CustomersPage {
     } else {
       this.loadCustomers().then(x => this.ref.markForCheck())
     }
+  }
+  async ionViewDidEnter() {
+    this.ref.markForCheck()
   }
 
   async loadCustomers(overrideQuery?: string) {

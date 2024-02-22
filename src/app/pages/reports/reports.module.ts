@@ -11,7 +11,7 @@ import { ReportsPage } from './reports.page'
     CommonModule,
     FormsModule,
     IonicModule,
-    TranslateModule.forChild(),
+    TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
       path: '', component: ReportsPage
     }])

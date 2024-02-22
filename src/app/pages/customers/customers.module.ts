@@ -16,7 +16,7 @@ import { TranslateModule } from '@ngx-translate/core';
     IonicModule,
     CustomersPageRoutingModule,
     ScrollingModule,
-    TranslateModule.forChild()
+    TranslateModule.forChild({ extend: true })
   ],
   declarations: [CustomersPage]
 })
