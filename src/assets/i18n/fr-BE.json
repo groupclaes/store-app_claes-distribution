@@ -2,6 +2,7 @@
   "backButtonText": "Retour",
   "cancelButtonText": "Annuler",
   "commonInfo": "Informations générales",
+  "commentsMachines": "Installateur",
   "subTotals": "Sous-totaux",
   "endTotal": "Somme finale",
   "welcomeIntro": "Bienvenue sur la nouvelle App de Claes Distribution!",
@@ -21,6 +22,7 @@
   "version": "Version: ",
   "cartSendError": "Erreur lors de l'envoi du panier. vérifiez votre connexion ou réessayez plus tard.",
   "availableOn": "Disponible dès le ",
+  "productUnavailable": "Momenteel niet beschikbaar",
   "signupTitle": "S'enregistrer",
   "registrationCode": "Code d'enregistrement",
   "signupButton": "S'enregistrer",
@@ -30,6 +32,7 @@
   "yes": "Oui",
   "no": "Non",
   "maybe": "Peut-être",
+  "preparing": "Voorbereiden",
   "choseAValue": "Choisissez une valeur",
   "selectAValue": "Sélectionnez une valeur",
   "searchInput": "Rechercher",
@@ -40,10 +43,13 @@
   "leafletPage": "Dépliant",
   "customersPage": "Clients",
   "customerInfoPage": "Info client",
-  "cartsPage": "Paniers",
+  "addressInfoPage": "Adresinfo",
+  "cartsPage": "Winkelmandjes",
   "categoriesPage": "Groupes de produits",
   "productsPage": "Produits",
   "departmentsPage": "Divisions",
+  "departments": "Divisions",
+  "department": "Division",
   "recipesPage": "Recettes",
   "reportsPage": "Rapports",
   "newsPage": "Nouvelles",
@@ -165,9 +171,7 @@
   "attributes": "Caractéristiques",
   "description": "Description",
   "promotion": "Promotion",
-  "departments": "Divisions",
   "selectaDepartment": "Selectionez une divisions",
-  "department": "Division",
   "reports": "Rapports",
   "productRelations": "Relations produit",
   "categories": "Catégories",
@@ -230,6 +234,7 @@
   "datasheetMailMessageError": "La fiche thechnique n'est pas envoyée",
   "invalidAmountError": "Quantité introduite incorrect ",
   "invalidAmountMessageError": "La quantité est modifié, veuillez consulter la quantité minimum et quantité par. Nouvelle quantité :",
+  "priceOnRequest": "Prijs op aanvraag",
   "syncronisationSettings": "Paramètres de synchronisation",
   "syncInterval": "Intervalle mise à jour automatique",
   "syncOnMobile": "mise à jour en cas de data mobile",
@@ -254,12 +259,18 @@
   "promoToggleButton": "P",
   "favoriteToggleButton": "F",
   "orderToggleButton": "AC",
+  "sendOk": "Verstuurd",
+  "sentOn": "Verstuurd op ",
+  "sendFailedOn": "Versturen mislukt op ",
+  "sendFailed": "Versturen mislukt!",
+  "notYetSent": "Nog niet verzonden",
   "allergenDetails": "Données allergènes",
   "noAllergensPresent": "Aucun des allergènes obligatoires à mentionner présents.",
   "noAllergensAvailable": "Pas disponibles pour ce produit.",
   "allergen_ae": "Des oeufs",
   "allergen_af": "Poisson",
   "allergen_am": "lait",
+  "allergen_ml": "Lactose",
   "allergen_an": "Noix",
   "allergen_ap": "Cacahuètes",
   "allergen_as": "Graines de sésame",
@@ -307,9 +318,11 @@
     "removeFromFavorites": "Supprimer des favoris",
     "changeCustomerDescription": "Modifier la description personnelle",
     "choseFiletype": "Choisir le type de fichier souhaité",
-    "choseDeliveryMethod": "Choisissez le type de fichier souhaité."
+    "choseDeliveryMethod": "Choisissez le type de fichier souhaité.",
+    "copiedToClipboard": "Artikel gekopieerd naar klembord"
   },
   "actions": {
+    "title": "Action",
     "open": "Ouvrir",
     "mail": "Envoyer par e-mail",
     "show": "Montrer",
@@ -323,40 +336,105 @@
     "okButton": "Ok"
   },
   "pages": {
+    "login": {
+      "offline-message": "Je moet online zijn om je aan te melden"
+    },
+    "customer-create": {
+      "title": "Klant aanmaken"
+    },
+    "product-detail": {
+      "modals": {
+        "mail": {
+          "cancel": "Annuleer",
+          "confirm": "Bevestig",
+          "title": "E-mail opgeven",
+
+          "label": "Bericht",
+          "placeholder": "Geef een bericht op voor de klant"
+        },
+        "remove-department": {
+          "cancel": "Annuleer",
+          "confirm": "Verwijder",
+          "title": "Weet je zeker dat je {{PRODUCT}} uit de afdeling {{DEPARTMENT}} wil verwijderen?",
+
+          "removed": "{{PRODUCT}} is uit {{DEPARTMENT}} verwijderd"
+        },
+        "remove-favourite": {
+          "cancel": "Annuleer",
+          "confirm": "Verwijder",
+          "title": "Weet je zeker dat je {{PRODUCT}} uit jouw favorieten wil verwijderen?",
+
+          "removed": "{{PRODUCT}} is uit jouw favorieten verwijderd"
+        }
+      }
+    },
+    "register": {
+      "fields": {
+        "registration-code": "Registratiecode",
+        "first-name": "Voornaam",
+        "last-name": "Achternaam",
+        "email": "E-mailadres",
+        "password": "Wachtwoord",
+        "re-password": "Wachtwoord (opnieuw)"
+      }
+    },
     "reports": {
       "requestedReports": "Mes rapports demandés",
       "reportExecutedAt": "rapport effectué à",
       "noActiveReportsLast2Weeks": "Vous n'avez pas de rapports demandés actifs des 14 derniers jours.",
       "availableReports": "Rapports disponibles"
+    },
+    "notes": {
+      "title": "Notities",
+      "saved": "Onafgewerkte notitie",
+      "to-be-sent": "Wordt verzonden",
+      "fields": {
+        "note": "Notitie",
+        "next-visit": "Volgend bezoek",
+        "closed-from": "Gesloten vanaf",
+        "open-from": "Open vanaf"
+      },
+      "unsavedNotes": {
+        "title": "Onafgewerkte notities voor deze klant",
+        "description": "U heeft nog onverzonden notities voor deze klant op dit toestel staan, weet u zeker dat u deze (nog) niet wilt verwerken?"
+      },
+      "confirmDelete": {
+        "title": "Weet u dit zeker?",
+        "description": "Weet u zeker dat u deze notitie wilt verwijderen?"
+      },
+      "deletedResult": "Er werden {{SENT}} notities verzonden ({{FAILED}} naar wachtrij)"
+    },
+    "customer-info": {
+      "fields": {
+        "bonus": "Bonus",
+        "customer-address": "Klantadres",
+        "customer-id": "Klantnummer",
+        "customer-name": "Naam",
+        "delivery-address": "Leveradres",
+        "promo": "Promorechtig",
+        "fostplus": "Fostplus",
+        "address": "Adres",
+        "city": "Stad",
+        "country": "Land",
+        "phoneNum": "Tel.",
+        "vatNum": "BTW-nummer",
+        "language": "Taal"
+      }
     }
   },
-  "tutorial": {
-    "slide1Title": "Connecter et enregistrer",
-    "slide1Description1": "Merci d'avoir installé notre application. <br />L'application fonctionne aussi hors ligne, donc n'hésitez pas à l'utiliser même si vous n'avez pas de réseau à votre disposition. <br />Les favoris et les divisions que vous ajoutez dans la boutique en ligne seront également disponibles dans l'application. <br />Le panier de la boutique en ligne et celui de l'application restent séparés.",
-    "slide1Description2": "¨Êtes-vous déjà inscrit sur la boutique en ligne? Vous pouvez alors utiliser les mêmes données de connexion pour l'application.",
-    "slide1Description3": "Pas encore inscrit sur notre boutique en ligne? <br />Cliquez sur 'Inscrire' sur la page de connexion. <br />Vous trouverez votre code d'inscription sur une facture ou un bordereau d'envoi récent. <br />Pas de documents sous la main? Pas de problème. Prenez contact avec notre service clientèle (<a href=\"mailto:info@claes-distribution.be\">info@claes-distribution.be</a> ou <a href=\"tel:003211456200\">+3211456200</a>) ou avec votre représentant. Ils vous procureront le code avec plaisir.",
-    "slide1Description4": "Vous n'êtes pas encore client chez nous? <br />Cliquez sur le lien. Vous serez alors redirigé à notre page web, où vous pouvez entrer toutes vos données d'entreprise. <br />Vous recevrez dans les meilleurs délais un e-mail avec votre code d'inscription.",
-    "slide2Title": "Produits",
-    "slide2Description1": "Afficher seuls les nouveaux produits",
-    "slide2Description2": "Afficher tous les produits",
-    "slide2Description3": "Afficher seuls les produits en promo",
-    "slide2Description5": "Afficher seuls vos favoris",
-    "slide2Description6": "Afficher tous les produits, sauf vos favoris",
-    "slide2Description8": "Les articles de commande sont des articles que nous ne gardons pas en stock, mais que nous pouvons fournir sur demande. Le délai de livraison estimé est toujours indiqué sur la page d'infos de l'article.",
-    "slide2Description9": "Vous pouvez combiner les filtres facilement, par exemple pour voir seuls vos favoris qui sont en promotion.",
-    "slide2Description10": "Afficher tous les produits, sauf les articles de commande",
-    "slide3Title": "Gestion et aperçu des produits",
-    "slide3Description1": "Vous pouvez dorénavant ajouter vous-même des produits à vos favoris.",
-    "slide3Description2": "Cliquez dans l'écran d'information sur 3 ... à côté du panier.<br />  Sélectionnez l'option 'Ajouter aux favoris'.",
-    "slide3Description3": "De la même manière, vous pouvez supprimer un produit favori de la liste.",
-    "slide3Description4": "Utilisez notre aperçu de l'assortiment pour trouver le produit que vous recherchez.",
-    "slide3Description5": "Cliquez sur l'assortiment dans le menu. <br /> Vous obtiendrez un aperçu complet de tous les types de produits disponibles. Vous pouvez ensuite cliquer facilement sur un groupe et voir tous les produits.",
-    "slide4Title": "Paramètres",
-    "slide4Description1": "Vous pouvez définir vous-même un certain nombre de paramètres.",
-    "slide4Description2": "Sous ‘page par défaut', choisissez la page qui s'ouvre en premier lors du démarrage de l'application.",
-    "slide4Description3": "Définissez le mode de fonctionnement par défaut des filtres des produits et si vous souhaitez toujours voir une photo du produit dans l'aperçu.",
-    "slide4Description4": "En cas d'iOS, vous pouvez choisir entre un thème sombre et clair.",
-    "slide4Description5": "L'application démarre par défaut dans la langue de votre appareil, mais ensuite vous pouvez choisir entre le néerlandais et le français."
+  "languages": {
+    "nl": "Nederlands",
+    "n": "Nederlands",
+    "fr": "Frans",
+    "f": "Frans"
+  },
+  "contacts": {
+    "ordConf": "Orderbevestiging",
+    "bonus": "Bonus",
+    "invoice": "Factuur",
+    "reminder": "Betaalherrinering",
+    "domiciliation": "Bevestiging domiciliëringsopdracht",
+    "comMailing": "Commerciële mailing"
   },
   "badge.new-label": "N",
   "badge.promo-label": "P",
@@ -379,5 +457,57 @@
         "message": "Une erreur s'est produite lors de la suppression de la division."
       }
     }
-  }
+  },
+  "checksum": {
+    "departments": "Afdelingen",
+    "reports": "Rapporten",
+    "productRelations": "Productrelaties",
+    "categories": "Categoriën",
+    "packingUnits": "Verpakkingen",
+    "favorites": "Favorieten",
+    "categoryAttributes": "Categorie kenmerken",
+    "productExceptions": "Uitzonderingen",
+    "productTaxes": "Product taksen",
+    "shippingCosts": "Leverkosten",
+    "products": "Producten",
+    "prices": "Prijzen",
+    "deliverySchedules": "Leverschema's",
+    "notes": "Notities",
+    "recipes": "Recepten",
+    "usageManuals": "Gebruikershandlijdingen",
+    "datasheets": "Datasheets",
+    "recipesModule": "Recepten Module",
+    "contacts": "Contacten",
+    "news": "Nieuws",
+    "customers": "Klanten",
+    "productDescriptionCustomers": "Artikelnummers klant",
+    "attributes": "Attributen",
+    "lastSync": "Laatst gesynchroniseerd"
+  },
+
+  "customer-info": {
+    "alerts": {
+      "invalid-customer": {
+        "title": "Ongeldige selectie",
+        "message": "Je het geen klant geselecteerd",
+        "buttons": {
+          "cancel": "Sluiten"
+        }
+      },
+      "switch-customer": {
+        "title": "Klant wisselen",
+        "message": "Je hebt nog geen notitie gemaakt voor je bezoek bij {{ACTIVE_CUSTOMER_NAME}} te {{ACTIVE_CUSTOMER_CITY}} weet je zeker dat je klant wilt wisselen?"
+      },
+      "no-change-customer": {
+        "title": "Klant niet gewijzigd!",
+        "message": "Je bevindt je momenteel al bij deze klant."
+      }
+    },
+    "search": "Zoek klant",
+    "customers": "Klanten"
+  },
+  "newItem": "Nieuw",
+  "promoItem": "Promotie",
+  "favoriteItem": "Favoriet",
+  "orderItem": "Bestelartikel"
 }
