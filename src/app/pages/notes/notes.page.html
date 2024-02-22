@@ -91,7 +91,7 @@
     <ion-item *ngIf="isUnsentNote(note)" lines="full">
       <span translate="pages.notes.saved"></span>
     </ion-item>
-    <ion-item *ngIf="debugging && note.id && note.toSend" lines="full">
+    <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend" lines="full">
       <span translate="pages.notes.to-be-sent"></span>
     </ion-item>
     <ion-item lines="full">
