@@ -1228,7 +1228,7 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true, undefined, false)
+          await db.executeSet(sqlStatements, true)
           this.logger.log('inserted contacts', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'contacts', response.checksumSha)
         })
