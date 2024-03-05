@@ -33,9 +33,7 @@
   </div>
 
   <div class="pt-4 px-4">
-    <ion-text *ngIf="unsendCount > 0">
-      Er zijn {{ unsendCount }} winkelmandjes nog niet succesvol verstuurd!
-    </ion-text>
+    <ion-text *ngIf="unsendCount > 0" [innerText]="unsentText"></ion-text>
     <ion-text *ngIf="carts && carts.length === 0">
       {{ 'noCarts' | translate }}
     </ion-text>

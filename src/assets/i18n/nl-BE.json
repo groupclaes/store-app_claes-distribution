@@ -29,6 +29,7 @@
   "signupError": "Fout bij het registreren, controleer je gegevens of probeer later opnieuw.",
   "howtoRegistrationCode": "Registratiecode?",
   "noCustomer": "Klant worden",
+  "noCarts": "Je hebt nog geen winkelmandje.",
   "yes": "Ja",
   "no": "Nee",
   "maybe": "Misschien",
@@ -172,6 +173,13 @@
   "description": "Beschrijving",
   "promotion": "Promotie",
   "selectaDepartment": "Selecteer een afdeling",
+  "reports": "Rapporten",
+  "productRelations": "Productrelaties",
+  "categories": "Categoriën",
+  "packingUnits": "Verpakkingen",
+  "favorites": "Favorieten",
+  "categoryAttributes": "Categorie kenmerken",
+  "productExceptions": "Uitzoneringen",
   "integrityChecksums": "Data-volledigheid",
   "showIntegrity": "Toon data-volledigheid",
   "resetIntegrity": "Stel data-volledigheid opnieuw in",
@@ -196,7 +204,6 @@
   "commentsDriver": "Chauffeur",
   "removeSelection": "Wis filters",
   "noCustomers": "Je hebt nog geen klanten, gelieve contact op te nemen met onze klantendienst.",
-  "noCarts": "Je hebt nog geen winkelmandje.",
   "nextVisit": "Volgend bezoek",
   "customerCloseFrom": "Klant gesloten van",
   "customerOpenFrom": "Klant gesloten tot",
@@ -334,6 +341,9 @@
     "customer-create": {
       "title": "Klant aanmaken"
     },
+    "cart": {
+      "unsentCarts": "Er zijn nog {{UNSENT}} winkelmandjes niet succesvol verstuurd!"
+    },
     "product-detail": {
       "modals": {
         "mail": {
@@ -424,7 +434,7 @@
     "ordConf": "Orderbevestiging",
     "bonus": "Bonus",
     "invoice": "Factuur",
-    "reminder": "Betaalherrinering",
+    "reminder": "Betalingsherinnering",
     "domiciliation": "Bevestiging domiciliëringsopdracht",
     "comMailing": "Commerciële mailing"
   },
@@ -481,7 +491,7 @@
     "alerts": {
       "invalid-customer": {
         "title": "Ongeldige selectie",
-        "message": "Je het geen klant geselecteerd",
+        "message": "Je hebt geen klant geselecteerd",
         "buttons": {
           "cancel": "Sluiten"
         }

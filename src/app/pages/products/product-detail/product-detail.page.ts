@@ -82,7 +82,7 @@ export class ProductDetailPage implements OnInit {
     if (this._product) {
       return `${this._product.name}`
     }
-    return '(unknown)'
+    return ''
   }
 
   get productImage(): string {

@@ -32,6 +32,9 @@ export class CartsPage implements OnInit {
     private navCtrl: NavController
   ) { }
 
+  get unsentText() {
+    return (this.translate.instant('pages.cart.unsentCarts') as string).replace('{{UNSENT}}', this.unsendCount + '')
+  }
 
   get carts(): ICartDetailCustom[] {
     return this._carts

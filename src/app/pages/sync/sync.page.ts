@@ -4,7 +4,7 @@ import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 import { Store, SyncService } from 'src/app/core/sync.service'
-import { UserService } from 'src/app/core/user.service'
+import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service'
 
 @Component({
   selector: 'app-sync',
@@ -56,8 +56,16 @@ export class SyncPage implements OnInit {
       promise = this.sync.fullSync(this.user.credential, 'all', true)
     }
 
-    promise.then(_ => this.loader.dismiss())
+    await promise.then(_ => this.loader.dismiss())
       .then(_ => this.load())
+
+    if (this.user.activeUser.id != null && this.user.activeUser.address != null) {
+      const customer = {
+        id: this.user.activeUser.id,
+        addressId: this.user.activeUser.address
+      } as AppCustomerModel
+      await this.sync.prepareCurrentExceptions(customer)
+    }
   }
 
   private async load(): Promise<void> {

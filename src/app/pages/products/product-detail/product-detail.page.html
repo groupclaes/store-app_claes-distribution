@@ -22,6 +22,7 @@
       </ion-title>
     </ion-toolbar>
   </ion-header>
+  <ion-loading *ngIf="product != undefined" spinner="lines" translate="preparing" mode="ios"></ion-loading>
   <article *ngIf="product !== null && !loading">
     <div class="image-price-container">
       <section class="product-image-wrapper">
@@ -48,7 +49,7 @@
           <h3>
             {{ 
               product.prices.length > 0 ?
-                ('basePrice' | translate) + ' ' + (product.basePrice | currency:'EUR':'symbol-narrow':'0.2-2':culture) :
+                ('basePrice' | translate ) + ' ' + (product.basePrice | currency:'EUR':'symbol-narrow':'0.2-2':culture) :
                 'priceOnRequest' | translate
             }}
           </h3>

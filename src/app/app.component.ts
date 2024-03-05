@@ -134,7 +134,7 @@ export class AppComponent {
   openLeaflet(): void {
     // this.statistics.leafletView(this.user.userinfo.userId)
     this.browser.open(
-      `https://pcm.groupclaes.be/v4/content/dis/website/month-leaflet/100/${this.culture.split('-')[0]}`,
+      `https://pcm.groupclaes.be/v4/content/dis/website/month-leaflet/100/${this.culture.split('-')[0]}?show`,
       '_system', 'location=yes')
   }
 }

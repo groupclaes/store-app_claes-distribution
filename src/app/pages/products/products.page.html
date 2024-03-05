@@ -53,7 +53,7 @@
 
 <ion-content [fullscreen]="true">
   <ion-list *ngIf="products.length > 0 && !loading">
-    <cdk-virtual-scroll-viewport itemSize="21" style="width:100%; height: calc(100vh - 100px)">
+    <cdk-virtual-scroll-viewport itemSize="45" style="width:100%; height: calc(100vh - 88px)">
       <ion-item lines="full" tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; let i = index">
         <ion-avatar *ngIf="displayThumbnail" slot="start">
           <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"

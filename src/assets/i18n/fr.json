@@ -2,7 +2,6 @@
   "backButtonText": "Retour",
   "cancelButtonText": "Annuler",
   "commonInfo": "Informations générales",
-  "commentsMachines": "Installateur",
   "subTotals": "Sous-totaux",
   "endTotal": "Somme finale",
   "welcomeIntro": "Bienvenue sur la nouvelle appli de Claes Distribution !",
@@ -29,7 +28,6 @@
   "signupError": "Erreur lors de l'enregistrement, contrôlez vos données ou ré-essayez plus tard”",
   "howtoRegistrationCode": "Code d'enregistrement ?",
   "noCustomer": "Devenir client",
-  "noCarts": "Vous n'avez pas encore de panier.",
   "yes": "Oui",
   "no": "Non",
   "maybe": "Peut-être",
@@ -181,60 +179,6 @@
   "categoryAttributes": "Caractéristiques de catégorie",
   "productExceptions": "Exceptions",
   "integrityChecksums": "Intégrité des données",
-  "showIntegrity": "Montrer que les données sont complètes",
-  "resetIntegrity": "Réinitialiser l'exhaustivité des données",
-  "showProducts": "Montrer les produits",
-  "confirm": "Confirmer",
-  "removeButton": "Effacer",
-  "products": "Produits",
-  "billing": "Facturation",
-  "summary": "Aperçu",
-  "reference": "Référence",
-  "atNextDelivery": "Attendez avec la livraison jusqu'à ma prochaine commande",
-  "deliverDate": "Date de livraison",
-  "deliverMethod": "Methode de livraison",
-  "deliver": "Livraison",
-  "collect": "Enlèvement",
-  "deliverOption": "Option de livraison",
-  "fastest": "Livrer la quantité en stock.",
-  "onlyComplete": "La commande ne peut être livrée que quand elle est complète.",
-  "comments": "Commentaires",
-  "commentsPlanning": "Planificateur",
-  "commentsInvoice": "Facture",
-  "commentsDriver": "Chauffeur",
-  "removeSelection": "effacer le filtre",
-  "noCustomers": "Pas encore de clients disponibles, contactez notre service clientèle.",
-  "nextVisit": "Prochaine visite",
-  "customerCloseFrom": "Client fermé de",
-  "customerOpenFrom": "Client ouvert de",
-  "offer": "offre",
-  "deliverTime": "Delai de livraison",
-  "day": "jour",
-  "days": "jours",
-  "supplierItemId": "Réf. fournisseur",
-  "welcomeCustomer": "Êtes-vous déjà client chez Claes Distribution ?",
-  "noResults": "Aucun résultat",
-  "taxes": "Taxes de recyclage",
-  "delivery": "Frais de livraison",
-  "total": "Totale",
-  "totalProducts": "Totale produits",
-  "similarPromoProducts": "Produits similaires en promo",
-  "similarProducts": "Produits similaires",
-  "relatedProducts": "Produits reliés",
-  "loadMoreProducts": "Montrer plus de produits",
-  "showRecipe": "Consulter la recette",
-  "mailRecipe": "Envoyer la recette par e-mail",
-  "recipeMailSend": "Envoyé",
-  "recipeMailMessageSend": "La recette est envoyée",
-  "recipeMailError": "Erreur d'envoi",
-  "recipeMailMessageError": "La recette n'est pas envoyée",
-  "datasheetMailSend": "Envoyé",
-  "datasheetMailMessageSend": "La fiche technique est envoyée",
-  "datasheetMailError": "Erreur d'envoi",
-  "datasheetMailMessageError": "La fiche technique n'est pas envoyée",
-  "invalidAmountError": "Quantité introduite incorrecte",
-  "invalidAmountMessageError": "La quantité est modifiée, veuillez consulter la quantité minimale et quantité par. Nouvelle quantité :",
-  "priceOnRequest": "Prix sur demande",
   "syncronisationSettings": "Paramètres de synchronisation",
   "syncInterval": "Intervalle mise à jour automatique",
   "syncOnMobile": "mise à jour en cas de données mobiles",
@@ -335,6 +279,9 @@
     "save": "Sauvegarder",
     "okButton": "Ok"
   },
+
+
+
   "pages": {
     "login": {
       "offline-message": "Il faut être en ligne pour se connecter"
@@ -351,6 +298,7 @@
           "cancel": "Annuler",
           "confirm": "Confirmer",
           "title": "Saisir l'adresse e-mail",
+
           "label": "Message",
           "placeholder": "Donnez un message au client"
         },
@@ -358,12 +306,14 @@
           "cancel": "Annuler",
           "confirm": "Supprimer",
           "title": "Êtes-vous sûr de vouloir supprimer {{PRODUIT}} de la section {{DIVISION}} ?",
+
           "removed": "{{PRODUIT}} est supprimé de {{DIVISION}}"
         },
         "remove-favourite": {
           "cancel": "Annuler",
           "confirm": "Supprimer",
           "title": "Êtes-vous sûr de vouloir supprimer {{PRODUIT}} des articles favoris ?",
+
           "removed": "{{PRODUIT}} est supprimé des articles favoris"
         }
       }
@@ -436,6 +386,9 @@
     "domiciliation": "Confirmation de l'ordre de domiciliation",
     "comMailing": "Mailing commercial"
   },
+
+
+
   "badge.new-label": "N",
   "badge.promo-label": "P",
   "badge.favorite-label": "F",
@@ -467,23 +420,40 @@
     "favorites": "Favoris",
     "categoryAttributes": "Caractéristiques de catégorie",
     "productExceptions": "Exceptions",
+
+
     "productTaxes": "Taxes produits",
     "shippingCosts": "Frais de livraison",
+
+
     "products": "Produits",
     "prices": "Prix",
+
+
     "deliverySchedules": "Calendrier de livraison",
+
+
     "notes": "Notes",
     "recipes": "Recettes",
     "usageManuals": "Fiche d'utilisation",
     "datasheets": "Fiche technique",
+
+
     "recipesModule": "Module Recettes",
     "contacts": "Contacten",
+
+
     "news": "Nouvelles",
     "customers": "Clients",
+
+
     "productDescriptionCustomers": "Numéros d'article client",
+
+
     "attributes": "Caractéristiques",
     "lastSync": "Dernière synchronisation"
   },
+
   
   "customer-info": {
     "alerts": {
