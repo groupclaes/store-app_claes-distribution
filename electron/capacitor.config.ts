@@ -1,8 +1,8 @@
 import { CapacitorElectronConfig } from '@capacitor-community/electron'
 
 const config: CapacitorElectronConfig = {
-  appId: 'be.claesdistribution.shop',
-  appName: 'store-app',
+  appId: 'be.claesdistribution.shopapp',
+  appName: 'Claes Store',
   webDir: 'www',
   server: {
     hostname: 'shop.claes-distribution.be'
