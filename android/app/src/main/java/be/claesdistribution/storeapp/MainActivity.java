@@ -1,4 +1,4 @@
-package be.claesdistribution.shop;
+package be.claesdistribution.storeapp;
 
 import com.getcapacitor.BridgeActivity;
 
