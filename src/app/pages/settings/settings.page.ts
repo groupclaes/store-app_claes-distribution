@@ -122,10 +122,10 @@ export class SettingsPage implements OnInit, OnDestroy {
     this.ref.markForCheck()
   }
 
-  toggleDebug(): void {
-    environment.production = !environment.production
-    this.ref.markForCheck()
-  }
+  // toggleDebug(): void {
+  //   environment.production = !environment.production
+  //   this.ref.markForCheck()
+  // }
 
   changeThumbnail($event: any) {
     this.settings.setDisplayThumbnail($event.detail.checked)
