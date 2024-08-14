@@ -77,6 +77,10 @@ export class AppComponent {
     return this.translate.currentLang
   }
 
+  get isGuest() {
+    return this.user.isGuest
+  }
+
   get hasUnsavedNotes(): boolean { // : visitNote[]
     const notes: any[] = this.storage.get('saved_notes')
 

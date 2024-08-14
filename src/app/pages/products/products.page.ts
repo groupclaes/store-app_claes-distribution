@@ -183,6 +183,10 @@ export class ProductsPage implements OnInit {
     return params
   }
 
+  get isGuest() {
+    return this.user.isGuest
+  }
+
   ngOnInit() {
 
   }

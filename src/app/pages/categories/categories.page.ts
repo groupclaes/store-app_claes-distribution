@@ -25,6 +25,7 @@ export class CategoriesPage {
     private ref: ChangeDetectorRef,
     private categoriesRepository: CategoriesRepositoryService,
     private cart: CartService,
+    private user: UserService,
     route: ActivatedRoute
   ) {
     route.queryParams.subscribe(params => {
@@ -34,6 +35,10 @@ export class CategoriesPage {
     route.params.subscribe(params => {
       this.loadCategories(+params['id'])
     })
+  }
+
+  get isGuest () {
+    return this.user.isGuest
   }
 
   ngOnInit() {

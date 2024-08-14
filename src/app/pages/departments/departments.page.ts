@@ -123,4 +123,8 @@ export class DepartmentsPage implements OnInit {
     if (this.cart.active) params.push(this.cart.active.id)
     return params
   }
+
+  get isGuest () {
+    return this.user.isGuest
+  }
 }

@@ -58,10 +58,10 @@
           <div class="toggle-button new-toggle" tappable (click)="toggleNew()">
             <span [ngClass]="displayDefaultFilters.new ? 'active' : 'default'" translate="newToggleButton"></span>
           </div>
-          <div class="toggle-button promo-toggle" tappable (click)="togglePromo()">
+          <div *ngIf="!isGuest" class="toggle-button promo-toggle" tappable (click)="togglePromo()">
             <span [ngClass]="displayDefaultFilters.promo ? 'active' : 'default'" translate="promoToggleButton"></span>
           </div>
-          <div class="toggle-button favorite-toggle" tappable (click)="toggleFavorite()">
+          <div *ngIf="!isGuest" class="toggle-button favorite-toggle" tappable (click)="toggleFavorite()">
             <span
               [ngClass]="displayDefaultFilters.favorite ? 'active' : ( displayDefaultFilters.favorite === false ? 'default' : 'inactive')"
               translate="favoriteToggleButton"></span>

@@ -12,7 +12,7 @@
       <ion-button tappable class="icon-only" (click)="changeSortOrder()" *ngIf="favoriteFilter">
         <i class="fal fa-fw fa-sort"></i>
       </ion-button>
-      <ion-button tappable class="icon-only" [routerLink]="cartLink">
+      <ion-button [disabled]="isGuest" tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
     </ion-buttons>
@@ -22,11 +22,11 @@
       <div class="toggle-button new-toggle" tappable (click)="toggleNewFilter()" [attr.disabled]="loading">
         <span [ngClass]="filter.newState" translate="newToggleButton"></span>
       </div>
-      <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable
+      <div *ngIf="!isGuest" class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable
         (click)="togglePromoFilter()">
         <span [ngClass]="filter.promoState" translate="promoToggleButton"></span>
       </div>
-      <div class="toggle-button favorite-toggle" tappable (click)="toggleFavoriteFilter()" [attr.disabled]="loading">
+      <div *ngIf="!isGuest" class="toggle-button favorite-toggle" tappable (click)="toggleFavoriteFilter()" [attr.disabled]="loading">
         <span [ngClass]="filter.favoriteState" translate="favoriteToggleButton"></span>
       </div>
       <div class="toggle-button order-toggle" tappable (click)="toggleOrderFilter()" [attr.disabled]="loading">

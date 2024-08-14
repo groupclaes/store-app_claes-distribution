@@ -5,10 +5,10 @@
     </ion-buttons>
     <ion-title tappable (click)="copyMessage(product.itemnum + ' ' + product.name)">{{ productName }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable class="icon-only" [routerLink]="cartLink">
+      <ion-button [disabled]="isGuest" tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-fw fa-shopping-cart"></i>
       </ion-button>
-      <ion-button *ngIf="product" tappable class="icon-only" [id]="'open-action-sheet-' + product.id" style="font-size: 1.5em">
+      <ion-button [disabled]="isGuest" *ngIf="product" tappable class="icon-only" [id]="'open-action-sheet-' + product.id" style="font-size: 1.5em">
         <i class="fal fa-fw fa-ellipsis-h"></i>
       </ion-button>
     </ion-buttons>
@@ -34,7 +34,7 @@
           </div>
         </div>
       </section>
-      <section class="product-prices-wrapper" *ngIf="product.prices">
+      <section class="product-prices-wrapper" *ngIf="!isGuest && product.prices">
         <ion-toolbar *ngIf="product.contentUnit && product.basePrice > 0">
           <ion-segment [(ngModel)]="showContentUnit">
             <ion-segment-button [value]="false">
@@ -95,7 +95,7 @@
         </ion-list>
       </section>
     </div>
-    <section class="product-actions-badges-wrapper">
+    <section class="product-actions-badges-wrapper" *ngIf="!isGuest">
       <div class="toggle-button new-toggle">
         <span [ngClass]="product.isNew === true ? 'active' : 'inactive'" translate="newToggleButton"></span>
       </div>
@@ -109,7 +109,7 @@
         <span [ngClass]="product.type === 'B' ? 'active' : 'inactive'" translate="orderToggleButton"></span>
       </div>
     </section>
-    <section class="product-promotion-wrapper" *ngIf="allowPromo">
+    <section class="product-promotion-wrapper" *ngIf="!isGuest && allowPromo">
       <ion-list-header lines="full">
         <h3 translate="promotion"></h3>
       </ion-list-header>
@@ -289,7 +289,7 @@
       </ion-list>
     </section>
 
-    <section class="product-attachments-wrapper">
+    <section class="product-attachments-wrapper" *ngIf="!isGuest">
       <ion-list *ngIf="(product.favLastB) || user.hasAgentAccess">
         <ion-list-header lines="full" *ngIf="(product.favLastB) || user.hasAgentAccess">
           <h3 translate="datasheets"></h3>

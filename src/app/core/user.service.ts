@@ -46,6 +46,48 @@ export class UserService {
     return request
   }
 
+  loginGuest() {
+    this.logger.info('Logging in as guest')
+
+    this._user = {
+      address: null,
+      addressGroup: null,
+      addressName: null,
+      bonus: null,
+      city: null,
+      fostplus: null,
+      id: null,
+      name: null,
+      promo: null,
+      type: null,
+      userCode: null,
+      bonusPercentage: null,
+      country: null,
+      delvAddress: null,
+      delvCity: null,
+      delvCountry: null,
+      delvLanguage: null,
+      delvPhoneNum: null,
+      delvStreetNum: null,
+      delvZipCode: null,
+      language: null,
+      phoneNum: null,
+      userId: null,
+      streetNum: null,
+      vatNum: null,
+      zipCode: null
+    }
+
+    const credential = {
+      username: 'GUEST-ACCESS',
+      password: null
+    }
+
+    this._credential = credential
+
+    this.storage.set('credential', credential)
+  }
+
   signup(credential: AppRegistrationCredential) {
     let request = this.api.post('appuser/signOn', credential).pipe(share())
 
@@ -66,10 +108,6 @@ export class UserService {
     }, {
       culture: this.translate.currentLang.split('-')[0]
     })
-  }
-
-  loginLocal(userResponse: ServerCustomer, credential: AppCredential) {
-    this._loggedIn(userResponse, credential)
   }
 
   async logout() {
@@ -104,6 +142,11 @@ export class UserService {
 
   set activeUser(value: Customer) {
     this._selectedCustomer = value
+  }
+
+  get isGuest() {
+    /* DEBUG */
+    return this._user.userId == null
   }
 
   get activeUser(): Customer {

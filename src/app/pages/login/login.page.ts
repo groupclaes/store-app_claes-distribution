@@ -116,6 +116,134 @@ export class LoginPage implements OnInit {
       }
     })
   }
+  
+  async loginAsGuest() {
+    this.user.loginGuest()
+
+    const syncRequired = await this.syncRequired({ username: 'GUEST-ACCESS',password: null })
+    this.log.debug('Sync required: ', syncRequired)
+    if (syncRequired !== 'CACHE') {
+      this._loading = await this.loadingCtrl.create({
+        spinner: 'lines',
+        message: this.translate.instant('syncPage')
+      })
+      this._loading.present()
+      this.ref.markForCheck()
+
+      try {
+        await this.user.syncData(syncRequired === 'FORCE').catch(() => {
+          this._loading.dismiss()
+          this.busy = false
+          this.toast(this.translate.instant('syncError'))
+        })
+      } catch {
+        this._loading.dismiss()
+        this.busy = false
+        this.toast(this.translate.instant('syncError'))
+      }
+
+      if (this.user.userinfo.type === 1) {
+        this._loading.message = this.translate.instant('preparing')
+        this.ref.markForCheck()
+
+        const prepare = await this.sync.prepareCurrentExceptions({
+          id: this.user.userinfo.id,
+          addressId: this.user.userinfo.address,
+          addressGroupId: this.user.userinfo.addressGroup,
+          userCode: this.user.userinfo.userCode,
+          userType: this.user.userinfo.type,
+          name: '',
+          address: '',
+          streetNum: '',
+          zipCode: '',
+          city: '',
+          country: '',
+          phoneNum: '',
+          vatNum: '',
+          language: '',
+          promo: this.user.userinfo.promo,
+          fostplus: this.user.userinfo.fostplus,
+          bonusPercentage: this.user.userinfo.bonus,
+          addressName: '',
+          delvAddress: '',
+          delvStreetNum: '',
+          delvZipCode: '',
+          delvCity: '',
+          delvCountry: '',
+          delvPhoneNum: '',
+          delvLanguage: ''
+        })
+        try {
+          this._loading.dismiss()
+        } catch { }
+        this.ref.markForCheck()
+
+        if (prepare) {
+          this.navCtrl.navigateRoot(await this.defaultPage)
+        } else {
+          this.toast(this.translate.instant('unknownError'))
+        }
+      } else {
+        this._loading.message = this.translate.instant('preparing')
+        try {
+          await this.cartsRepository.deleteOld(90)
+        } catch {
+
+        }
+        await this.exceptionsRepository.delete()
+        this._loading.dismiss()
+        this.ref.markForCheck()
+        this.navCtrl.navigateRoot(await this.defaultPage)
+      }
+    } else {
+      this.toast(this.translate.instant('localData'))
+
+      if (this.user.userinfo.type === 1) {
+        try {
+          this._loading.message = this.translate.instant('preparing')
+        } catch { }
+        const prepare = await this.sync.prepareCurrentExceptions({
+          id: this.user.userinfo.id,
+          addressId: this.user.userinfo.address,
+          addressGroupId: this.user.userinfo.addressGroup,
+          userCode: this.user.userinfo.userCode,
+          userType: this.user.userinfo.type,
+          name: '',
+          address: '',
+          streetNum: '',
+          zipCode: '',
+          city: '',
+          country: '',
+          phoneNum: '',
+          vatNum: '',
+          language: '',
+          promo: this.user.userinfo.promo,
+          fostplus: this.user.userinfo.fostplus,
+          bonusPercentage: this.user.userinfo.bonus,
+          addressName: '',
+          delvAddress: '',
+          delvStreetNum: '',
+          delvZipCode: '',
+          delvCity: '',
+          delvCountry: '',
+          delvPhoneNum: '',
+          delvLanguage: ''
+        })
+        try {
+          this._loading.dismiss()
+        } catch { }
+        this.ref.markForCheck()
+
+        if (prepare) {
+          this.navCtrl.navigateRoot(await this.defaultPage)
+        } else {
+          this.toast(this.translate.instant('unknownError'))
+        }
+      } else {
+        this.navCtrl.navigateRoot(await this.defaultPage)
+      }
+    }
+  }
 
   async login() {
     if (this.busy || this.accountForm.invalid) {
@@ -346,6 +474,7 @@ export class LoginPage implements OnInit {
     if (!oldCredential) {
       return 'FORCE'
     }
+
     if (this.accountForm.value.username !== oldCredential.username) {
       return 'FORCE'
     }
@@ -365,6 +494,7 @@ export class LoginPage implements OnInit {
 
     return new Date().getTime() - syncInterval > lastSync.getTime() ? 'SYNC' : 'CACHE'
   }
+
   private async toast(message: string, duration: number = 3000) {
     const toast = await this.toastCtrl.create({
       message,

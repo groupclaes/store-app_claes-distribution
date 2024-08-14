@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { environment } from 'src/environments/environment'
 import { StorageProvider } from 'src/app/core/storage-provider.service';
+import { UserService } from 'src/app/core/user.service';
 
 const LS_LANGUAGE = 'CLAES_STORE_LANGUAGE'
 
@@ -35,6 +36,7 @@ export class SettingsPage implements OnInit, OnDestroy {
     private settings: SettingsService,
     private ref: ChangeDetectorRef,
     private logger: LoggingProvider,
+    private user: UserService,
     private store: StorageProvider
   ) {
   }
@@ -45,6 +47,10 @@ export class SettingsPage implements OnInit, OnDestroy {
 
   get debugging() {
     return !environment.production
+  }
+
+  get isGuest() {
+    return this.user.isGuest
   }
 
   ngOnInit() {

@@ -167,6 +167,10 @@ export class ProductDetailPage implements OnInit {
     return buttons
   }
 
+  get isGuest() {
+    return this.user.isGuest
+  }
+
 
   ngOnInit() {
   }
