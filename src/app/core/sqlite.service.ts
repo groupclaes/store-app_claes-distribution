@@ -107,8 +107,7 @@ export class SQLiteService {
     : Promise<void> {
     if (this.sqlite != null) {
       try {
-        await this.sqlite.addUpgradeStatement(database, toVersion,
-          statements)
+        await this.sqlite.addUpgradeStatement(database, [ { toVersion, statements } ])
         return Promise.resolve()
       } catch (err) {
         return Promise.reject(new Error(err))
