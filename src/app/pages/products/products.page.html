@@ -53,7 +53,7 @@
 
 <ion-content [fullscreen]="true">
   <ion-list *ngIf="products.length > 0 && !loading">
-    <cdk-virtual-scroll-viewport itemSize="45" style="width:100%; height: calc(100vh - 88px)">
+    <cdk-virtual-scroll-viewport itemSize="45" minBufferPx="250" style="width:100%; height: calc(100vh - 88px)">
       <ion-item lines="full" tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; let i = index">
         <ion-avatar *ngIf="displayThumbnail" slot="start">
           <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
@@ -118,12 +118,5 @@
     <div style="text-align:center">
       <ion-spinner mode="ios"></ion-spinner>
     </div>
-  </div>
-
-  <div style="margin:auto 1em;text-align:center" class="py-4"
-    *ngIf="products.length > 0 && !loadingAdditional && !loading && !noMoreProducts">
-    <ion-button color="primary" tappable (click)="load(true)">
-      {{ 'loadMoreProducts' | translate }}
-    </ion-button>
   </div>
 </ion-content>

@@ -231,19 +231,19 @@ export class ProductsPage implements OnInit {
       this.noMoreProducts = false
       this.loading = true
     } else {
-      this.page++
-      this.loadingAdditional = true
+      // this.page++
+      // this.loadingAdditional = true
     }
     this.ref.markForCheck()
 
-    const products = await this.repo.query(this.culture, this.page, this.increment, this._filters, this.sortOrder, [
+    const products = await this.repo.queryAll(this.culture, this._filters, this.sortOrder, [
       this.user.activeUser.id,
       this.user.activeUser.address,
       this.user.activeUser.addressGroup
     ])
 
     if (products.length <= this.increment - 1) {
-      this.noMoreProducts = true
+      // this.noMoreProducts = true
     }
 
     const cart = (this.cart || this.cart.active) ? this.cart.active : null

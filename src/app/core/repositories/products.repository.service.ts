@@ -301,6 +301,117 @@ export class ProductsRepositoryService {
       return result.values as IProductT[]
     })
   }
+  queryAll(culture: string = 'nl-BE', filters: any, sortOrder: ISortOrder, params: number[]) {
+    const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+      const queryParams = [params[0], params[1], ...params, params[0], params[1]]
+      const isPromo = `(SELECT promo FROM prices WHERE prices.product = products.id 
+          AND ( 
+            ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 )
+            OR ( prices.customer = ? AND ( prices.address = ? OR prices.address = 0 )
+            AND prices.[group] = 0 )
+          OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ? ) )
+          AND prices.stack = 1 ORDER BY address DESC, customer DESC, [group] DESC LIMIT 1 )`
+
+      let query = `SELECT products.id,
+        products.nameNl,
+        products.nameFr,
+        products.minOrder,
+        products.stackSize,
+        products.itemnum,
+        products.${nameString} as name,
+        products.[type],
+        products.isNew,
+        packingUnits.${nameString} as unit,
+        EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ? AND ( favorites.hi = 0 OR favorites.hi IS NULL )) as isFavorite,
+        favorites.lastB as favLastB,
+        favorites.lastA as favLastA,
+        products.AvailableOn as availableOn,
+        ${isPromo} as isPromo,
+        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+        products.color,
+        (SELECT description FROM productDescriptionCustomers WHERE id=products.id) as descriptionCustomer
+      FROM products
+      INNER JOIN packingUnits ON products.packId = packingUnits.id
+      LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?
+      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
+
+
+      if (filters.category) {
+        query += ` AND (products.c1 = ? OR products.c2 = ? OR products.c3 = ? OR products.c4 = ? OR products.c5 = ? OR products.c6 = ?)`
+        queryParams.push(filters.category.id, filters.category.id, filters.category.id,
+          filters.category.id, filters.category.id, filters.category.id)
+      }
+      if (filters.orderState === 'inactive') {
+        query += ` AND ( products.[type] != "B" )`
+      }
+      if (filters.newState === 'active') {
+        query += ` AND ( products.isNew = 1 )`
+      }
+      if (filters.favoriteState === 'active') {
+        query += ` AND EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ? AND ( favorites.hi = 0 OR favorites.hi IS NULL ))`
+        queryParams.push(params[0], params[1])
+      }
+      if (filters.favoriteState === 'inactive') {
+        query += ` AND ( ( favorites.hi = 1 ) OR NOT EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?) )`
+        queryParams.push(params[0], params[1])
+      }
+      if (filters.promoState === 'active') {
+        query += ` AND ( isPromo = 1 )`
+      }
+      if (filters.query) {
+        const filterQuery: string =  filters.query.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
+          .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
+          .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
+          .replace(/(œ|Œ)/g, 'oe')
+          .replace(/(ó|ö|ô|ò|õ|ø|ō|Ó|Ö|Ô|Ò|Õ|Ø|Ō)/g, 'o')
+          .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
+          .replace(/(æ|Æ)/g, 'ae')
+          .toLowerCase()
+        const parts = filterQuery.toLowerCase().replace(/\'/g, '\'\'').split(' ')
+        for (const part of parts) {
+          if (culture === 'nl-BE') {
+            query += ` AND (products.searchNameNl LIKE '%${part}%'`
+              + `OR products.itemnum LIKE '%${part}%' `
+              + `OR products.searchQueryWordsNl LIKE '%${part}%')`
+          } else {
+            query += ` AND (products.searchNameFr LIKE '%${part}%' `
+              + `OR products.itemnum LIKE '${part}%'`
+              + `OR products.searchQueryWordsFr LIKE '%${part}%')`
+          }
+        }
+      }
+      if (filters.attributes && filters.attributes.length > 0) {
+        for (const filter of filters.attributes) {
+          const attributes: number[] = filter.selected
+          query += ` AND ( ( SELECT COUNT(*) FROM productAttributes WHERE productAttributes.product = products.id AND (`
+          for (let j = 0; j < attributes.length; j++) {
+            if (j >= 1) {
+              query += ` OR `
+            }
+            query += ` productAttributes.attribute = ${attributes[j]} `
+          }
+          query += `) LIMIT 1) > 0 )`
+        }
+      }
+
+      if (sortOrder === 'favoriteBoughtDate$DESC') {
+        query += ` ORDER BY favorites.lastB DESC`
+      } else if (filters.favoriteState === 'active') {
+        query += ` ORDER BY SUBSTR(products.itemnum || '0000000000', 1, 10) ASC`
+      } else {
+        query += ` ORDER BY sortOrder, SUBSTR(products.itemnum || '0000000000', 1, 10) ASC`
+      }
+
+      this.logger.debug('ProductsRepositoryService.query() -- running statement')
+      const result = await db.query(
+        query,
+        queryParams
+      )
+
+      return result.values as IProductT[]
+    })
+  }
 
   async getPrices(id: number, customer: any, db: SQLiteDBConnection, minQ?: number) {
     this.logger.debug('ProductsRepositoryService.getPrices(' + id + ')')
