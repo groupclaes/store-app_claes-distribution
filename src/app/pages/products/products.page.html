@@ -52,25 +52,22 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-list *ngIf="products.length > 0 && !loading">
-    <cdk-virtual-scroll-viewport itemSize="45" minBufferPx="250" style="width:100%; height: calc(100vh - 88px)">
-      <ion-item lines="full" tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; let i = index">
+  <ion-list *ngIf="products.length > 0 && !loading" lines="full">
+    <cdk-virtual-scroll-viewport itemSize="80" minBufferPx="640" style="width:100%; height: calc(100vh - 88px)">
+      <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; let i = index">
         <ion-avatar *ngIf="displayThumbnail" slot="start">
           <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
             [style]="'background-color:' + product.color" width="32" height="32">
         </ion-avatar>
 
-        <ion-label class="ion-text-wrap">
-          <div class="product-options" style="display:flex">
-            <ion-badge color="secondary" *ngIf="newState(product) === 'active'" translate="newItem"></ion-badge>
-            {{ newState(product) === 'active' ? '&nbsp;' : '' }}
-            <ion-badge color="danger" *ngIf="promoState(product) === 'active'" translate="promoItem"></ion-badge>
-            {{ promoState(product) === 'active' ? '&nbsp;' : '' }}
-            <ion-badge color="warning" *ngIf="favoriteState(product) === 'active'" translate="favoriteItem"></ion-badge>
-            {{ favoriteState(product) === 'active' ? '&nbsp;' : '' }}
-            <ion-badge color="success" *ngIf="orderState(product) === 'active'" translate="orderItem"></ion-badge>
-          </div>
-          {{ product.unit | capitalize }} - {{ product.name }}
+        <ion-label class="ion-text-wrap" style="min-height:60px"> <!--style="min-height:58px;">-->
+          <!-- <div class="product-options" style="display:flex;gap:.5em">
+            <ion-badge color="secondary" *ngIf="product.isNew == true" translate="newItem"></ion-badge>
+            <ion-badge color="danger" *ngIf="this.canPromo && product.isPromo == true" translate="promoItem"></ion-badge>
+            <ion-badge color="warning" *ngIf="product.isFavorite" translate="favoriteItem"></ion-badge>
+            <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderItem"></ion-badge>
+          </div> -->
+          <span>{{ product.unit | capitalize }} - {{ product.name }}</span>
           <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
             {{ favinfo(product) }}
           </div>
@@ -78,34 +75,6 @@
             {{ availableDescription(product) }}
           </ion-badge>
         </ion-label>
-        <!-- <div class="w-full product-listitem-grid">
-          <div class="product-options">
-            <div class="option-state new-toggle">
-              <span [ngClass]="newState(product)" translate="newToggleButton"></span>
-            </div>
-            <div class="option-state promo-toggle">
-              <span [ngClass]="promoState(product)" translate="promoToggleButton"></span>
-            </div>
-            <div class="option-state favorite-toggle">
-              <span [ngClass]="favoriteState(product)" translate="favoriteToggleButton"></span>
-            </div>
-            <div class="option-state order-toggle">
-              <span [ngClass]="orderState(product)" translate="orderToggleButton"></span>
-            </div>
-          </div>
-          <div class="product-name">
-            {{ product.name }}
-            <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
-              {{ favinfo(product) }}
-            </div>
-            <ion-badge color="light" *ngIf="product.availableOn">
-              {{ availableDescription(product) }}
-            </ion-badge>
-          </div>
-          <div class="product-packing-unit">
-            {{ product.unit | capitalize }}
-          </div>
-        </div> -->
         <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
           <input [ngModel]="product.amount" [disabled]="product.availableOn !== null" placeholder="0" class="control-color"
             type="tel" [tabindex]="i+1" (input)="changeProductAmount($event, product)" />
