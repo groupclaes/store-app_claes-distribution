@@ -1,11 +1,12 @@
+import { firstValueFrom, Subscription } from 'rxjs';
 /* eslint-disable eqeqeq */
 import { DatePipe } from '@angular/common'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core'
-import { ActivatedRoute } from '@angular/router'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core'
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router'
 import { AlertController, IonContent, ModalController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { Observable, Subject, of } from 'rxjs'
-import { debounce, debounceTime, take } from 'rxjs/operators'
+import { debounce, debounceTime, filter, take } from 'rxjs/operators'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
@@ -21,9 +22,10 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
   styleUrls: ['./products.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductsPage implements OnInit {
+export class ProductsPage {
   private _products: IProductT[]
   private _updateCartProduct = new Subject<{productId: number, amount: number}>()
+  private _routerEventSubscription: Subscription;
 
   @ViewChild(IonContent) content: IonContent
 
@@ -70,14 +72,15 @@ export class ProductsPage implements OnInit {
     categoriesRepository: CategoriesRepositoryService,
     private repo: ProductsRepositoryService,
     private settings: SettingsService,
-    route: ActivatedRoute
+    route: ActivatedRoute,
+    private router: Router
   ) {
     let fallback
     settings.DisplayThumbnail.subscribe(displayThumbnail => {
       this.displayThumbnail = displayThumbnail
       this.ref.markForCheck()
     })
-    settings.DisplayDefaultFilters.pipe(take(1)).toPromise().then(filters => {
+    firstValueFrom(settings.DisplayDefaultFilters).then(filters => {
       if (filters.new === true) {
         this._filters.newState = 'active'
       } else {
@@ -101,23 +104,24 @@ export class ProductsPage implements OnInit {
         this._filters.orderState = 'inactive'
       }
       if (this.user.activeUser) {
-        fallback = setTimeout(() => { this.loading = false; this.load() }, 180)
+        fallback = setTimeout(() => { this.load(true) }, 180)
       }
     })
+
+    this._routerEventSubscription = router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(async (ev) => {
+        console.log(ev)
+        window.clearTimeout(fallback)
+        this._filters.category = undefined
+
+        this.load(true)
+      })
     route.queryParams.subscribe(async (params) => {
       if (params.category) {
         this._filters.category = await categoriesRepository.find(+params.category, this.culture)
         window.clearTimeout(fallback)
-        this.loading = false
-        this.load()
+        this.load(true)
       }
-    })
-
-    this.updateCartProduct.subscribe(async ({ productId, amount }) => {
-      await this.cart.updateProduct(productId, amount,
-        this.user.activeUser.id, this.user.activeUser.address,
-        this.user.credential)
-      this.ref.markForCheck()
     })
   }
 
@@ -183,16 +187,16 @@ export class ProductsPage implements OnInit {
     return params
   }
 
-  ngOnInit() {
-
+  ionViewDidLeave(): void {
+    this._routerEventSubscription.unsubscribe()
   }
 
   async ionViewDidEnter() {
-    await this.cart.loadCarts()
     try {
       this.logger.log('ProductsPage.ionViewDidEnter() -- start')
+      await this.cart.loadCarts()
+      await this.cart.updateActive(this.user.activeUser.id, this.user.activeUser.address)
       if (this._products && this._products.length > 0) {
-        await this.cart.updateActive(this.user.activeUser.id, this.user.activeUser.address)
         if (
           this.cart.active &&
           this.cart.active.customer === this.user.activeUser.id &&
@@ -208,10 +212,9 @@ export class ProductsPage implements OnInit {
             }
           }
         } else {
-          for (const product of this.products) {
-            product.amount = null
-          }
+          this.products.forEach(x => x.amount = null)
         }
+        this.ref.markForCheck()
       }
     } catch (err) {
       this.logger.error('ProductsPage.ionViewDidEnter() -- error', err)
@@ -221,19 +224,16 @@ export class ProductsPage implements OnInit {
     }
   }
 
-  async load(additional?: boolean): Promise<void> {
-    if (!additional) {
+  async load(force?: boolean): Promise<void> {
+    if (!force) {
       if (this.loading === true) {
         return
       }
-      this.page = 0
-      this._products = []
-      this.noMoreProducts = false
-      this.loading = true
-    } else {
-      // this.page++
-      // this.loadingAdditional = true
     }
+    this.page = 0
+    this._products = []
+    this.noMoreProducts = false
+    this.loading = true
     this.ref.markForCheck()
 
     const products = await this.repo.queryAll(this.culture, this._filters, this.sortOrder, [
@@ -242,25 +242,20 @@ export class ProductsPage implements OnInit {
       this.user.activeUser.addressGroup
     ])
 
-    if (products.length <= this.increment - 1) {
-      // this.noMoreProducts = true
-    }
-
     const cart = (this.cart || this.cart.active) ? this.cart.active : null
 
     for (const product of products) {
       product.isNew = product.isNew == 1
       product.isPromo = product.isPromo == 1
       product.isFavorite = product.isFavorite == 1
+
       if (cart) {
-        for (const cartProduct of products) {
-          const pr = cart.products.find(x => x.id == cartProduct.id)
-          cartProduct.amount = (pr !== undefined) ? pr.amount : null
-        }
+        const cartProduct = cart.products.find(x => x.id == product.id)
+        product.amount = (cartProduct != undefined) ? cartProduct.amount : null
       }
     }
 
-    this._products = this._products.concat(products)
+    this._products = products
 
     this.loading = false
     this.loadingAdditional = false
@@ -350,10 +345,6 @@ export class ProductsPage implements OnInit {
     let showAlert = false
     this.ref.markForCheck()
 
-    const customerId = this.user.activeUser.id
-    const addressId = this.user.activeUser.address
-    const credential = this.user.credential
-
     // check if item had minorderQuantity
     if (product.minOrder > 1) {
       this.logger.info('this product has a minOrderquantity')
@@ -382,9 +373,11 @@ export class ProductsPage implements OnInit {
         message: this.translate.instant('invalidAmountMessageError') + productAmount
       })
       alert.present()
+    } else {
+      await this.cart.updateProduct(productId, productAmount,
+        this.user.activeUser.id, this.user.activeUser.address,
+        this.user.credential)
     }
-
-    this._updateCartProduct.next({ productId, amount: productAmount})
   }
 
   newState = (product: $TSFixMe) => product.isNew ? 'active' : 'inactive'
@@ -453,6 +446,10 @@ export class ProductsPage implements OnInit {
       return `${this.translate.instant('availableOn')} ${availableOn}`
     }
     return ''
+  }
+
+  productById(index, product: IProductT) {
+    return product.id
   }
 }
 

@@ -28,7 +28,7 @@
       <h3 translate="integrityChecksums"></h3>
     </ion-list-header>
     <ion-item lines="full" *ngFor="let checksum of integrityChecksums">
-      <ion-label [translate]="'checksum.' + checksum.dataTable"></ion-label>
+      <ion-label>{{ 'checksum.' + checksum.dataTable | translate }}</ion-label>
       <div slot="end">
         <i class="emphasize">{{ checksum.dateChanged | date: 'HH:mm d MMM' }}</i>
       </div>
