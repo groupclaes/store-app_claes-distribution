@@ -22,8 +22,7 @@
       <div class="toggle-button new-toggle" tappable (click)="toggleNewFilter()" [attr.disabled]="loading">
         <span [ngClass]="filter.newState" translate="newToggleButton"></span>
       </div>
-      <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable
-        (click)="togglePromoFilter()">
+      <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable (click)="togglePromoFilter()">
         <span [ngClass]="filter.promoState" translate="promoToggleButton"></span>
       </div>
       <div class="toggle-button favorite-toggle" tappable (click)="toggleFavoriteFilter()" [attr.disabled]="loading">
@@ -39,8 +38,7 @@
         </span>
       </div> -->
       <div class="search-query">
-        <input [placeholder]="'searchInput' | translate" class="control-color" style="width:100%" type="text"
-          [(ngModel)]="filter.query" (change)="load()" />
+        <input [placeholder]="'searchInput' | translate" class="control-color" style="width:100%" type="text" [(ngModel)]="filter.query" (change)="load()" />
       </div>
       <div class="toggle-button reset-button" tappable (click)="resetFilters()" [attr.disabled]="loading">
         <span class="default">
@@ -51,16 +49,16 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-list *ngIf="products.length > 0 && !loading" lines="full">
-    <cdk-virtual-scroll-viewport itemSize="80" minBufferPx="640" style="width:100%; height: calc(100vh - 88px)">
-      <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; let i = index; trackBy: productById">
+<ion-content [scrollY]="false">
+  <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" *ngIf="products.length > 0 && !loading" class="ion-content-scroll-host">
+    <ion-list>
+      <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products">
         <ion-avatar *ngIf="displayThumbnail" slot="start">
-          <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy"
-            [style]="'background-color:' + product.color" width="32" height="32">
+          <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
         </ion-avatar>
 
-        <ion-label class="ion-text-wrap" style="min-height:60px; display:flex;flex-direction: column;justify-content: center;"> <!--style="min-height:58px;">-->
+        <ion-label class="ion-text-wrap" style="min-height:60px; display:flex;flex-direction: column;justify-content: center;">
+          <!--style="min-height:58px;">-->
           <div class="product-options" style="display:flex;gap:.5em">
             <ion-badge color="secondary" *ngIf="product.isNew == true" translate="newItem"></ion-badge>
             <ion-badge color="danger" *ngIf="this.canPromo && product.isPromo == true" translate="promoItem"></ion-badge>
@@ -76,12 +74,11 @@
           </ion-badge>
         </ion-label>
         <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
-          <input [value]="product.amount ?? null" [disabled]="product.availableOn !== null" placeholder="0" class="control-color"
-            type="tel" [tabindex]="i+1" (input)="changeProductAmount($event, product)" />
+          <input [value]="product.amount ?? null" [disabled]="product.availableOn !== null" placeholder="0" class="control-color" type="tel" [tabindex]="1" (input)="changeProductAmount($event, product)" />
         </div>
       </ion-item>
-    </cdk-virtual-scroll-viewport>
-  </ion-list>
+    </ion-list>
+  </cdk-virtual-scroll-viewport>
 
   <div *ngIf="(!products.length && loading) || loading || loadingAdditional">
     <div style="text-align:center">
