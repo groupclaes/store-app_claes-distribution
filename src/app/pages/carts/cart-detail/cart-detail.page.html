@@ -46,10 +46,10 @@
   </div>
 
   <ion-list *ngIf="!loading && view === 'productsView' && currentCart && currentCart.products?.length > 0">
-    <ion-list-header lines="full">
+    <ion-list-header>
       <h3>{{ 'productsPage' |translate }} ({{ currentCart.products.length }})</h3>
     </ion-list-header>
-    <ion-item lines="full" *ngFor="let product of currentCart.products">
+    <ion-item *ngFor="let product of currentCart.products">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
         <img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy"
           [style]="'background-color:' + product.color" width="32" height="32">
@@ -75,23 +75,23 @@
 
   <div [hidden]="view !== 'invoiceView'" *ngIf="!loading && invoiceForm">
     <ion-list>
-      <ion-list-header lines="full">
+      <ion-list-header>
         <h3 translate="commonInfo"></h3>
       </ion-list-header>
-      <ion-item lines="full">
+      <ion-item>
         <ion-input type="text" (ionChange)="onChange()" [(ngModel)]="invoiceForm.reference"
           [disabled]="isHistory"
           [label]="'reference' | translate"></ion-input>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-toggle (ionChange)="onChange()" [(ngModel)]="invoiceForm.nextDelivery"
           [disabled]="isHistory">{{ 'atNextDelivery' | translate }}</ion-toggle>
       </ion-item>
-      <ion-item lines="full" *ngIf="isAgent">
+      <ion-item *ngIf="isAgent">
         <ion-toggle (ionChange)="onChange()" [(ngModel)]="invoiceForm.offer"
           [disabled]="isHistory">{{ 'offer' | translate }}</ion-toggle>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-select (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryDate"
           interface="popover" [disabled]="isHistory" [label]="'deliverDate' | translate">
           <ion-select-option [value]="date" *ngFor="let date of delvDates">
@@ -101,16 +101,16 @@
       </ion-item>
     </ion-list>
     <ion-list>
-      <ion-list-header lines="full">
+      <ion-list-header>
         <h3 translate="deliverMethod"></h3>
       </ion-list-header>
       <ion-radio-group [disabled]="isHistory" [allowEmptySelection]="true"
         (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryMethod">
-        <ion-item lines="full">
+        <ion-item>
           <ion-radio [disabled]="isHistory" value="deliver"
             >{{ 'deliver' | translate }}</ion-radio>
         </ion-item>
-        <ion-item lines="full">
+        <ion-item>
           <ion-radio [disabled]="isHistory" value="collect"
             >{{ 'collect' | translate }}</ion-radio>
         </ion-item>
@@ -119,10 +119,10 @@
 
     </ion-list>
     <ion-list *ngIf="invoiceForm.deliveryMethod === 'collect'">
-      <ion-list-header lines="full">
+      <ion-list-header>
         <h3 translate="openhoursstore"></h3>
       </ion-list-header>
-      <ion-item lines="full">
+      <ion-item>
         <ion-label class="ion-text-wrap">
           <b translate="monday"></b>: 08:00 - 18:00
           <br>
@@ -137,46 +137,46 @@
       </ion-item>
     </ion-list>
     <ion-list>
-      <ion-list-header lines="full">
+      <ion-list-header>
         <h3 translate="deliverOption"></h3>
       </ion-list-header>
       <ion-radio-group [disabled]="isHistory" [allowEmptySelection]="true"
         (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryOption">
-        <ion-item lines="full">
+        <ion-item>
           <ion-radio [disabled]="isHistory" value="fastest"
             >{{ 'fastest' | translate }}</ion-radio>
         </ion-item>
-        <ion-item lines="full">
+        <ion-item>
           <ion-radio [disabled]="isHistory" value="onlyComplete"
             >{{ 'onlyComplete' | translate }}</ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-list>
     <ion-list>
-      <ion-list-header lines="full">
+      <ion-list-header>
         <h3 translate="comments"></h3>
       </ion-list-header>
-      <ion-item lines="full">
+      <ion-item>
         <ion-textarea type="text" (ionChange)="onChange()"
           [(ngModel)]="invoiceForm.comments" [disabled]="isHistory"
           [label]="'comments' | translate"></ion-textarea>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-textarea type="text" (ionChange)="onChange()"
           [(ngModel)]="invoiceForm.commentsPlanning" [disabled]="isHistory"
           [label]="'commentsPlanning' | translate"></ion-textarea>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-textarea type="text" (ionChange)="onChange()"
           [(ngModel)]="invoiceForm.commentsInvoice" [disabled]="isHistory"
           [label]="'commentsInvoice' | translate"></ion-textarea>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-textarea type="text" (ionChange)="onChange()"
           [(ngModel)]="invoiceForm.commentsDriver" [disabled]="isHistory"
           [label]="'commentsDriver' | translate"></ion-textarea>
       </ion-item>
-      <ion-item lines="full" [hidden]="!isAgent">
+      <ion-item [hidden]="!isAgent">
         <ion-textarea type="text" (ionChange)="onChange()"
           [(ngModel)]="invoiceForm.commentsMachines" [disabled]="isHistory"
           [label]="'commentsMachines' | translate"></ion-textarea>
@@ -186,10 +186,10 @@
 
   <div *ngIf="!loading && view === 'summaryView'">
     <ion-list>
-      <ion-list-header lines="full">
+      <ion-list-header>
         <h3 translate="summary"></h3>
       </ion-list-header>
-      <ion-item lines="full" *ngFor="let product of currentCart.products">
+      <ion-item *ngFor="let product of currentCart.products">
         <ion-label class="ion-text-wrap">
           <div class="product-name">
             {{ product.name }}
@@ -203,23 +203,23 @@
         </div>
       </ion-item>
       <ion-item-group>
-        <ion-list-header lines="full">
+        <ion-list-header>
           <h3 translate="subTotals"></h3>
         </ion-list-header>
 
-        <ion-item lines="full">
+        <ion-item>
           <ion-label translate="totalProducts"></ion-label>
           <div slot="end">
             {{ productsPrice > 0 ? (productsPrice | currency:'EUR':'symbol-narrow':'0.2-2':culture) : ('priceOnRequest' | translate) }}
           </div>
         </ion-item>
-        <ion-item lines="full">
+        <ion-item>
           <ion-label translate="taxes"></ion-label>
           <div slot="end">
             {{ taxesPrice | currency:'EUR':'symbol-narrow':'0.2-2':culture }}
           </div>
         </ion-item>
-        <ion-item lines="full">
+        <ion-item>
           <ion-label translate="delivery"></ion-label>
           <div slot="end">
             {{ deliveryPrice | currency:'EUR':'symbol-narrow':'0.2-2':culture }}
@@ -227,11 +227,11 @@
         </ion-item>
       </ion-item-group>
       <ion-item-group>
-        <ion-list-header lines="full">
+        <ion-list-header>
           <h3 translate="endTotal"></h3>
         </ion-list-header>
 
-        <ion-item lines="full">
+        <ion-item>
           <ion-label translate="total"></ion-label>
           <div slot="end">
             {{

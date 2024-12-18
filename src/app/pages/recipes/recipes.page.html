@@ -11,16 +11,17 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000"
-      [placeholder]="'searchInput' | translate" (ionInput)="filterRecipes($event)">
+    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000" [placeholder]="'searchInput' | translate" (ionInput)="filterRecipes($event)">
     </ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large" translate="recipesPage"></ion-title>
+    <ion-toolbar color="light">
+      <ion-title size="large">
+        <span translate>recipesPage</span>
+      </ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -33,21 +34,19 @@
   <div class="ion-padding">
     <gro-recipe-banner></gro-recipe-banner>
   </div>
-  <ion-item lines="full">
-    <ion-note class="ion-text-wrap ion-padding" style="text-align: center;width:100%;">
+
+  <ion-text class="list-footer">
+    <ion-note>
       Wist je dat je nog meer overheerlijke recepten terug kan vinden op onze recepten website?
       <br>
       <a href="https://www.claes-distribution.be/recepten" target="_system">
         Bekijk alle recepten.
       </a>
     </ion-note>
-  </ion-item>
+  </ion-text>
 
-  <ion-list *ngIf="!loading">
-    <ion-list-header lines="full">
-      <h3>{{ recipes.length }} {{ 'recipesPage' | translate }}</h3>
-    </ion-list-header>
-    <ion-item button lines="full" *ngFor="let recipe of recipes" [routerLink]="[recipe.guid]">
+  <ion-list [inset]="true" *ngIf="!loading">
+    <ion-item button *ngFor="let recipe of recipes" [routerLink]="[recipe.guid]">
       {{ recipe.name }}
     </ion-item>
   </ion-list>

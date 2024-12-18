@@ -12,27 +12,25 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
-    <ion-toolbar>
+    <ion-toolbar color="light">
       <ion-title size="large" translate="syncPage"></ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <ion-item lines="full">
-    <span translate="checksum.lastSync"></span>: {{ lastSync | date:'HH:mm EEE dd MMM yyyy':null:culture }}
-  </ion-item>
-  <br>
-  <ion-list lines="full" *ngIf="internalUser">
-    <ion-list-header lines="full">
-      <h3 translate="integrityChecksums"></h3>
-    </ion-list-header>
-    <ion-item lines="full" *ngFor="let checksum of integrityChecksums">
-      <ion-label>{{ 'checksum.' + checksum.dataTable | translate }}</ion-label>
-      <div slot="end">
-        <i class="emphasize">{{ checksum.dateChanged | date: 'HH:mm d MMM' }}</i>
-      </div>
-      <!-- <div item-start>
+  <ng-container *ngIf="internalUser">
+    <ion-text class="list-header">
+      <ion-note translate>integrityChecksums</ion-note>
+    </ion-text>
+
+    <ion-list inset="true">
+      <ion-item *ngFor="let checksum of integrityChecksums">
+        <ion-label>{{ 'checksum.' + checksum.dataTable | translate }}</ion-label>
+        <ion-note slot="end">
+          {{ checksum.dateChanged | date:'dd/MM/yyyy HH:mm':undefined:culture }}
+        </ion-note>
+        <!-- <div item-start>
         <span [innerText]="checksum.dateChanged | date: 'dd/MM HH:mm'" style="font-size:12px;line-height:16px"></span>
       </div>
       <div item-content>
@@ -41,6 +39,13 @@
       <div item-end>
         <span [innerText]="checksum.checksum" style="font-family:'Courier New',Courier,monospace;font-size:12px"></span>
       </div> -->
-    </ion-item>
-  </ion-list>
+      </ion-item>
+    </ion-list>
+  </ng-container>
+
+  <ion-text class="list-footer">
+    <ion-note>
+      <span translate="checksum.lastSync"></span>: {{ lastSync | date:'d MMMM yyyy HH:mm':undefined:culture }}
+    </ion-note>
+  </ion-text>
 </ion-content>

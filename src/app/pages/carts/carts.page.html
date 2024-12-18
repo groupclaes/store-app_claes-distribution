@@ -6,12 +6,15 @@
     </ion-buttons>
     <ion-title translate="cartsPage"></ion-title>
     <ion-buttons slot="end">
+      <ion-button tappable color="primary" [routerLink]="['history']" translate>
+        showCartsHistory
+      </ion-button>
       <ion-button class="icon-only" *ngIf="menuItemsActive" tappable (click)="create()">
         <i class="fal fa-fw fa-plus"></i>
       </ion-button>
-      <ion-button class="icon-only" tappable *ngIf="isAgent" (click)="toggleMode()">
+      <!-- <ion-button class="icon-only" tappable *ngIf="isAgent" (click)="toggleMode()">
         <i class="fal fa-fw fa-ellipsis-v"></i>
-      </ion-button>
+      </ion-button> -->
       <ion-button class="icon-only" tappable (click)="sendSelected()" *ngIf="isAgent" [disabled]="!showSelects">
         <i class="fal fa-fw fa-paper-plane"></i>
       </ion-button>
@@ -32,24 +35,25 @@
     </div>
   </div>
 
-  <div class="pt-4 px-4">
-    <ion-text *ngIf="unsendCount > 0" [innerText]="unsentText"></ion-text>
-    <ion-text *ngIf="carts && carts.length === 0">
-      {{ 'noCarts' | translate }}
-    </ion-text>
+  <div style="display:flex;justify-content:center;align-items:center;align-content:center;height:calc(100% - 52px);width:100%;overflow:hidden;" *ngIf="carts && carts.length === 0">
+    <ion-note translate>noCarts</ion-note>
   </div>
 
-  <ion-list>
+  <ion-text class="list-footer">
+    <ion-note>
+      <ion-text *ngIf="unsendCount > 0" [innerText]="unsentText"></ion-text>
+    </ion-note>
+  </ion-text>
+
+  <ion-list inset="true">
     <ion-item-sliding *ngFor="let cart of carts">
-      <ion-item lines="full" [routerLink]="[cart.id]" tappable button>
-        <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)"
-          class="fal fa-xs fa-check-circle" style="color:#76D572" *ngIf="cart.active"></i>
-        <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)"
-          class="fal fa-xs fa-check-circle" *ngIf="!cart.active"></i>
+      <ion-item [routerLink]="[cart.id]" tappable button>
+        <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)" class="fal fa-xs fa-check-circle" style="color:#76D572" *ngIf="cart.active"></i>
+        <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)" class="fal fa-xs fa-check-circle" *ngIf="!cart.active"></i>
         <ion-label>
-          <div class="select" style="display:inline-block" *ngIf="showSelects">
+          <!-- <div class="select" style="display:inline-block" *ngIf="showSelects">
             <ion-checkbox [(ngModel)]="cart.selected"></ion-checkbox>
-          </div>
+          </div> -->
           <div style="display:inline-block">
             <h2>
               {{ cart.customerName | capitalize }}
@@ -65,12 +69,4 @@
       </ion-item>
     </ion-item-sliding>
   </ion-list>
-
-  <div class="pt-4 px-4">
-    <div style="display:flex;flex-flow:column">
-      <ion-button tappable color="primary" [routerLink]="['history']">
-        {{ 'showCartsHistory' | translate }}
-      </ion-button>
-    </div>
-  </div>
 </ion-content>

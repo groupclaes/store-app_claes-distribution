@@ -22,24 +22,24 @@
         </ion-icon>
       </span>
     </ion-list-header>
-    <ion-item lines="full">
+    <ion-item>
       <ion-textarea [label]="'pages.notes.fields.note' | translate" labelPlacement="fixed"
         type="text" auto-grow="true"
         rows="4" [(ngModel)]="newNote.text"></ion-textarea>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item>
       <ion-label slot="start" [innerText]="'pages.notes.fields.next-visit' | translate"></ion-label>
       <ion-datetime-button slot="end" datetime="dt-nextVisit"></ion-datetime-button>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item>
       <ion-label slot="start" [innerText]="'pages.notes.fields.closed-from' | translate"></ion-label>
       <ion-datetime-button slot="end" datetime="dt-customerCloseFrom"></ion-datetime-button>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item>
       <ion-label slot="start" [innerText]="'pages.notes.fields.open-from' | translate"></ion-label>
       <ion-datetime-button slot="end" datetime="dt-customerOpenFrom"></ion-datetime-button>
     </ion-item>
-    <ion-item lines="full" id="note-buttons">
+    <ion-item id="note-buttons">
       <ion-button size="default" color="primary" tappable (click)="send(newNote)">
         <i class="fal fa-fw fa-lg fa-paper-plane"></i>
         <span translate="actions.send"></span>
@@ -88,17 +88,17 @@
         </ng-template>
       </ion-button>
     </ion-list-header>
-    <ion-item *ngIf="isUnsentNote(note)" lines="full">
+    <ion-item *ngIf="isUnsentNote(note)">
       <span translate="pages.notes.saved"></span>
     </ion-item>
-    <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend" lines="full">
+    <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend">
       <span translate="pages.notes.to-be-sent"></span>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item>
       <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
         item-content [innerText]="note.text"></div>
     </ion-item>
-    <ion-item lines="full" *ngIf="debugging">
+    <ion-item *ngIf="debugging">
       <ion-label>Debug</ion-label>
       <ion-label>{{ note | json }}</ion-label>
     </ion-item>

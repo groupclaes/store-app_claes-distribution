@@ -89,9 +89,8 @@ export class RecipeDetailPage implements OnInit {
   }
 
   get recipe() {
-    if (this._recipe) {
+    if (this._recipe)
       return this._recipe
-    }
     return {}
   }
 

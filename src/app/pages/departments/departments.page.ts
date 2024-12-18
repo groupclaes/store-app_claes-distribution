@@ -16,7 +16,6 @@ import { UserService } from 'src/app/core/user.service'
 export class DepartmentsPage implements OnInit {
   loading = true
   private _departments: IDepartmentT[]
-  private _query: string
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -50,11 +49,6 @@ export class DepartmentsPage implements OnInit {
       this.loading = false
       this.ref.markForCheck()
     }
-  }
-
-  filterDepartments(event: $TSFixMe): boolean {
-    this._query = event.target.value
-    return true
   }
 
   async create(data: { name: string }) {
@@ -108,10 +102,6 @@ export class DepartmentsPage implements OnInit {
 
   get departments(): IDepartmentT[] {
     return this._departments || []
-  }
-
-  get searchTerm(): string {
-    return this._query || ''
   }
 
   get culture(): string {

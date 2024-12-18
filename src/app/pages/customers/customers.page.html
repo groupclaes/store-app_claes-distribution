@@ -20,13 +20,13 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-item lines="full">
-    <ion-searchbar lines="full" [placeholder]="'customer-info.search' | translate" type="text" id="searchInputField" (input)="filterCustomers($event)"></ion-searchbar>
+  <ion-item>
+    <ion-searchbar [placeholder]="'customer-info.search' | translate" type="text" id="searchInputField" (input)="filterCustomers($event)"></ion-searchbar>
   </ion-item>
   <ion-list-header translate="customer-info.customers" class="ion-padding"></ion-list-header>
   <ion-list *ngIf="customers && (customers.length > 0 || searchTerm.length > 0);else noCustomers">
     <cdk-virtual-scroll-viewport itemSize="70" style="width:100%; height: calc(100vh - 100px)">
-      <ion-item lines="full" *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)">
+      <ion-item *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)">
         <ion-label>
           <div class="customer-grid">
             <div class="customer-name text-capitalize">

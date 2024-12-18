@@ -6,37 +6,43 @@
     <ion-title>
       <span>{{ department.alias | capitalize }}</span>
     </ion-title>
-    <ion-buttons slot="end">
-      <ion-button tappable size="small" class="icon-only" (click)="showUpdateInput()">
-        <i class="fal fa-fw fa-pen"></i>
-      </ion-button>
-      <ion-button tappable size="small" class="icon-only" (click)="showDeleteConfirmation()">
-        <i class="fal fa-fw fa-trash"></i>
-      </ion-button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <div *ngIf="loading" padding>
     <div style="text-align:center">
       <ion-spinner mode="ios"></ion-spinner>
     </div>
   </div>
 
-  <ion-list *ngIf="!loading">
-    <ion-item lines="full" button *ngFor="let product of department.products" tappable
-      [routerLink]="['/products', product.id]">
+  <ion-text class="list-header">
+    <ion-note translate>products</ion-note>
+  </ion-text>
+
+  <ion-list [inset]="true" *ngIf="!loading">
+    <ion-item button *ngFor="let product of department.products" tappable [routerLink]="['/products', product.id]">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
-        <img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy"
-          [style]="'background-color:' + product.color" width="32" height="32">
+        <img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
       </ion-avatar>
       <ion-label>
         {{ product.name }}
       </ion-label>
-      <div slot="end" class="product-unit">
+      <ion-note slot="end">
         {{ product.unit }}
-      </div>
+      </ion-note>
+    </ion-item>
+  </ion-list>
+
+  <ion-list inset="true">
+    <ion-item detail="false" button tappable (click)="showUpdateInput()">
+      <ion-label color="tertiary" style="text-align:center">{{ 'actions.modify' | translate }}</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-list inset="true">
+    <ion-item detail="false" button tappable (click)="showDeleteConfirmation()">
+      <ion-label color="danger" style="text-align:center">{{ 'actions.delete' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

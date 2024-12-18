@@ -1,42 +1,45 @@
 <ion-header [translucent]="true"></ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <div class="splash-bg" [style.background-image]="backgroundImage" id="backgound-image"></div>
   <div class="splash-info">
     <div class="splash-logo"></div>
     <div class="splash-intro" *ngIf="accountForm">
       <form [formGroup]="accountForm" (submit)="login()">
-        <ion-list style="margin-bottom:1px">
-          <ion-item lines="full">
-            <ion-input type="email" formControlName="username" autocomplete="username" name="email"
-              [label]="'email' | translate" labelPlacement="floating"></ion-input>
+        <ion-list inset="true" style="margin-bottom:1px">
+          <ion-item>
+            <ion-input type="email" formControlName="username" autocomplete="username" name="email" [label]="'email' | translate" labelPlacement="floating"></ion-input>
           </ion-item>
-          <ion-item lines="full">
-            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password"
-              [label]="'password' | translate" labelPlacement="floating"></ion-input>
+          <ion-item>
+            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password" [label]="'password' | translate" labelPlacement="floating"></ion-input>
           </ion-item>
         </ion-list>
-        <div class="pt-4 px-4">
-          <div class="pb-4" *ngIf="busy">
-            <ion-spinner mode="ios"></ion-spinner>
-          </div>
-          <ion-button color="primary" expand="block" type="submit" [disabled]="busy || dbError" translate="loginButton">
+
+        <div class="px-4 pt-4">
+          <ion-button color="primary" fill="clear" expand="block" type="submit" style="background:white;border-radius:8px" [disabled]="busy || dbError">
+            <ion-spinner *ngIf="busy" mode="ios"></ion-spinner>
+            <ion-label style="text-align:center">{{ 'loginButton' | translate }}</ion-label>
           </ion-button>
         </div>
+
+        <ion-text class="list-footer">
+          <ion-note>
+            <p>
+              <span translate="version"></span>
+              <span>{{ appVersion }}</span>
+            </p>
+          </ion-note>
+        </ion-text>
       </form>
 
-      <div class="pt-4 px-4">
-        <div style="display:flex;flex-flow:column">
-          <ion-button color="primary" tappable (click)="resetPassword()" translate="forgotPassword">
-          </ion-button>
-          <ion-button color="primary" tappable (click)="signup()" translate="noClaesID">
-          </ion-button>
-        </div>
-        <p>
-          <span translate="version"></span>
-          <span>{{ appVersion }}</span>
-        </p>
-      </div>
+      <ion-list inset="true">
+        <ion-item detail="false" button tappable (click)="resetPassword()">
+          <ion-label color="tertiary">{{ 'forgotPassword' | translate }}</ion-label>
+        </ion-item>
+        <ion-item detail="false" button tappable (click)="signup()">
+          <ion-label color="tertiary">{{ 'noClaesID' | translate }}</ion-label>
+        </ion-item>
+      </ion-list>
     </div>
   </div>
 </ion-content>

@@ -160,3 +160,99 @@ ion-menu ion-backdrop {
 ion-toolbar ion-buttons {
   font-size: 1.5em
 }
+
+//#region ion list fixes to be inline with ios guidelines
+ion-list-header+ion-list {
+  margin: 0 16px 8px !important;
+}
+
+ion-text.list-header {
+  text-transform: uppercase;
+  margin: 16px 16px 8px;
+  padding: 0 16px;
+  display: block;
+  line-height: 16px;
+  font-size: 13pt
+}
+
+ion-text.list-footer {
+  margin: 8px 16px 22px;
+  padding: 0 16px;
+  display: block;
+  line-height: 16px;
+  font-size: 13pt
+}
+
+.list-ios.list-inset:first-of-type {
+  margin-top: 32px;
+}
+
+// .list-ios.list-inset:first-of-type+ion-text.list-header {
+//   margin-top: 16px;
+// }
+
+.list-ios.list-inset+.list-ios.list-inset {
+  margin-top: 34px
+}
+
+.list-ios.list-inset+ion-text.list-header {
+  margin: 32px 16px 8px
+}
+
+ion-text.list-header+.list-ios.list-inset {
+  margin-top: 0
+}
+
+ion-text.list-footer+.list-ios.list-inset {
+  margin-top: 40px
+}
+
+ion-text.list-footer+ion-text.list-header {
+  margin-top: 22px 16px 0px;
+}
+
+.list-ios.list-inset:last-of-type {
+  margin-bottom: 50px;
+}
+
+.list-ios.list-inset:has(+ion-text.list-footer) {
+  margin-bottom: 0px;
+}
+
+.list-ios.list-inset:last-of-type+ion-text.list-footer {
+  margin-bottom: 40px;
+}
+
+ion-popover {
+  --width: 280px;
+  --min-width: 280px
+}
+
+.font-bold {
+  font-weight: bold !important
+}
+
+.font-medium {
+  font-weight: 500 !important
+}
+
+.font-italic {
+  font-style: italic !important;
+  color: var(--ion-color-medium);
+}
+
+.text-uppercase {
+  text-transform: uppercase
+}
+
+.text-capitalize {
+  text-transform: capitalize
+}
+
+.mb-1 {
+  margin-bottom: .25rem !important
+}
+
+ion-note {
+  color: var(--ion-color-medium);
+}

@@ -17,7 +17,6 @@ export class CategoriesPage {
   private _categories: ICategoryT[]
   currentCategory: ICategoryT = null
   assortmentGroups: any[]
-  displaymode: string = "display-list"
 
   constructor(
     private navCtrl: NavController,
@@ -27,10 +26,6 @@ export class CategoriesPage {
     private cart: CartService,
     route: ActivatedRoute
   ) {
-    route.queryParams.subscribe(params => {
-      this.displaymode = params['display'] || this.displaymode || "display-list"
-    })
-
     route.params.subscribe(params => {
       this.loadCategories(+params['id'])
     })
@@ -71,8 +66,7 @@ export class CategoriesPage {
     } else {
       this.navCtrl.navigateRoot(['products'], {
         queryParams: {
-          category: category.id,
-          display: this.displaymode
+          category: category.id
         },
         animated: true
       })
@@ -82,8 +76,7 @@ export class CategoriesPage {
   navigateToPage(category: ICategoryT) {
     this.navCtrl.navigateForward(['products'], {
       queryParams: {
-        category: category.id,
-        display: this.displaymode
+        category: category.id
       }
     })
   }

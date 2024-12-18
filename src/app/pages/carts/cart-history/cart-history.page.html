@@ -20,7 +20,7 @@
       </ion-label>
     </ion-item-divider>
     <ion-item *ngFor="let cart of carts" [routerLink]="'/carts/' + cart.id"
-      [queryParams]="{history: true}" lines="full">
+      [queryParams]="{history: true}">
       <div class="ion-padding" style="font-size:2em;width:1.6em;padding-left: 0;">
         <div *ngIf="cart.sendOk" style="color:green">
           <i class="fal fa-fw fa-sm fa-check"></i>

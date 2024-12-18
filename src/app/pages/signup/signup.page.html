@@ -16,23 +16,23 @@
 
   <form [formGroup]="form" (submit)="doSignup()">
     <ion-list>
-      <ion-item lines="full">
+      <ion-item>
         <ion-input [label]="'pages.register.fields.email' | translate" labelPlacement="floating"
           type="email" formControlName="username" autocomplete="email" name="email"></ion-input>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-input [label]="'pages.register.fields.first-name' | translate" labelPlacement="floating"
           type="text" formControlName="given_name" autocomplete="given-name" name="given-name"></ion-input>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-input [label]="'pages.register.fields.last-name' | translate" labelPlacement="floating"
           type="text" formControlName="family_name" autocomplete="family-name" name="family-name"></ion-input>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-input [label]="'pages.register.fields.password' | translate" labelPlacement="floating"
           type="password" formControlName="password" autocomplete="password" name="password"></ion-input>
       </ion-item>
-      <ion-item lines="full">
+      <ion-item>
         <ion-input [label]="'pages.register.fields.registration-code' | translate" labelPlacement="floating"
           type="text" formControlName="code" autocomplete="registration-code"
           name="registrationCode"></ion-input>

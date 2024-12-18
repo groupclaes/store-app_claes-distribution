@@ -12,45 +12,44 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
-    <ion-toolbar>
+    <ion-toolbar color="light">
       <ion-title size="large" translate="reportsPage"></ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <ion-list>
-    <ion-list-header lines="full">
-      <h3 translate="pages.reports.requestedReports"></h3>
-    </ion-list-header>
-    <ion-item button lines="full" *ngFor="let report of myreports" tappable (click)="showActionMenu(report)">
+  <ion-text class="list-header" *ngIf="!loading && myreports.length > 0">
+    <ion-note translate>pages.reports.requestedReports</ion-note>
+  </ion-text>
+
+  <ion-list inset="true" *ngIf="!loading && myreports.length > 0">
+    <ion-item button *ngFor="let report of myreports" tappable (click)="showActionMenu(report)">
       <ion-label>
         {{ report.Filename }}
       </ion-label>
-      <div slot="end" *ngIf="report.CompletionTime"
-        style="font-style:italic;color:#999;font-size:14px;line-height: 18px">
+      <div slot="end" *ngIf="report.CompletionTime" style="font-style:italic;color:#999;font-size:14px;line-height: 18px">
         <span translate="pages.reports.reportExecutedAt"></span> {{ report.CompletionTime | date:'dd/MM/yyyy HH:mm' }}
       </div>
     </ion-item>
-    <ion-item lines="full" *ngIf="!loading && myreports.length <= 0">
-      <span style="font-style:italic;color:#999;font-size:14px;line-height: 18px">
-        <span translate="pages.reports.noActiveReportsLast2Weeks"></span>
-      </span>
-    </ion-item>
   </ion-list>
-  <br>
-  <ion-list>
-    <ion-list-header lines="full">
-      <h3 translate="pages.reports.availableReports"></h3>
-    </ion-list-header>
+
+  <ion-text class="list-header">
+    <ion-note translate>pages.reports.availableReports</ion-note>
+  </ion-text>
+
+  <ion-list inset="true">
     <div *ngIf="loading" padding>
       <div style="text-align:center">
         <ion-spinner mode="ios"></ion-spinner>
       </div>
     </div>
-    <ion-item button lines="full" *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable
-      (click)="confirmRunReport(report)">
+    <ion-item button *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable (click)="confirmRunReport(report)">
       <ion-label>{{ report.name }}</ion-label>
     </ion-item>
   </ion-list>
+
+  <ion-text class="list-footer" *ngIf="!loading && myreports.length <= 0">
+    <ion-note translate>pages.reports.noActiveReportsLast2Weeks</ion-note>
+  </ion-text>
 </ion-content>

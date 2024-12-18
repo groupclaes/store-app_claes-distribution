@@ -6,24 +6,16 @@
     <ion-title translate="departmentsPage">
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable size="small" class="icon-only" (click)="showCreateInput()">
-        <i class="fal fa-fw fa-plus"></i>
-      </ion-button>
-      <ion-button tappable size="small" class="icon-only" [routerLink]="cartLink">
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <!-- <ion-toolbar *ngIf="departments">
-    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000"
-      [placeholder]="'searchInput' | translate" (ionInput)="filterDepartments($event)">
-    </ion-searchbar>
-  </ion-toolbar> -->
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
-    <ion-toolbar>
+    <ion-toolbar color="light">
       <ion-title size="large" translate="departmentsPage"></ion-title>
     </ion-toolbar>
   </ion-header>
@@ -34,12 +26,18 @@
     </div>
   </div>
 
-  <ion-list *ngIf="!loading">
-    <ion-item button lines="full" *ngFor="let department of departments" [routerLink]="[department.id]">
+  <ion-list [inset]="true" *ngIf="!loading">
+    <ion-item button *ngFor="let department of departments" [routerLink]="[department.id]">
       <ion-label>{{ department.alias | capitalize }}</ion-label>
       <div slot="end">
         {{ department.products }}
       </div>
+    </ion-item>
+  </ion-list>
+
+  <ion-list inset="true">
+    <ion-item detail="false" button tappable (click)="showCreateInput()">
+      <ion-label color="primary" style="text-align:center">{{ 'actions.add' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>
