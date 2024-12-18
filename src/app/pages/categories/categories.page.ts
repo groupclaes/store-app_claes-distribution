@@ -65,10 +65,7 @@ export class CategoriesPage {
     const result = await this.categoriesRepository.findChildren(category.id)
 
     if (result && result.length > 0) {
-      this.navCtrl.navigateRoot(['categories', category.id], {
-        queryParams: {
-          display: this.displaymode
-        },
+      this.navCtrl.navigateForward(['categories', category.id], {
         animated: true
       })
     } else {
