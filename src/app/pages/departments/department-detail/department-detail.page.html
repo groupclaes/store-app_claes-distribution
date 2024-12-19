@@ -6,6 +6,14 @@
     <ion-title>
       <span>{{ department.alias | capitalize }}</span>
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable color="tertiary" (click)="showUpdateInput()" translate>
+        actions.modify
+      </ion-button>
+      <ion-button tappable color="danger" (click)="showDeleteConfirmation()" translate>
+        actions.delete
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -31,18 +39,6 @@
       <ion-note slot="end">
         {{ product.unit }}
       </ion-note>
-    </ion-item>
-  </ion-list>
-
-  <ion-list inset="true">
-    <ion-item detail="false" button tappable (click)="showUpdateInput()">
-      <ion-label color="tertiary" style="text-align:center">{{ 'actions.modify' | translate }}</ion-label>
-    </ion-item>
-  </ion-list>
-
-  <ion-list inset="true">
-    <ion-item detail="false" button tappable (click)="showDeleteConfirmation()">
-      <ion-label color="danger" style="text-align:center">{{ 'actions.delete' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>
