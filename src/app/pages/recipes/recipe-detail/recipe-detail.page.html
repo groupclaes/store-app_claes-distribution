@@ -15,7 +15,7 @@
   <ion-list [inset]="true" *ngIf="!loading">
     <ion-item button *ngFor="let product of recipe.products" tappable [routerLink]="['/products', product.id]">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
-        <ion-img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32"></ion-img>
+        <ion-img class="product-image" [src]="product | secure | async" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32"></ion-img>
       </ion-avatar>
       <ion-label>
         {{ product.name }}

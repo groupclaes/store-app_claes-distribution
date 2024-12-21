@@ -24,7 +24,7 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
 })
 export class ProductsPage {
   private _products: IProductT[]
-  private _updateCartProduct = new Subject<{productId: number, amount: number}>()
+  private _updateCartProduct = new Subject<{ productId: number, amount: number }>()
   private _routerEventSubscription: Subscription;
 
   @ViewChild(IonContent) content: IonContent
@@ -39,7 +39,7 @@ export class ProductsPage {
   displayThumbnail = false
   sortOrder: ISortOrder = 'itemNum$ASC'
 
-  updateCartProduct: Observable<{productId: number, amount: number}>
+  updateCartProduct: Observable<{ productId: number, amount: number }>
     = this._updateCartProduct.asObservable().pipe(debounceTime(500))
 
   private _filters: {
@@ -174,7 +174,7 @@ export class ProductsPage {
         ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`)
     } else if (this.user.multiUser) {
       return '  -  ' + (this.user.activeUser.addressName != null
-            ? this.user.activeUser.addressName : this.user.activeUser.name)
+        ? this.user.activeUser.addressName : this.user.activeUser.name)
     }
     return ''
   }
@@ -344,6 +344,11 @@ export class ProductsPage {
     let productAmount = $event.target.value || -1
     let showAlert = false
     this.ref.markForCheck()
+    console.debug('changeProductAmount() --start ', productId, productAmount)
+
+    console.debug(productId, productAmount,
+      this.user.activeUser.id, this.user.activeUser.address,
+      this.user.credential)
 
     // check if item had minorderQuantity
     if (product.minOrder > 1) {
@@ -378,6 +383,7 @@ export class ProductsPage {
         this.user.activeUser.id, this.user.activeUser.address,
         this.user.credential)
     }
+    console.debug('changeProductAmount() --end ', productId, productAmount)
   }
 
   newState = (product: $TSFixMe) => product.isNew ? 'active' : 'inactive'

@@ -84,7 +84,7 @@ export class ProductsRepositoryService {
         puc.${nameString} as contentUnit,
         productTexts.${descriptionString} as description,
         productTexts.${promoString} as promo,
-        p.url,
+        ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
         p.color
       FROM products AS p
       INNER JOIN packingUnits AS pu ON p.packId = pu.id
@@ -106,7 +106,7 @@ export class ProductsRepositoryService {
         products.itemnum,
         products.id,
         packingUnits.${nameString} as unit,
-        products.url,
+        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
         products.color
       FROM productRelations AS rel
       INNER JOIN products ON rel.product = products.id
@@ -117,7 +117,7 @@ export class ProductsRepositoryService {
         products.itemnum,
         products.id,
         packingUnits.${nameString} as unit,
-        products.url,
+        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
         products.color
       FROM products
       INNER JOIN packingUnits ON products.packId = packingUnits.id
@@ -127,7 +127,7 @@ export class ProductsRepositoryService {
         products.itemnum,
         products.id,
         packingUnits.${nameString} as unit,
-        products.url,
+        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
         products.color
       FROM productRelations AS rel
       INNER JOIN products ON rel.product = products.id
@@ -138,7 +138,7 @@ export class ProductsRepositoryService {
         products.itemnum,
         products.id,
         packingUnits.${nameString} as unit,
-        products.url,
+        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
         products.color
       FROM productRelations AS rel
       INNER JOIN products ON rel.product = products.id
@@ -249,7 +249,7 @@ export class ProductsRepositoryService {
         query += ` AND ( isPromo = 1 )`
       }
       if (filters.query) {
-        const filterQuery: string =  filters.query.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
+        const filterQuery: string = filters.query.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
           .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
           .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
           .replace(/(œ|Œ)/g, 'oe')
@@ -360,7 +360,7 @@ export class ProductsRepositoryService {
         query += ` AND ( isPromo = 1 )`
       }
       if (filters.query) {
-        const filterQuery: string =  filters.query.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
+        const filterQuery: string = filters.query.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
           .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
           .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
           .replace(/(œ|Œ)/g, 'oe')

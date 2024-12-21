@@ -127,7 +127,7 @@
             <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', promoProduct.id]"
               *ngFor="let promoProduct of product.promoProducts">
               <div class="product-image" *ngIf="displayThumbnail">
-                <img class="product-image" [src]="'https:' + promoProduct.url" [title]="promoProduct.name"
+                <img class="product-image" [src]="promoProduct.url | secure | async" [title]="promoProduct.name"
                   [alt]="promoProduct.name" loading="lazy" [style]="'background-color:' + promoProduct.color"
                   width="72" height="72">
               </div>
@@ -148,7 +148,7 @@
             <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', rel.id]"
               *ngFor="let rel of product.relatedProducts">
               <div class="product-image" *ngIf="displayThumbnail">
-                <img class="product-image" [src]="'https:' + rel.url" [title]="rel.name" [alt]="rel.name" loading="lazy"
+                <img class="product-image" [src]="rel.url | secure | async" [title]=" rel.name" [alt]="rel.name" loading="lazy"
                   [style]="'background-color:' + rel.color" width="72" height="72">
               </div>
               <div>
@@ -170,7 +170,7 @@
             <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', similarProduct.id]"
               *ngFor="let similarProduct of product.similarProducts">
               <div class="product-image" *ngIf="displayThumbnail">
-                <img class="product-image" [src]="'https:' + similarProduct.url" [title]="similarProduct.name"
+                <img class="product-image" [src]="similarProduct.url | secure | async" [title]="similarProduct.name"
                   [alt]="similarProduct.name" loading="lazy" [style]="'background-color:' + product.color" width="72"
                   height="72">
               </div>

@@ -19,9 +19,28 @@
     </ion-toolbar>
   </ion-header>
 
+  <ion-refresher slot="fixed" (ionRefresh)="fullSync($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-text class="list-header">
+    <ion-note translate>Documenten</ion-note>
+  </ion-text>
+
+  <ion-list inset="true">
+
+    <ion-item>
+      <i class="fal fa-lg fa-fw fa-image" slot="start"></i>
+      <ion-label>Thumbnails</ion-label>
+      <ion-note slot="end">
+        {{ imagecount }} / {{ productcount }}
+      </ion-note>
+    </ion-item>
+  </ion-list>
+
   <ng-container *ngIf="internalUser">
     <ion-text class="list-header">
-      <ion-note translate>integrityChecksums</ion-note>
+      <ion-note translate>pages.sync.sync_details</ion-note>
     </ion-text>
 
     <ion-list inset="true">
@@ -45,7 +64,13 @@
 
   <ion-text class="list-footer">
     <ion-note>
-      <span translate="checksum.lastSync"></span>: {{ lastSync | date:'d MMMM yyyy HH:mm':undefined:culture }}
+      <ng-container *ngIf="lastSync">
+        {{ 'pages.sync.lastsync' | translate }}
+        {{ lastSync | date:'d MMMM yyyy HH:mm':undefined:culture }}
+      </ng-container>
+      <ng-container *ngIf="!lastSync">
+        {{ 'pages.sync.neversynced' | translate }}
+      </ng-container>
     </ion-note>
   </ion-text>
 </ion-content>

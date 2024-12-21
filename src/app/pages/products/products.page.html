@@ -53,27 +53,31 @@
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" *ngIf="products.length > 0 && !loading" class="ion-content-scroll-host">
     <ion-list>
       <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products">
-        <ion-avatar *ngIf="displayThumbnail" slot="start">
-          <img class="product-image" [src]="product.url" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
-        </ion-avatar>
+        <ion-thumbnail *ngIf="displayThumbnail" slot="start">
+          <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="48" height="48">
+        </ion-thumbnail>
 
-        <ion-label class="ion-text-wrap" style="min-height:60px; display:flex;flex-direction: column;justify-content: center;">
-          <!--style="min-height:58px;">-->
-          <div class="product-options" style="display:flex;gap:.5em">
-            <ion-badge color="secondary" *ngIf="product.isNew == true" translate="newItem"></ion-badge>
-            <ion-badge color="danger" *ngIf="this.canPromo && product.isPromo == true" translate="promoItem"></ion-badge>
-            <ion-badge color="warning" *ngIf="product.isFavorite" translate="favoriteItem"></ion-badge>
-            <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderItem"></ion-badge>
+        <ion-label class="ion-text-wrap" style="min-height:60px;display:flex;justify-content:center;">
+          <div style="display:flex;flex-direction:column;justify-content:center;flex:1">
+            <div class="product-options" style="display:flex;gap:.5em">
+              <ion-badge color="secondary" *ngIf="product.isNew == true" translate="newItem"></ion-badge>
+              <ion-badge color="danger" *ngIf="this.canPromo && product.isPromo == true  && filter.promoState !== 'active'" translate="promoItem"></ion-badge>
+              <ion-badge color="warning" *ngIf="product.isFavorite && filter.favoriteState !== 'active'" translate="favoriteItem"></ion-badge>
+              <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderItem"></ion-badge>
+            </div>
+            <span style="font-size:clamp(6px, 3vw, 0.875rem)">{{ product.name }}</span>
+            <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
+              {{ favinfo(product) }}
+            </div>
+            <ion-badge color="light" *ngIf="product.availableOn">
+              {{ availableDescription(product) }}
+            </ion-badge>
           </div>
-          <span style="font-size:clamp(6px, 3vw, 0.875rem)">{{ product.unit | capitalize }} - {{ product.name }}</span>
-          <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
-            {{ favinfo(product) }}
-          </div>
-          <ion-badge color="light" *ngIf="product.availableOn">
-            {{ availableDescription(product) }}
-          </ion-badge>
+          <ion-note style="display:flex;flex-direction:column;justify-content:center">
+            {{ product.unit | capitalize }}
+          </ion-note>
         </ion-label>
-        <div class="add-to-cart" slot="end" (click)="$event.stopPropagation();$event.preventDefault()">
+        <div slot="end" class="add-to-cart" (click)="$event.stopPropagation();$event.preventDefault()">
           <input [value]="product.amount ?? null" [disabled]="product.availableOn !== null" placeholder="0" class="control-color" type="tel" [tabindex]="1" (input)="changeProductAmount($event, product)" />
         </div>
       </ion-item>

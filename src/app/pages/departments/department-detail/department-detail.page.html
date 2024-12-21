@@ -6,14 +6,14 @@
     <ion-title>
       <span>{{ department.alias | capitalize }}</span>
     </ion-title>
-    <ion-buttons slot="end">
+    <!-- <ion-buttons slot="end">
       <ion-button tappable color="tertiary" (click)="showUpdateInput()" translate>
         actions.modify
       </ion-button>
       <ion-button tappable color="danger" (click)="showDeleteConfirmation()" translate>
         actions.delete
       </ion-button>
-    </ion-buttons>
+    </ion-buttons> -->
   </ion-toolbar>
 </ion-header>
 
@@ -31,7 +31,7 @@
   <ion-list [inset]="true" *ngIf="!loading">
     <ion-item button *ngFor="let product of department.products" tappable [routerLink]="['/products', product.id]">
       <ion-avatar *ngIf="displayThumbnail" slot="start">
-        <img class="product-image" [src]="'https:' + product.url" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
+        <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
       </ion-avatar>
       <ion-label>
         {{ product.name }}
@@ -39,6 +39,18 @@
       <ion-note slot="end">
         {{ product.unit }}
       </ion-note>
+    </ion-item>
+  </ion-list>
+
+  <!-- <ion-list inset="true">
+    <ion-item detail="false" button tappable (click)="showUpdateInput()">
+      <ion-label color="tertiary" style="text-align:center">{{ 'actions.modify' | translate }}</ion-label>
+    </ion-item>
+  </ion-list> -->
+
+  <ion-list inset="true">
+    <ion-item detail="false" button tappable (click)="showDeleteConfirmation()">
+      <ion-label color="danger" style="text-align:center">{{ 'actions.delete' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>

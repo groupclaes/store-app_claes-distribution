@@ -10,7 +10,8 @@ export const environment = {
     'nl-BE',
     'fr-BE'
   ],
-  api_url: 'https://api.groupclaes.be/test/distribution',
+  // api_url: 'https://api.groupclaes.be/test/distribution',
+  api_url: 'https://api.groupclaes.be/distribution',
   pcm_url: 'https://pcm.groupclaes.be/v4',
   database_name: 'distribution-test'
 }

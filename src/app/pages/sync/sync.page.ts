@@ -1,7 +1,10 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { Directory, Filesystem } from '@capacitor/filesystem'
 import { LoadingController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { DatabaseService } from 'src/app/core/database.service'
 import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 import { Store, SyncService } from 'src/app/core/sync.service'
 import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service'
@@ -17,6 +20,9 @@ export class SyncPage implements OnInit {
   lastSync: Date
   integrityChecksums: Array<Store> = []
 
+  productcount = 0
+  imagecount = 0
+
   constructor(
     private ref: ChangeDetectorRef,
     private translate: TranslateService,
@@ -24,7 +30,8 @@ export class SyncPage implements OnInit {
     private sync: SyncService,
     private repo: DataIntegrityChecksumsRepositoryService,
     private loadingCtrl: LoadingController,
-    private logger: LoggingProvider
+    private logger: LoggingProvider,
+    private _db: DatabaseService
   ) { }
 
 
@@ -40,7 +47,7 @@ export class SyncPage implements OnInit {
     this.load()
   }
 
-  async fullSync() {
+  async fullSync($event?: any) {
     this.loader = await this.loadingCtrl.create({
       spinner: 'lines',
       message: this.translate.instant('syncPage')
@@ -57,7 +64,10 @@ export class SyncPage implements OnInit {
     }
 
     await promise.then(_ => this.loader.dismiss())
-      .then(_ => this.load())
+      .then(_ => {
+        this.load()
+        $event?.target.complete()
+      })
 
     if (this.user.activeUser.id != null && this.user.activeUser.address != null) {
       const customer = {
@@ -76,6 +86,22 @@ export class SyncPage implements OnInit {
       const dataIntegrity = await this.repo.get<Store>()
       this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
       this.integrityChecksums = dataIntegrity.filter(e => e.dataTable !== 'lastSync')
+
+      this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
+        const result = await db.query('select count(*) as c from products')
+        if (result.values)
+          this.productcount = result.values[0]['c']
+        this.ref.markForCheck()
+      })
+
+      Filesystem.readdir({
+        path: 'thumbnails',
+        directory: Directory.Documents,
+      }).then(result => {
+        console.log(result)
+        this.imagecount = result.files.length
+        this.ref.markForCheck()
+      })
     } catch (err) {
       this.logger.error('SyncPage.load() error', err)
     } finally {
