@@ -16,7 +16,7 @@ export class ThumbCacheService {
       Filesystem.readFile({
         path: 'thumbnails/' + itemnum + '.blob',
         directory: Directory.Documents,
-        encoding: Encoding.UTF8,
+        encoding: Encoding.UTF8
       })
     )
       .pipe(map(r => new HttpResponse({

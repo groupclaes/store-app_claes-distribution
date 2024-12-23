@@ -341,7 +341,8 @@ export class ProductsPage {
 
   async changeProductAmount($event: any, product: $TSFixMe) {
     const productId = product.id
-    let productAmount = $event.target.value || -1
+    // make sure no negative values are passed if defined
+    let productAmount = $event.target.value ? Math.abs($event.target.value) : -1
     let showAlert = false
     this.ref.markForCheck()
     console.debug('changeProductAmount() --start ', productId, productAmount)
@@ -379,7 +380,7 @@ export class ProductsPage {
       })
       alert.present()
     } else {
-      await this.cart.updateProduct(productId, productAmount,
+      await this.cart.setProduct(productId, productAmount,
         this.user.activeUser.id, this.user.activeUser.address,
         this.user.credential)
     }

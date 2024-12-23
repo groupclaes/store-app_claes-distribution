@@ -7,6 +7,7 @@ import { AppCredential, Customer } from './user.service'
 import { CustomersRepositoryService } from './repositories/customers.repository.service'
 import { firstValueFrom } from 'rxjs'
 import { environment } from 'src/environments/environment'
+import { Queue } from './queue'
 
 @Injectable({
   providedIn: 'root'
@@ -15,33 +16,31 @@ export class CartService {
   private _carts: ICartDetail[] = []
   private _credential: AppCredential
 
+  private _queue_running: boolean = false
+  private _update_queue: Queue<CartUpdateType> = new Queue<CartUpdateType>()
+
   constructor(
     public api: ApiService,
     private repo: CartsRepositoryService,
     private customerRepo: CustomersRepositoryService,
     private logger: LoggingProvider,
     private translate: TranslateService
-    // private statistics: StatisticsProvider
   ) { }
 
-  get active(): ICartDetail | null {
-    if (this._carts) {
-      return this._carts.find(e => e.active === true) || null
+  async init(credential: AppCredential, userId: number) {
+    this.logger.debug('CartService.init() -- start', userId)
+
+    try {
+      this.logger.debug('CartService.init() -- verifyDb')
+      await this.verifyDb()
+      this.logger.debug('CartService.init() -- loadCarts')
+      await this.loadCarts()
+    } catch (err) {
+      this.logger.error('CartService.init() error', err)
+    } finally {
+      this._credential = credential
+      this.logger.debug('CartService.init() -- end')
     }
-    return null
-  }
-
-  get newId(): number {
-    const newNum = Math.floor(Math.random() * (2147483647 - 0)) + 0
-    return newNum
-  }
-
-  get culture(): string {
-    return this.translate.currentLang
-  }
-
-  get carts(): ICartDetail[] {
-    return this._carts
   }
 
   async verifyDb() {
@@ -49,10 +48,10 @@ export class CartService {
   }
 
   async loadCarts() {
-    this.logger.log('CartService.loadCarts() -- start')
+    this.logger.debug('CartService.loadCarts() -- start')
     this._carts = await this.repo.loadUnsent(this.culture)
-    this.logger.log(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
-    this.logger.log('CartService.loadCarts() -- end')
+    this.logger.debug(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
+    this.logger.debug('CartService.loadCarts() -- end')
   }
 
   async getHistoryCarts() {
@@ -64,20 +63,36 @@ export class CartService {
     return carts
   }
 
-  async init(credential: AppCredential, userId: number) {
-    this.logger.log('CartService.init() -- start')
-
-    try {
-      this.logger.log('CartService.init() -- verifyDb')
-      await this.verifyDb()
-      this.logger.log('CartService.init() -- loadCarts')
-      await this.loadCarts()
-    } catch (err) {
-      this.logger.error('CartService.init() error', err)
-    } finally {
+  async setProduct(product_id: number, amount: number, customer: number, address: number, credential?: AppCredential, cartId?: number) {
+    if (credential)
       this._credential = credential
+    this.logger.log('CartService.setProduct() -- ', product_id, amount, cartId)
 
-      this.logger.log('CartService.init() -- end')
+    if (cartId) {
+      const cart = this._carts.find(e => e.id === cartId)
+      this.logger.log('setProduct() -- isValidCart')
+      this.isValidCart(cart)
+
+      this.logger.log('setProduct() -- enqueue')
+      this._update_queue.enqueue({
+        type: 'update',
+        id: cart.id,
+        customer,
+        address,
+        product_id,
+        amount,
+        credential
+      })
+
+      this.logger.log('setProduct() -- complete_queue')
+      this.complete_queue()
+      this.logger.log('setProduct() -- complete_queue() called')
+    } else {
+      // check if there is an active cart, if not error
+      if (this.active)
+        return this.setProduct(product_id, amount, customer, address, credential, this.active.id)
+
+      throw new Error('No active cart found')
     }
   }
 
@@ -93,6 +108,7 @@ export class CartService {
         await this.repo.removeProduct(this.active.id, id)
         // this.statistics.cartRemove(this._userId, id)
       } else if (amount > -1) {
+        // make sure no float's amounts get saved
         const correctAmount = Math.floor(amount)
 
         cart.products.find(e => e.id === id).amount = correctAmount
@@ -101,8 +117,8 @@ export class CartService {
       return
     }
 
-    if (!this._carts || this.carts.length === 0
-      || (!this.active && !this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
+    if (this.carts.length === 0
+      || (!this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
       || !(this.active?.customer === customer && this.active?.address === address)) {
       this.logger.log('CartService.updateProduct() -- createCart')
       if (!await this.createCart(customer, address, credential)) {
@@ -151,7 +167,7 @@ export class CartService {
 
     if (this.active && this.active.customer === customer && this.active.address === address && this.active.send === false) {
       this.logger.log('CartService.updateActive() -- case 1', 'do nothing')
-    } else if (this._carts && this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) {
+    } else if (this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) {
       // there is a cart for the user
       this.logger.log('CartService.updateActive() -- case 2', 'loop trough')
       for (const cart of this._carts) {
@@ -204,10 +220,6 @@ export class CartService {
     }
 
     if (await this.repo.create(newCart)) {
-      if (!this._carts) {
-        this._carts = []
-      }
-
       for (const cart of this._carts) {
         cart.active = false
       }
@@ -253,4 +265,101 @@ export class CartService {
   cancelSend(cart: ICartDetail): Promise<boolean> {
     return this.repo.updateSend(cart.id, false)
   }
+
+  private isValidCart(cart: ICartDetail | undefined) {
+    if (!cart)
+      throw new Error('Cart is not valid!')
+    return
+  }
+
+  private async complete_queue(): Promise<void> {
+    this.logger.debug('complete_queue() -- running', this._queue_running)
+    if (this._queue_running)
+      return
+
+    this.logger.debug('complete_queue() -- start', this._update_queue.size)
+
+    try {
+      this._queue_running = true
+      while (this._update_queue.size > 0) {
+        this.logger.debug('complete_queue() -- while', this._update_queue.size)
+        const task = this._update_queue.dequeue()
+        switch (task.type) {
+          case 'create':
+            break
+
+          case 'update':
+            const cart = this._carts.find(e => e.id === task.id)
+            this.isValidCart(cart)
+
+            if (task.amount === -1) {
+              cart.products = cart.products.filter(e => e.id !== task.product_id)
+              await this.repo.removeProduct(this.active.id, task.product_id)
+            } else if (task.amount > -1) {
+              // make sure no float's amounts get saved
+              const correctAmount = Math.floor(task.amount)
+
+              cart.products.find(e => e.id === task.product_id).amount = correctAmount
+              await this.repo.updateProduct(task.id, task.product_id, correctAmount)
+            }
+            break
+
+          case 'delete':
+            break
+        }
+
+        if (this._update_queue.size === 0)
+          continue
+      }
+    } catch (err) {
+
+    } finally {
+      this._queue_running = false
+      this.logger.debug('complete_queue() -- end')
+    }
+  }
+
+  get active(): ICartDetail | null {
+    if (this._carts)
+      return this._carts.find(e => e.active === true) || null
+  }
+
+  get newId(): number {
+    const newNum = Math.floor(Math.random() * (2147483647 - 0)) + 0
+    return newNum
+  }
+
+  get culture(): string {
+    return this.translate.currentLang
+  }
+
+  get carts(): ICartDetail[] {
+    return this._carts
+  }
+}
+
+export type CartUpdateType = ICartUpdateCreate | ICartUpdateUpdate | ICartUpdateDelete
+
+export interface ICartUpdate {
+  type: 'create' | 'update' | 'delete'
+  customer: number
+  address: number
+  credential: AppCredential
+}
+
+export interface ICartUpdateCreate extends ICartUpdate {
+  type: 'create'
+}
+
+export interface ICartUpdateUpdate extends ICartUpdate {
+  type: 'update'
+  id: number
+  product_id: number
+  amount: number
+}
+
+export interface ICartUpdateDelete extends ICartUpdate {
+  type: 'delete'
+  id: number
+  product_id: number
 }
