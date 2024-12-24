@@ -63,13 +63,13 @@ export class CartService {
     return carts
   }
 
-  async setProduct(product_id: number, amount: number, customer: number, address: number, credential?: AppCredential, cartId?: number) {
+  async setProduct(product_id: number, amount: number, customer: number, address: number, credential?: AppCredential, cart_id?: number): Promise<void> {
     if (credential)
       this._credential = credential
-    this.logger.log('CartService.setProduct() -- ', product_id, amount, cartId)
+    this.logger.log('CartService.setProduct() -- ', product_id, amount, cart_id)
 
-    if (cartId) {
-      const cart = this._carts.find(e => e.id === cartId)
+    if (cart_id) {
+      const cart = this._carts.find(e => e.id === cart_id)
       this.logger.log('setProduct() -- isValidCart')
       this.isValidCart(cart)
 
@@ -83,83 +83,27 @@ export class CartService {
         amount,
         credential
       })
-
-      this.logger.log('setProduct() -- complete_queue')
-      this.complete_queue()
-      this.logger.log('setProduct() -- complete_queue() called')
     } else {
       // check if there is an active cart, if not error
+      let cust_cart = this._carts.find(e => e.customer === customer && e.address === address && e.send === false)
       if (this.active)
         return this.setProduct(product_id, amount, customer, address, credential, this.active.id)
-
-      throw new Error('No active cart found')
-    }
-  }
-
-  async updateProduct(id: number, amount: number, customer: number, address: number, credential: AppCredential, cartId?: number) {
-    this._credential = credential
-    this.logger.log('CartService.updateProduct() -- ', id, amount, customer, address)
-
-    if (cartId) {
-      this.logger.log('CartService.updateProduct() -- has cartId')
-      const cart = this._carts.find(e => e.id === cartId)
-      if (amount === -1) {
-        cart.products = cart.products.filter(e => e.id !== id)
-        await this.repo.removeProduct(this.active.id, id)
-        // this.statistics.cartRemove(this._userId, id)
-      } else if (amount > -1) {
-        // make sure no float's amounts get saved
-        const correctAmount = Math.floor(amount)
-
-        cart.products.find(e => e.id === id).amount = correctAmount
-        await this.repo.updateProduct(cartId, id, correctAmount)
-      }
-      return
-    }
-
-    if (this.carts.length === 0
-      || (!this._carts.some(e => e.customer === customer && e.address === address && e.send === false))
-      || !(this.active?.customer === customer && this.active?.address === address)) {
-      this.logger.log('CartService.updateProduct() -- createCart')
-      if (!await this.createCart(customer, address, credential)) {
-        this.logger.error('CartService.updateProduct() -- createCart failed!')
-      }
-    }
-
-    if (!this.active && this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) {
-      this._carts.find(e => e.customer === customer && e.address === address && e.send === false).active = true
-      this.logger.log('CartService.updateProduct() -- active = true')
-    }
-
-    if (this.active && this.active.products && this.active.products.some(e => e.id === id) && this.active.send === false) {
-      this.logger.log('CartService.updateProduct() -- some')
-      if (amount === -1) {
-        this.active.products = this.active.products.filter(e => e.id !== id)
-        await this.repo.removeProduct(this.active.id, id)
-        // this.statistics.cartRemove(this._userId, id)
-      } else {
-        this.active.products.find(e => e.id === id).amount = amount
-
-        await this.repo.updateProduct(this.active.id, id, amount)
-      }
-    } else {
-      this.logger.log('CartService.updateProduct() -- else')
-      if (!this.active.products) {
-        this.active.products = []
+      else if (cust_cart) {
+        return this.setProduct(product_id, amount, customer, address, credential, cust_cart.id)
       }
 
-      this.active.products.push({
-        id,
-        itemnum: '',
+      this._update_queue.enqueue({
+        type: 'create',
+        customer,
+        address,
+        product_id,
         amount,
-        name: null,
-        unit: null,
-        color: null,
-        url: null
+        credential
       })
-      await this.repo.addProduct(this.active.id, id, amount)
-      // this.statistics.cartAdd(this._userId, id)
     }
+
+    this.logger.log('setProduct() -- complete_queue')
+    await this.complete_queue()
   }
 
   async updateActive(customer: number, address: number) {
@@ -196,40 +140,6 @@ export class CartService {
     return this.repo.delete(cart.id)
   }
 
-  async createCart(customer: number, address: number, credential: AppCredential) {
-    this.logger.log('CartService.createCart() --', customer, address)
-    this._credential = credential
-
-    const { name, addressName } = await this.customerRepo.get<Customer>(customer, address);
-
-    const newCart: ICartDetail = {
-      id: this.newId,
-      name: 'cart-' + new Date().getTime(),
-      customer,
-      customerName: name,
-      addressName,
-      address,
-      serverDate: null,
-      lastChangeDate: new Date(),
-      sendDate: null,
-      send: false,
-      sendOk: false,
-      active: true,
-      products: [],
-      settings: null
-    }
-
-    if (await this.repo.create(newCart)) {
-      for (const cart of this._carts) {
-        cart.active = false
-      }
-
-      this._carts.push(newCart)
-      return true
-    }
-    return false
-  }
-
   async sendCart(cart: ICartDetail): Promise<boolean> {
     let response: any
     try {
@@ -262,6 +172,20 @@ export class CartService {
     }
   }
 
+  async create(customer: number, address: number, credential: AppCredential) {
+    this.logger.log('create() -- start')
+    await this.complete_queue()
+    this._update_queue.enqueue({
+      type: 'create',
+      customer,
+      address,
+      credential
+    })
+    this.logger.log('create() -- complete_queue')
+    await this.complete_queue()
+    this.logger.log('create() -- end')
+  }
+
   cancelSend(cart: ICartDetail): Promise<boolean> {
     return this.repo.updateSend(cart.id, false)
   }
@@ -272,10 +196,90 @@ export class CartService {
     return
   }
 
+  private async complete_cart_create(task: ICartUpdateCreate) {
+    const { name, addressName } = await this.customerRepo.get<Customer>(task.customer, task.address)
+    const newCart: ICartDetail = {
+      id: this.newId,
+      name: 'cart-' + new Date().getTime(),
+      customer: task.customer,
+      customerName: name,
+      addressName,
+      address: task.address,
+      serverDate: null,
+      lastChangeDate: new Date(),
+      sendDate: null,
+      send: false,
+      sendOk: false,
+      active: true,
+      products: [],
+      settings: null
+    }
+
+    for (const cart of this._carts) {
+      cart.active = false
+    }
+
+    this._carts.push(newCart)
+
+    if (task.product_id && task.amount) {
+      this._update_queue.enqueue({
+        type: 'update',
+        id: newCart.id,
+        customer: task.customer,
+        address: task.address,
+        product_id: task.product_id,
+        amount: task.amount,
+        credential: task.credential
+      })
+    }
+
+    // craete new cart in db
+    await this.repo.create(newCart)
+
+    await new Promise(r => setTimeout(r, 18))
+  }
+
+  private async complete_cart_update(task: ICartUpdateUpdate) {
+    const cart = this._carts.find(e => e.id === task.id)
+    this.isValidCart(cart)
+
+    if (task.amount === -1) {
+      cart.products = cart.products.filter(e => e.id !== task.product_id)
+      await this.repo.removeProduct(this.active.id, task.product_id)
+    } else if (task.amount > -1) {
+      // make sure no float's amounts get saved
+      const correctAmount = Math.floor(task.amount)
+      const product = cart.products.find(e => e.id === task.product_id)
+
+      if (product) {
+        product.amount = correctAmount
+        await this.repo.updateProduct(task.id, task.product_id, correctAmount)
+      } else {
+        cart.products.push({
+          id: task.product_id,
+          itemnum: '',
+          amount: correctAmount,
+          name: null,
+          unit: null,
+          color: null,
+          url: null
+        })
+        await this.repo.addProduct(task.id, task.product_id, correctAmount)
+      }
+    }
+  }
+
   private async complete_queue(): Promise<void> {
     this.logger.debug('complete_queue() -- running', this._queue_running)
     if (this._queue_running)
-      return
+      return new Promise<void>(r => {
+        const t = setInterval(() => {
+          if (this._queue_running = false) {
+            r()
+            clearInterval(t)
+          }
+        }, 18)
+      })
 
     this.logger.debug('complete_queue() -- start', this._update_queue.size)
 
@@ -284,24 +288,15 @@ export class CartService {
       while (this._update_queue.size > 0) {
         this.logger.debug('complete_queue() -- while', this._update_queue.size)
         const task = this._update_queue.dequeue()
+        this._credential = task.credential
+
         switch (task.type) {
           case 'create':
+            await this.complete_cart_create(task)
             break
 
           case 'update':
-            const cart = this._carts.find(e => e.id === task.id)
-            this.isValidCart(cart)
-
-            if (task.amount === -1) {
-              cart.products = cart.products.filter(e => e.id !== task.product_id)
-              await this.repo.removeProduct(this.active.id, task.product_id)
-            } else if (task.amount > -1) {
-              // make sure no float's amounts get saved
-              const correctAmount = Math.floor(task.amount)
-
-              cart.products.find(e => e.id === task.product_id).amount = correctAmount
-              await this.repo.updateProduct(task.id, task.product_id, correctAmount)
-            }
+            await this.complete_cart_update(task)
             break
 
           case 'delete':
@@ -349,6 +344,8 @@ export interface ICartUpdate {
 
 export interface ICartUpdateCreate extends ICartUpdate {
   type: 'create'
+  product_id?: number
+  amount?: number
 }
 
 export interface ICartUpdateUpdate extends ICartUpdate {

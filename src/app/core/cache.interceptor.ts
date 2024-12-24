@@ -12,10 +12,11 @@ export class CachingInterceptor implements HttpInterceptor {
     if (!isCacheable(request)) { return next.handle(request) }
 
     return this.cache.get(request)
-      .pipe(catchError(err => {
-        console.log(err)
-        // if there is an error retreiving from cache, send request
-        return sendRequest(request, next, this.cache)
+      .pipe(catchError((err: Error) => {
+        if (err.message === 'File does not exist.')
+          // if there is an error retreiving from cache, send request
+          return sendRequest(request, next, this.cache)
+        console.log(err.message)
       }))
   }
 }

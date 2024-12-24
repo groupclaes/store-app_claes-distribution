@@ -366,7 +366,7 @@ export class ProductDetailPage implements OnInit {
       alert.present()
     }
 
-    this.cart.updateProduct(productId, productAmount, customerId, addressId, credential)
+    this.cart.setProduct(productId, productAmount, customerId, addressId, credential)
     this.ref.markForCheck()
   }
 
@@ -395,7 +395,7 @@ export class ProductDetailPage implements OnInit {
             handler: async () => {
               await this.products.removeFromDepartment(this.product.id, departmentId)
               this.product.departments = this.product.departments.filter(x => x.id !== departmentId)
-        
+
               const toast = await this.toastCtrl.create({
                 message: (this.translate.instant('pages.product-detail.modals.remove-department.removed') as string)
                   .replace('{{PRODUCT}}', this.product.name)
@@ -485,14 +485,14 @@ export class ProductDetailPage implements OnInit {
           handler: async () => {
             await this.products.removeFromFavourites(this._product.id)
             this._product.isFavorite = false
-        
+
             const toast = await this.toastCtrl.create({
               message: (this.translate.instant('pages.product-detail.modals.remove-favourite.removed') as string)
                 .replace('{{PRODUCT}}', this.product.name), /* | translate */
               duration: 3000,
               position: 'top'
             })
-        
+
             toast.present()
             this.ref.markForCheck()
           }
@@ -557,7 +557,7 @@ export class ProductDetailPage implements OnInit {
         }).then(alert => alert.present())
         return
       }
-    } catch (err) {}
+    } catch (err) { }
 
     this.alertCtrl.create({
       header: this.translate.instant('recipeMailError'),
@@ -581,7 +581,7 @@ export class ProductDetailPage implements OnInit {
         }).then(alert => alert.present())
         return
       }
-    } catch (err) {}
+    } catch (err) { }
 
     this.alertCtrl.create({
       header: this.translate.instant('datasheetMailError'),

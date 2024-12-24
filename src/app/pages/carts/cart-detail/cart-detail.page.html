@@ -72,13 +72,13 @@
         </ion-button>
       </ion-item>
     </ion-list>
-
-    <ion-list inset="true">
-      <ion-item detail="false" button tappable (click)="showDeleteConfirmation()">
-        <ion-label color="danger" style="text-align:center">{{ 'actions.delete' | translate }}</ion-label>
-      </ion-item>
-    </ion-list>
   </ng-container>
+
+  <ion-list *ngIf="!loading && view === 'productsView'" inset=" true">
+    <ion-item detail="false" button tappable (click)="showDeleteConfirmation()">
+      <ion-label color="danger" style="text-align:center">{{ 'actions.delete' | translate }}</ion-label>
+    </ion-item>
+  </ion-list>
 
   <div [hidden]="view !== 'invoiceView'" *ngIf="!loading && invoiceForm">
     <ion-text class="list-header">

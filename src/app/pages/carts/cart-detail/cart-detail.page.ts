@@ -248,7 +248,7 @@ export class CartDetailPage implements OnInit {
       return
     }
 
-    await this.cart.updateProduct(
+    await this.cart.setProduct(
       productId,
       productAmount,
       customerId,
@@ -267,7 +267,7 @@ export class CartDetailPage implements OnInit {
     const customerId = this._cart.customer
     const addressId = this._cart.address
 
-    await this.cart.updateProduct(
+    await this.cart.setProduct(
       productId,
       productAmount,
       customerId,

@@ -96,8 +96,7 @@ export class CartsPage implements OnInit {
       this.loading = true
       this.ref.markForCheck()
 
-
-      await this.cart.createCart(this.user.activeUser.id, this.user.activeUser.address, this.user.credential)
+      await this.cart.create(this.user.activeUser.id, this.user.activeUser.address, this.user.credential)
       await this.load()
     } catch (err) {
       console.error(err)

@@ -68,13 +68,7 @@ export class LoggingProvider {
   }
 
   private shouldLog(level: LogLevel): boolean {
-    let ret: boolean = false
-    if ((level >= this._level &&
-      level !== LogLevel.Off) ||
-      this._level === LogLevel.All) {
-      ret = true
-    }
-    return ret
+    return level <= this._level
   }
 }
 
@@ -119,11 +113,11 @@ export class LogEntry {
 }
 
 export enum LogLevel {
-  All = 0,
+  Off = 0,
   Debug = 1,
   Info = 2,
   Warn = 3,
   Error = 4,
   Fatal = 5,
-  Off = 6
+  All = 6
 }

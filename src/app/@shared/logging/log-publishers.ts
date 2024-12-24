@@ -25,7 +25,7 @@ export class LogConsole extends LogPublisher {
         console.trace(entry.buildLogString())
         break
       case LogLevel.Debug:
-        // console.trace(entry.buildLogString())
+        console.debug(entry.buildLogString())
         break
     }
     return of(true)

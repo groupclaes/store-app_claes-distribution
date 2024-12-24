@@ -15,22 +15,15 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large" tappable (click)="copyMessage(product.itemnum + ' ' + product.name)">{{ productName }}
-      </ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" color="light">
   <ion-loading *ngIf="product != undefined" spinner="lines" translate="preparing" mode="ios"></ion-loading>
   <article *ngIf="product !== null && !loading">
     <div class="image-price-container">
       <section class="product-image-wrapper">
         <div class="product-image-container">
           <div class="product-image-border">
-            <img [title]="product.name" [alt]="product.name" loading="lazy"
-              [style]="'background-color:' + product.color" [src]="productImage">
-            <div class="product-image-inset"  tappable (click)="openPicturePreview()"></div>
+            <img [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" [src]="productImage">
+            <div class="product-image-inset" tappable (click)="openPicturePreview()"></div>
           </div>
         </div>
       </section>
@@ -55,8 +48,7 @@
           </h3>
         </ion-list-header>
         <ion-list>
-          <ion-item *ngFor="let price of product.prices | reverse" [ngClass]="isCurrentStack(price)"
-            tappable (click)="setAmount(price.quantity)">
+          <ion-item *ngFor="let price of product.prices | reverse" [ngClass]="isCurrentStack(price)" tappable (click)="setAmount(price.quantity)">
             <ion-label slot="start">
               {{ showContentUnit ? price.quantity * this._product.contentQuantity : price.quantity }}
             </ion-label>
@@ -85,8 +77,7 @@
               <span translate="availableOn"></span>
               <span [innerText]="product.availableOn | date:'dd/MM/yyyy'"></span>
             </div>
-            <ion-input type="number" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()"
-              *ngIf="!product.availableOn" [label]="'amount' | translate" step="1" min="0">
+            <ion-input type="number" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()" *ngIf="!product.availableOn" [label]="'amount' | translate" step="1" min="0">
             </ion-input>
             <ion-badge slot="end" color="light">
               {{ product.unit }}
@@ -109,93 +100,84 @@
         <span [ngClass]="product.type === 'B' ? 'active' : 'inactive'" translate="orderToggleButton"></span>
       </div>
     </section>
+
     <section class="product-promotion-wrapper" *ngIf="allowPromo">
-      <ion-list-header>
-        <h3 translate="promotion"></h3>
-      </ion-list-header>
-      <ion-list>
+      <ion-text class="list-header">
+        <ion-note translate>promotion</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
         <ion-item text-wrap>
           <span [innerHtml]="product.promo"></span>
         </ion-item>
       </ion-list>
-      <ion-list>
-        <div class="other-promo-products" *ngIf="product.promoProducts && product.promoProducts.length > 0">
-          <ion-list-header>
-            <h3 translate="similarPromoProducts"></h3>
-          </ion-list-header>
-          <div class="product-scroll-container item-color">
-            <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', promoProduct.id]"
-              *ngFor="let promoProduct of product.promoProducts">
-              <div class="product-image" *ngIf="displayThumbnail">
-                <img class="product-image" [src]="promoProduct.url | secure | async" [title]="promoProduct.name"
-                  [alt]="promoProduct.name" loading="lazy" [style]="'background-color:' + promoProduct.color"
-                  width="72" height="72">
-              </div>
-              <span [innerHtml]="promoProduct.name"></span>
-              <span [innerHtml]="promoProduct.unit"></span>
+
+      <ng-container *ngIf="product.promoProducts && product.promoProducts.length > 0">
+        <ion-text class="list-header">
+          <ion-note translate>similarPromoProducts</ion-note>
+        </ion-text>
+        <div class="product-scroll-container item-color">
+          <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', promoProduct.id]" *ngFor="let promoProduct of product.promoProducts">
+            <div class="product-image" *ngIf="displayThumbnail">
+              <img class="product-image" [src]="promoProduct.url | secure | async" [title]="promoProduct.name" [alt]="promoProduct.name" loading="lazy" [style]="'background-color:' + promoProduct.color" width="72" height="72">
             </div>
+            <span [innerHtml]="promoProduct.name"></span>
+            <span [innerHtml]="promoProduct.unit"></span>
           </div>
         </div>
-      </ion-list>
+      </ng-container>
     </section>
-    <section class="product-related-products-wrapper">
-      <ion-list>
-        <div class="other-promo-products" *ngIf="product.relatedProducts && product.relatedProducts.length > 0">
-          <ion-list-header>
-            <h3 translate="relatedProducts"></h3>
-          </ion-list-header>
-          <div class="product-scroll-container item-color">
-            <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', rel.id]"
-              *ngFor="let rel of product.relatedProducts">
-              <div class="product-image" *ngIf="displayThumbnail">
-                <img class="product-image" [src]="rel.url | secure | async" [title]=" rel.name" [alt]="rel.name" loading="lazy"
-                  [style]="'background-color:' + rel.color" width="72" height="72">
-              </div>
-              <div>
-                {{ rel.name }}
-                {{ rel.unit | capitalize }}
-              </div>
-            </div>
+
+    <section class="product-related-products-wrapper" *ngIf="product.relatedProducts && product.relatedProducts.length > 0">
+      <ion-text class="list-header">
+        <ion-note translate>relatedProducts</ion-note>
+      </ion-text>
+      <div class="product-scroll-container item-color">
+        <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', rel.id]" *ngFor="let rel of product.relatedProducts">
+          <div class="product-image" *ngIf="displayThumbnail">
+            <img class="product-image" [src]="rel.url | secure | async" [title]=" rel.name" [alt]="rel.name" loading="lazy" [style]="'background-color:' + rel.color" width="72" height="72">
+          </div>
+          <div>
+            {{ rel.name }}
+            {{ rel.unit | capitalize }}
           </div>
         </div>
-      </ion-list>
+      </div>
     </section>
-    <section class="product-similar-products-wrapper">
-      <ion-list>
-        <div class="other-promo-products" *ngIf="product.similarProducts && product.similarProducts.length > 0">
-          <ion-list-header>
-            <h3 translate="similarProducts"></h3>
-          </ion-list-header>
-          <div class="product-scroll-container item-color">
-            <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', similarProduct.id]"
-              *ngFor="let similarProduct of product.similarProducts">
-              <div class="product-image" *ngIf="displayThumbnail">
-                <img class="product-image" [src]="similarProduct.url | secure | async" [title]="similarProduct.name"
-                  [alt]="similarProduct.name" loading="lazy" [style]="'background-color:' + product.color" width="72"
-                  height="72">
-              </div>
-              <span>{{ similarProduct.name }}</span>
-              <span>{{ similarProduct.unit }}</span>
-            </div>
+
+    <section class="product-similar-products-wrapper" *ngIf="product.similarProducts && product.similarProducts.length > 0">
+      <ion-text class="list-header">
+        <ion-note translate>similarProducts</ion-note>
+      </ion-text>
+      <div class="product-scroll-container item-color">
+        <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', similarProduct.id]" *ngFor="let similarProduct of product.similarProducts">
+          <div class="product-image" *ngIf="displayThumbnail">
+            <img class="product-image" [src]="similarProduct.url | secure | async" [title]="similarProduct.name" [alt]="similarProduct.name" loading="lazy" [style]="'background-color:' + product.color" width="72" height="72">
           </div>
+          <span>{{ similarProduct.name }}</span>
+          <span>{{ similarProduct.unit }}</span>
         </div>
-      </ion-list>
+      </div>
     </section>
-    <section class="product-description-wrapper">
-      <ion-list-header *ngIf="product.description">
-        <h3 translate="description"></h3>
-      </ion-list-header>
-      <ion-list *ngIf="product.description">
+
+    <section *ngIf="product.description" class="product-description-wrapper">
+      <ion-text class="list-header">
+        <ion-note translate>description</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
         <ion-item>
           <ion-label class="ion-text-wrap" [innerHtml]="safe(product.description)"></ion-label>
         </ion-item>
       </ion-list>
     </section>
+
     <section class="product-information-wrapper">
-      <ion-list-header>
-        <h3 translate="productInfo"></h3>
-      </ion-list-header>
-      <ion-list>
+      <ion-text class="list-header">
+        <ion-note translate>productInfo</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
         <ion-item *ngIf="product.isFavorite && product.favLastB">
           <ion-label translate="totalPurchased"></ion-label>
           <span [innerText]="product.favA"></span>
@@ -212,7 +194,7 @@
           <ion-label translate="itemNum"></ion-label>
           <span [innerHtml]="product.itemnum"></span>
         </ion-item>
-        <ion-item  *ngIf="product.descriptionCustomer">
+        <ion-item *ngIf="product.descriptionCustomer">
           <ion-label translate="descriptionCustomer"></ion-label>
           <span [innerText]="product.descriptionCustomer"></span>
         </ion-item>
@@ -245,48 +227,57 @@
           <span [innerText]="product.supplierItemIdentifier"></span>
         </ion-item>
       </ion-list>
-      <ion-list-header *ngIf="product.departments && product.departments.length > 0">
-        <h3 translate="departments"></h3>
-      </ion-list-header>
-      <ion-list *ngIf="product.departments && product.departments.length > 0">
-        <ion-item *ngFor="let department of product.departments">
-          <ion-label [innerText]="department.alias"></ion-label>
-          <ion-button slot="end" color="danger" tappable (click)="removeFromDepartment(department.id)">
-            {{ 'removeButton' | translate }}
-          </ion-button>
-        </ion-item>
-      </ion-list>
-      <ion-list-header *ngIf="isFood">
-        <h3 translate="allergenDetails"></h3>
-      </ion-list-header>
-      <ion-list *ngIf="isFood && product.allergens && product.allergens.length > 0">
-        <ion-item *ngFor="let allergen of product.allergens">
-          <span class="text-capitalize" translate>allergen_{{ allergen.code | lowercase }}</span> &nbsp;
-          <span class="text-capitalize" translate>{{ allergen.value | lowercase }}</span>
-        </ion-item>
-      </ion-list>
-      <ion-list *ngIf="isFood && product.allergens && product.allergens.length <= 0">
-        <ion-item>
-          <ion-label class="ion-text-wrap" translate="noAllergensPresent"></ion-label>
-        </ion-item>
-      </ion-list>
-      <ion-list *ngIf="isFood && !product.allergens">
-        <ion-item>
-          <ion-label class="ion-text-wrap" translate="noAllergensAvailable"></ion-label>
-        </ion-item>
-      </ion-list>
 
-      <ion-list-header *ngIf="product.attributes && product.attributes.length > 0">
-        <h3 translate="attributes"></h3>
-      </ion-list-header>
-      <ion-list *ngIf="product.attributes && product.attributes.length > 0">
-        <ion-item *ngFor="let attribute of product.attributes">
-          <ion-label>
-            {{ attribute.groupName | capitalize }}:
+      <ng-container *ngIf="product.departments && product.departments.length > 0">
+        <ion-text class="list-header">
+          <ion-note translate>productInfo</ion-note>
+        </ion-text>
+
+        <ion-list inset="true">
+          <ion-item *ngFor="let department of product.departments">
+            <ion-label [innerText]="department.alias"></ion-label>
+            <ion-button slot="end" color="danger" tappable (click)="removeFromDepartment(department.id)">
+              {{ 'removeButton' | translate }}
+            </ion-button>
+          </ion-item>
+        </ion-list>
+      </ng-container>
+
+      <ng-container *ngIf="isFood">
+        <ion-text class="list-header">
+          <ion-note translate>allergenDetails</ion-note>
+        </ion-text>
+
+        <ion-list inset="true" *ngIf="product.allergens && product.allergens.length > 0">
+          <ion-item *ngFor="let allergen of product.allergens">
+            <span class="text-capitalize" translate>allergen_{{ allergen.code | lowercase }}</span> &nbsp;
+            <span class="text-capitalize" translate>{{ allergen.value | lowercase }}</span>
+          </ion-item>
+        </ion-list>
+
+        <ion-text class="list-footer" *ngIf="product.allergens && product.allergens.length <= 0">
+          <ion-note translate>noAllergensPresent</ion-note>
+        </ion-text>
+
+        <ion-text class="list-footer" *ngIf="!product.allergens">
+          <ion-note translate>noAllergensAvailable</ion-note>
+        </ion-text>
+      </ng-container>
+
+      <ng-container *ngIf="product.attributes && product.attributes.length > 0">
+        <ion-text class="list-header">
+          <ion-note translate>attributes</ion-note>
+        </ion-text>
+
+        <ion-list inset="true">
+          <ion-item *ngFor="let attribute of product.attributes">
+            <ion-label>
+              {{ attribute.groupName | capitalize }}
+            </ion-label>
             {{ attribute.name | capitalize }}
-          </ion-label>
-        </ion-item>
-      </ion-list>
+          </ion-item>
+        </ion-list>
+      </ng-container>
     </section>
 
     <section class="product-attachments-wrapper">
@@ -297,8 +288,7 @@
         <ion-item *ngIf="datasheets.length === 0">
           <ion-label class="ion-text-wrap" translate="noDatasheets"></ion-label>
         </ion-item>
-        <ion-item *ngFor="let attachment of datasheets" tappable
-          (click)="showDocumentActionSheet(attachment)">
+        <ion-item *ngFor="let attachment of datasheets" tappable (click)="showDocumentActionSheet(attachment)">
           <ion-avatar slot="start">
             <ion-img height="24" width="24" src="assets/icon/pdf.svg"></ion-img>
           </ion-avatar>
@@ -311,8 +301,7 @@
         <ion-list-header *ngIf="usageManuals.length > 0">
           <h3 translate="usageManuals"></h3>
         </ion-list-header>
-        <ion-item *ngFor="let attachment of usageManuals" tappable
-          (click)="showDocumentActionSheet(attachment)">
+        <ion-item *ngFor="let attachment of usageManuals" tappable (click)="showDocumentActionSheet(attachment)">
           <ion-avatar slot="start">
             <ion-img height="24" width="24" src="assets/icon/pdf.svg"></ion-img>
           </ion-avatar>
@@ -323,8 +312,7 @@
         <ion-list-header *ngIf="recipes.length > 0">
           <h3 translate="recipes"></h3>
         </ion-list-header>
-        <ion-item *ngFor="let attachment of recipes | slice:0:recipeCount" tappable
-          (click)="showRecipeActionSheet(attachment)">
+        <ion-item *ngFor="let attachment of recipes | slice:0:recipeCount" tappable (click)="showRecipeActionSheet(attachment)">
           <ion-avatar slot="start">
             <ion-img height="24" width="24" src="assets/icon/pdf.svg"></ion-img>
           </ion-avatar>
@@ -345,8 +333,7 @@
     </section>
     <ion-action-sheet *ngIf="product" [trigger]="'open-action-sheet-' + product.id" [header]="'actions.title' | translate" [buttons]="actionSheetButtons"></ion-action-sheet>
   </article>
-  <ion-modal [isOpen]="pictureOpen" style="--max-width:800px;--max-height:800px;--width:100%; --height:calc(100vw + 40px);"
-    (didDismiss)="pictureOpen = false">
+  <ion-modal [isOpen]="pictureOpen" style="--max-width:800px;--max-height:800px;--width:100%; --height:calc(100vw + 40px);" (didDismiss)="pictureOpen = false">
     <!-- <ion-backdrop [visible]="true"></ion-backdrop> -->
     <ng-template>
       <ion-header>
@@ -357,8 +344,7 @@
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
-        <img [src]="'https://pcm.groupclaes.be/v4/content/dis/artikel/foto/' + _product.itemnum"
-          [alt]="_product.name" width="800" height="800" style="max-width: inherit; max-height: inherit; height: auto; width: 100%" />
+        <img [src]="'https://pcm.groupclaes.be/v4/content/dis/artikel/foto/' + _product.itemnum" [alt]="_product.name" width="800" height="800" style="max-width: inherit; max-height: inherit; height: auto; width: 100%" />
       </ion-content>
     </ng-template>
   </ion-modal>
@@ -390,8 +376,7 @@
               <ion-select-option [value]="department.id" *ngFor="let department of departments">{{ department.alias }}</ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-button  color="primary" tappable (click)="completeAddProductToDepartment()"
-            [disabled]="!selectedDepartment">{{ 'confirm' | translate }}</ion-button>
+          <ion-button color="primary" tappable (click)="completeAddProductToDepartment()" [disabled]="!selectedDepartment">{{ 'confirm' | translate }}</ion-button>
         </ion-list>
       </ion-content>
     </ng-template>

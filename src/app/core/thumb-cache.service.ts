@@ -29,7 +29,7 @@ export class ThumbCacheService {
       .replace('https://pcm.groupclaes.be/v4/product-images/dis/', '')
       .replace('?s=thumb', '')
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === 'string') {
         Filesystem.writeFile({
@@ -40,9 +40,9 @@ export class ThumbCacheService {
           recursive: true
         })
       }
-    };
+    }
     reader.readAsDataURL(response.body)
-    console.log(request, response)
+    // console.log(request, response)
   }
 }
 function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
