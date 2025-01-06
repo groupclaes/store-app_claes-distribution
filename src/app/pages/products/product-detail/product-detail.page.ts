@@ -5,6 +5,7 @@ import { ActionSheetController, AlertController, ModalController, NavController,
 import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { BrowserService } from 'src/app/core/browser.service'
 import { CartService } from 'src/app/core/cart.service'
@@ -61,7 +62,9 @@ export class ProductDetailPage implements OnInit {
     settings: SettingsService,
     route: ActivatedRoute,
     private actionSheetCtrl: ActionSheetController,
-    private browser: BrowserService
+    private browser: BrowserService,
+    public network: NetworkService,
+    private toastController: ToastController
   ) {
     logger.log('ProductDetailPage -- constructor()')
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
@@ -72,6 +75,7 @@ export class ProductDetailPage implements OnInit {
         await this.load(+params.id)
       }
     })
+    this.network.connected.subscribe(() => this.ref.markForCheck())
   }
 
   get canPromo() {
@@ -374,7 +378,6 @@ export class ProductDetailPage implements OnInit {
     this.pictureOpen = true;
     console.log('Opened image preview')
   }
-
 
   async removeFromDepartment(departmentId: number) {
     if (departmentId != null) {

@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, OnInit, ChangeDetectorRef } from '@angular/core'
-import { ActionSheetController } from '@ionic/angular'
+import { ActionSheetController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { ApiService } from 'src/app/core/api.service'
 import { UserService } from 'src/app/core/user.service'
@@ -7,6 +7,7 @@ import { ReportsRepositoryService } from 'src/app/core/repositories/reports.repo
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { BrowserService } from 'src/app/core/browser.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 
 @Component({
   selector: 'app-reports',
@@ -28,9 +29,12 @@ export class ReportsPage implements OnInit {
     private logger: LoggingProvider,
     private reportsRepository: ReportsRepositoryService,
     private cart: CartService,
-    private browser: BrowserService
-    // private statistics: StatisticsProvider
-  ) { }
+    private browser: BrowserService,
+    private toastCtrl: ToastController,
+    public network: NetworkService
+  ) {
+    this.network.connected.subscribe(() => this.ref.markForCheck())
+  }
 
   get menuItemActive(): boolean {
     if (!this.user.activeUser && this.user.userinfo
@@ -233,7 +237,6 @@ export class ReportsPage implements OnInit {
     // this.iab.create(`${this.api.url}/reports/queue/${reportGuid}?userCode=${this.user.userinfo.userCode}`, '_system', 'location=yes')
   }
 
-
   private handleReport(report: $TSFixMe, type: number, mode: number): void {
     this.api.get(`reports/${report.id}`, {
       mode: mode,
@@ -247,6 +250,7 @@ export class ReportsPage implements OnInit {
       this.checkReportProgress(resp, mode)
     })
   }
+
   private checkReportProgress(reportGuid: $TSFixMe, mode: number): void {
     setTimeout(() => {
       this.api.get(`reports/queue/${reportGuid}/status`, {

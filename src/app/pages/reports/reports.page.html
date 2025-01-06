@@ -24,7 +24,7 @@
   </ion-text>
 
   <ion-list inset="true" *ngIf="!loading && myreports.length > 0">
-    <ion-item button *ngFor="let report of myreports" tappable (click)="showActionMenu(report)">
+    <ion-item button *ngFor="let report of myreports" tappable (click)="network.online ? showActionMenu(report) : network.noop()">
       <ion-label>
         {{ report.Filename }}
       </ion-label>
@@ -44,7 +44,7 @@
         <ion-spinner mode="ios"></ion-spinner>
       </div>
     </div>
-    <ion-item button *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable (click)="confirmRunReport(report)">
+    <ion-item button *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable (click)="network.online ? confirmRunReport(report) : network.noop()">
       <ion-label>{{ report.name }}</ion-label>
     </ion-item>
   </ion-list>
@@ -53,3 +53,14 @@
     <ion-note translate>pages.reports.noActiveReportsLast2Weeks</ion-note>
   </ion-text>
 </ion-content>
+
+<ion-footer *ngIf="network.offline">
+  <ion-toolbar color="light">
+    <ion-note style="display:flex;justify-content:center;flex-direction:column">
+      <div style="text-align: center;">
+        <i class="far fa-fw fa-wifi-slash"></i>&nbsp;
+        Je bent momenteel offline, sommige functies zijn niet beschikbaar.
+      </div>
+    </ion-note>
+  </ion-toolbar>
+</ion-footer>

@@ -4,6 +4,7 @@ import { UserService } from 'src/app/core/user.service'
 import { IRecipe, RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
 import { NavController } from '@ionic/angular'
 import { CartService } from 'src/app/core/cart.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 
 @Component({
   selector: 'app-recipes',
@@ -23,8 +24,11 @@ export class RecipesPage implements OnInit {
     private navCtrl: NavController,
     private ref: ChangeDetectorRef,
     private recipesRepository: RecipesRepositoryService,
-    private cart: CartService
-  ) { }
+    private cart: CartService,
+    public network: NetworkService
+  ) {
+    this.network.connected.subscribe(() => this.ref.markForCheck())
+  }
 
   ngOnInit() {
     this.load()
@@ -102,10 +106,14 @@ export class RecipesPage implements OnInit {
   get culture(): string {
     return this.translate.currentLang
   }
-  
+
   get cartLink(): any[] {
     const params: any[] = ['/carts']
     if (this.cart.active) params.push(this.cart.active.id)
     return params
+  }
+
+  get online(): boolean {
+    return this.network.online
   }
 }

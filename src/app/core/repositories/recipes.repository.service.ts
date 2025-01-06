@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
+import { environment } from 'src/environments/environment'
 
 @Injectable({
   providedIn: 'root'
@@ -26,11 +27,11 @@ export class RecipesRepositoryService {
 
       const recipe = result.values[0] as IRecipe
       const products = JSON.parse(recipe.products)
-      const response: IRecipeDetailT = { ...recipe, products: []}
+      const response: IRecipeDetailT = { ...recipe, products: [] }
       for (const itemnum of products) {
         const productResult = await db.query(`
         SELECT
-          itemnum, products.id,products.${nameString} as name,packingUnits.${nameString} as unit, url
+          itemnum, products.id,products.${nameString} as name,packingUnits.${nameString} as unit, ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url
         FROM products
         INNER JOIN packingUnits ON products.packId = packingUnits.id
         WHERE EXISTS

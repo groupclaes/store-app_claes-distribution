@@ -31,11 +31,11 @@
     </div>
   </div>
 
-  <div class="ion-padding">
+  <!-- <div class="ion-padding" *ngIf="network.online">
     <gro-recipe-banner></gro-recipe-banner>
-  </div>
+  </div> -->
 
-  <ion-text class="list-footer">
+  <ion-text class="list-footer" *ngIf="network.online">
     <ion-note>
       Wist je dat je nog meer overheerlijke recepten terug kan vinden op onze recepten website?
       <br>

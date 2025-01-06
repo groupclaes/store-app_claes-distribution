@@ -16,7 +16,7 @@ import { take } from 'rxjs/operators'
 import { CartService } from 'src/app/core/cart.service'
 import { firstValueFrom } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
-import { Network } from '@capacitor/network'
+import { NetworkService } from 'src/app/@shared/network.service'
 
 @Component({
   selector: 'app-login',
@@ -47,8 +47,11 @@ export class LoginPage implements OnInit {
     private cartsRepository: CartsRepositoryService,
     private exceptionsRepository: CurrentExceptionsRepositoryService,
     private cart: CartService,
-    private log: LoggingProvider
-  ) { }
+    private log: LoggingProvider,
+    public network: NetworkService
+  ) {
+    this.network.connected.subscribe(() => this.ref.markForCheck())
+  }
 
   get defaultPage(): Promise<string> {
     if (this.user.userinfo.type > 1) {
@@ -124,17 +127,6 @@ export class LoginPage implements OnInit {
 
     this.busy = true
     this.ref.markForCheck()
-
-    const networkStatus = await Network.getStatus()
-    if (!networkStatus.connected) {
-      this.toast(this.translate.instant('pages.login.offline-message'))
-
-
-      this.busy = false
-      this.ref.markForCheck()
-      return
-    }
-
     const oldCredential = this.user.storedCredential
 
     try {

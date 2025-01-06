@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { BrowserService } from 'src/app/core/browser.service'
 import { RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
@@ -30,7 +31,8 @@ export class RecipeDetailPage implements OnInit {
     private alertCtrl: AlertController,
     private api: ApiService,
     route: ActivatedRoute,
-    private browser: BrowserService
+    private browser: BrowserService,
+    public network: NetworkService
   ) {
     this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail
@@ -38,6 +40,7 @@ export class RecipeDetailPage implements OnInit {
     route.params.subscribe(params => {
       this.load(params['guid'])
     })
+    this.network.connected.subscribe(() => this.ref.markForCheck())
   }
 
   ngOnInit() {

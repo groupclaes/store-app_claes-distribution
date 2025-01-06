@@ -1,18 +1,21 @@
 import { firstValueFrom, Subscription } from 'rxjs';
 /* eslint-disable eqeqeq */
 import { DatePipe } from '@angular/common'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router'
-import { AlertController, IonContent, ModalController } from '@ionic/angular'
+import { AlertController, IonContent } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { Observable, Subject, of } from 'rxjs'
-import { debounce, debounceTime, filter, take } from 'rxjs/operators'
+import { debounceTime, filter, take } from 'rxjs/operators'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
 import { IProductT, ISortOrder, ProductsRepositoryService } from 'src/app/core/repositories/products.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
+import { NetworkService } from 'src/app/@shared/network.service';
+import { Store } from 'src/app/core/sync.service';
+import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service';
 
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
 
@@ -32,6 +35,7 @@ export class ProductsPage {
   loading = true
   loadingAdditional = false
   noMoreProducts = false
+  lastSync: Date
 
   page = 0
   increment = 36
@@ -67,13 +71,14 @@ export class ProductsPage {
     private cart: CartService,
     private logger: LoggingProvider,
     private alertCtrl: AlertController,
-    private modalCtrl: ModalController,
     private datePipe: DatePipe,
     categoriesRepository: CategoriesRepositoryService,
     private repo: ProductsRepositoryService,
+    private repoChk: DataIntegrityChecksumsRepositoryService,
     private settings: SettingsService,
     route: ActivatedRoute,
-    private router: Router
+    router: Router,
+    private networkService: NetworkService
   ) {
     let fallback
     settings.DisplayThumbnail.subscribe(displayThumbnail => {
@@ -122,6 +127,12 @@ export class ProductsPage {
         window.clearTimeout(fallback)
         this.load(true)
       }
+    })
+
+    this.networkService.connected.subscribe(async () => {
+      this.ref.markForCheck()
+      const dataIntegrity = await this.repoChk.get<Store>()
+      this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
     })
   }
 
@@ -457,6 +468,10 @@ export class ProductsPage {
 
   productById(index, product: IProductT) {
     return product.id
+  }
+
+  get offline(): boolean {
+    return this.networkService.offline
   }
 }
 
