@@ -11,6 +11,7 @@ import { TranslateService } from '@ngx-translate/core'
 import { StorageProvider } from './core/storage-provider.service'
 import { CartService } from './core/cart.service'
 import { BrowserService } from './core/browser.service'
+import { NetworkService } from './@shared/network.service'
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
 
@@ -37,7 +38,8 @@ export class AppComponent {
     private user: UserService,
     private cart: CartService,
     private browser: BrowserService,
-    private store: StorageProvider
+    private store: StorageProvider,
+    public network: NetworkService
   ) {
     logger.log('MyApp.constructor() -- started.')
 
@@ -46,6 +48,7 @@ export class AppComponent {
 
       this.navCtrl.navigateRoot('/account/login')
     })
+    this.network.connected.subscribe(() => this.ref.markForCheck())
     this.initTranslate()
   }
 
@@ -100,7 +103,7 @@ export class AppComponent {
 
     this.translate.addLangs(environment.supported_languages)
 
-    const storedLanguage =  this.store.get<string>(LS_LANGUAGE)
+    const storedLanguage = this.store.get<string>(LS_LANGUAGE)
     if (this.translate.langs.findIndex(e => e === storedLanguage) > -1) {
       this.translate.use(storedLanguage)
     } else {

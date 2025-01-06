@@ -7,7 +7,7 @@
     </ion-header>
     <ion-content>
       <ion-list>
-        <ion-item tappable button (click)="openLeaflet()" *ngIf="isActivePromo">
+        <ion-item tappable button (click)="network.online ? openLeaflet() : network.noop()" *ngIf="isActivePromo">
           <i slot="start" class='fal fa-fw fa-badge-percent'></i>
           <ion-label translate>leafletPage</ion-label>
         </ion-item>
