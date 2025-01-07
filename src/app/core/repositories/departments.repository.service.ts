@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
 import { IProductInfoT } from './products.repository.service'
+import { environment } from 'src/environments/environment'
 
 @Injectable({
   providedIn: 'root'
@@ -105,7 +106,12 @@ export class DepartmentsRepositoryService {
 
       const department = result.values[0] as IDepartmentDetailT
       const resultP = await db.query(
-        `SELECT p.itemnum, p.id, p.${nameString} as name, pu.${nameString} as unit, p.url, p.color
+        `SELECT p.itemnum,
+           p.id,
+           p.${nameString} as name,
+           pu.${nameString} as unit,
+           ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+           p.color
          FROM departmentProducts
          INNER JOIN products p ON p.id = departmentProducts.product
          INNER JOIN packingUnits pu ON p.packId = pu.id

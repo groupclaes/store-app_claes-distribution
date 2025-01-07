@@ -5,6 +5,7 @@ import { DatabaseService } from '../database.service'
 import { Customer } from '../user.service'
 import { CustomersRepositoryService } from './customers.repository.service'
 import { IProductInfoT, IProductOrderInfo, IProductPricesOverview, ProductsRepositoryService } from './products.repository.service'
+import { environment } from 'src/environments/environment'
 
 @Injectable({
   providedIn: 'root'
@@ -168,7 +169,7 @@ export class CartsRepositoryService {
           p.id,
           p.${nameString} as name,
           pu.${nameString} as unit,
-          p.url,
+          ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
           p.color,
           p.minOrder,
           p.stackSize
@@ -309,7 +310,7 @@ export class CartsRepositoryService {
             p.id,
             p.${nameString} as name,
             pu.${nameString} as unit,
-            p.url,
+            ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
             p.color
           FROM cartProducts AS cp
           LEFT OUTER JOIN products AS p ON cp.product = p.id

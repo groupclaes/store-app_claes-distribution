@@ -1061,8 +1061,8 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS notes')
           await db.execute('CREATE TABLE IF NOT EXISTS notes (customer INTEGER, address INTEGER, date DATETIME, text STRING NULL)')
           await db.execute('CREATE TABLE IF NOT EXISTS unsentNotes ('
-          + 'id INTEGER PRIMARY KEY AUTOINCREMENT, customer INTEGER, address INTEGER, date DATETIME, text STRING NULL,'
-          + 'nextVisit DATETIME NULL, customerCloseFrom DATETIME NULL, customerOpenFrom DATETIME NULL, toSend BOOLEAN)')
+            + 'id INTEGER PRIMARY KEY AUTOINCREMENT, customer INTEGER, address INTEGER, date DATETIME, text STRING NULL,'
+            + 'nextVisit DATETIME NULL, customerCloseFrom DATETIME NULL, customerOpenFrom DATETIME NULL, toSend BOOLEAN)')
           this.logger.log('dropped notes')
 
           const sqlStatements: capSQLiteSet[] = []
@@ -1552,7 +1552,7 @@ export class SyncService {
       }
 
       const defaultExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = 0 '
-       + 'AND address = 0 AND addressGroup = 0 LIMIT 1')).values
+        + 'AND address = 0 AND addressGroup = 0 LIMIT 1')).values
       const customerExceptions = (await db.query('SELECT * FROM productExceptions WHERE customer = ? '
         + 'AND address = 0 AND addressGroup = 0 LIMIT 1', [
         customer.id
@@ -1653,7 +1653,7 @@ export class SyncService {
           exceptions = exceptions.concat(addressGroupExceptions[0].list.toString().split(','))
         }
         allowed = uniqBy<number>(temp.concat(products.filter(
-            e => exceptions.includes(e.itemnum.toString())).map(e => e.id)), JSON.stringify)
+          e => exceptions.includes(e.itemnum.toString())).map(e => e.id)), JSON.stringify)
       } else {
         this.logger.warn('I dont know what is going on here but default will have to do!')
         exceptions = defaultExceptions[0].list.toString().split(',')
@@ -1728,13 +1728,13 @@ export class SyncService {
    */
   private filterDiacritics(input: string): string {
     return input.replace(/(é|ë|ê|è|ę|ė|ē|É|Ë|Ê|È|Ę|Ė|Ē)/g, 'e')
-    .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
-    .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
-    .replace(/(œ|Œ)/g, 'oe')
-    .replace(/(ó|ö|ô|ò|õ|ø|ō|Ó|Ö|Ô|Ò|Õ|Ø|Ō)/g, 'o')
-    .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
-    .replace(/(æ|Æ)/g, 'ae')
-    .toLowerCase()
+      .replace(/(á|ä|â|à|ã|å|ā|Á|Ä|Â|À|Ã|Å|Ā)/g, 'a')
+      .replace(/(í|ï|ì|î|į|ī|Í|Ï|Ì|Î|Į|Ī)/g, 'i')
+      .replace(/(œ|Œ)/g, 'oe')
+      .replace(/(ó|ö|ô|ò|õ|ø|ō|Ó|Ö|Ô|Ò|Õ|Ø|Ō)/g, 'o')
+      .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
+      .replace(/(æ|Æ)/g, 'ae')
+      .toLowerCase()
   }
 }
 
