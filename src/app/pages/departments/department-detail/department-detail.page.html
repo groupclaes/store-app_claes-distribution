@@ -49,8 +49,10 @@
   </ion-list> -->
 
   <ion-list inset="true">
-    <ion-item detail="false" button tappable (click)="showDeleteConfirmation()">
+    <ion-item detail="false" button tappable (click)="network.online ? showDeleteConfirmation() : network.noop()">
       <ion-label color="danger" style="text-align:center">{{ 'actions.delete' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>
+
+<app-offline-footer></app-offline-footer>

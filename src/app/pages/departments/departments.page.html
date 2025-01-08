@@ -36,8 +36,10 @@
   </ion-list>
 
   <ion-list inset="true">
-    <ion-item detail="false" button tappable (click)="showCreateInput()">
+    <ion-item detail="false" button tappable (click)="network.online ? showCreateInput() : network.noop()">
       <ion-label color="primary" style="text-align:center">{{ 'actions.add' | translate }}</ion-label>
     </ion-item>
   </ion-list>
 </ion-content>
+
+<app-offline-footer></app-offline-footer>

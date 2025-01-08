@@ -63,8 +63,7 @@ export class ProductDetailPage implements OnInit {
     route: ActivatedRoute,
     private actionSheetCtrl: ActionSheetController,
     private browser: BrowserService,
-    public network: NetworkService,
-    private toastController: ToastController
+    public network: NetworkService
   ) {
     logger.log('ProductDetailPage -- constructor()')
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
@@ -82,6 +81,7 @@ export class ProductDetailPage implements OnInit {
     // eslint-disable-next-line eqeqeq
     return this.user.activeUser?.promo == true
   }
+
   get productName(): string {
     if (this._product) {
       return `${this._product.name}`
@@ -89,9 +89,13 @@ export class ProductDetailPage implements OnInit {
     return ''
   }
 
+  get amountLabel(): string {
+    return this.translate.instant('amount') + ` (${this._product?.unit})`
+  }
+
   get productImage(): string {
     if (this._product) {
-      return `${environment.pcm_url}/product-images/dis/${this._product.itemnum}`
+      return this._product.url.replace('?s=thumb', '')
     }
     return null
   }
@@ -171,6 +175,12 @@ export class ProductDetailPage implements OnInit {
     return buttons
   }
 
+  get otherUnits(): any[] | undefined {
+    if (this._product && this._product['units']) {
+      return  this._product['units']
+    }
+    return undefined
+  }
 
   ngOnInit() {
   }
@@ -180,8 +190,7 @@ export class ProductDetailPage implements OnInit {
       this.loading = true
       this.ref.markForCheck()
 
-      this.departmentsRepo.get(
-        this.user.activeUser.userCode).then(x => this.departments = x)
+      this.departmentsRepo.get(this.user.activeUser.userCode).then(x => this.departments = x)
 
       this._product = await this.repo.getDetail(
         id,
@@ -189,6 +198,7 @@ export class ProductDetailPage implements OnInit {
         this.culture
       )
 
+      console.log(this.product['units'])
 
       const cart = (this.cart || this.cart.active) ? this.cart.active : null
       if (cart) {
@@ -285,6 +295,7 @@ export class ProductDetailPage implements OnInit {
       ]
     }).then(sheet => sheet.present())
   }
+
   showRecipeActionSheet(recipe: any) {
     this.actionSheetCtrl.create({
       buttons: [
@@ -327,7 +338,7 @@ export class ProductDetailPage implements OnInit {
   }
 
   safe(html: string) {
-    return this.sanitizer.bypassSecurityTrustHtml(html)
+    return this.sanitizer.bypassSecurityTrustHtml(html.trim())
   }
 
   async changeProductAmount() {

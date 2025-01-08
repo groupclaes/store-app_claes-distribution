@@ -22,9 +22,9 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
-    <ion-toolbar>
+    <ion-toolbar color="light">
       <ion-title size="large" translate="cartsPage"></ion-title>
     </ion-toolbar>
   </ion-header>
@@ -39,34 +39,29 @@
     <ion-note translate>noCarts</ion-note>
   </div>
 
-  <ion-text class="list-footer">
-    <ion-note>
-      <ion-text *ngIf="unsendCount > 0" [innerText]="unsentText"></ion-text>
-    </ion-note>
-  </ion-text>
-
   <ion-list inset="true">
     <ion-item-sliding *ngFor="let cart of carts">
       <ion-item [routerLink]="[cart.id]" tappable button>
         <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)" class="fal fa-xs fa-check-circle" style="color:#76D572" *ngIf="cart.active"></i>
         <i slot="start" (click)="$event.stopPropagation();$event.preventDefault();setActive(cart)" class="fal fa-xs fa-check-circle" *ngIf="!cart.active"></i>
+
         <ion-label>
-          <!-- <div class="select" style="display:inline-block" *ngIf="showSelects">
-            <ion-checkbox [(ngModel)]="cart.selected"></ion-checkbox>
-          </div> -->
-          <div style="display:inline-block">
-            <h2>
-              {{ cart.customerName | capitalize }}
-              {{ cart.addressName | capitalize }}
-            </h2>
-            <span>{{ cart.name }}</span>
-            <p [innerText]="cart.serverDate | date"></p>
-          </div>
+          {{ cart.customerName | capitalize }}
+          {{ cart.addressName | capitalize }}
         </ion-label>
-        <span slot="end">
-          ({{ cart.products.length }})
-        </span>
+
+        <ion-note slot="end">
+          {{ cart.products.length }}
+        </ion-note>
       </ion-item>
     </ion-item-sliding>
   </ion-list>
+
+  <ion-text class="list-footer" *ngIf="unsendCount > 0">
+    <ion-note>
+      <ion-text [innerText]="unsentText"></ion-text>
+    </ion-note>
+  </ion-text>
 </ion-content>
+
+<app-offline-footer></app-offline-footer>

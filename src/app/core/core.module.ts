@@ -5,11 +5,13 @@ import { RecipeBannerComponent } from './components/recipe-banner/recipe-banner.
 import { IonicModule } from '@ionic/angular'
 import { OptionalInputModalComponent } from './components/optional-input-modal/optional-input-modal.component'
 import { FormsModule } from '@angular/forms'
+import { OfflineFooterComponent } from './components/offline-footer/offline-footer.component'
 
 @NgModule({
   declarations: [
     RecipeBannerComponent,
-    OptionalInputModalComponent
+    OptionalInputModalComponent,
+    OfflineFooterComponent
   ],
   imports: [
     CommonModule,
@@ -20,7 +22,8 @@ import { FormsModule } from '@angular/forms'
   exports: [
     PipesModule,
     RecipeBannerComponent,
-    OptionalInputModalComponent
+    OptionalInputModalComponent,
+    OfflineFooterComponent
   ]
 })
 export class CoreModule { }

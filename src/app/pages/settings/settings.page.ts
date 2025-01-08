@@ -6,7 +6,7 @@ import { TranslateService } from '@ngx-translate/core'
 import { Subscription } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { environment } from 'src/environments/environment'
-import { StorageProvider } from 'src/app/core/storage-provider.service';
+import { StorageProvider } from 'src/app/core/storage-provider.service'
 
 const LS_LANGUAGE = 'CLAES_STORE_LANGUAGE'
 

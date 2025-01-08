@@ -4,10 +4,11 @@ import { Directory, Filesystem } from '@capacitor/filesystem'
 import { LoadingController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 import { DatabaseService } from 'src/app/core/database.service'
 import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 import { Store, SyncService } from 'src/app/core/sync.service'
-import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service'
+import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 
 @Component({
   selector: 'app-sync',
@@ -31,9 +32,9 @@ export class SyncPage implements OnInit {
     private repo: DataIntegrityChecksumsRepositoryService,
     private loadingCtrl: LoadingController,
     private logger: LoggingProvider,
-    private _db: DatabaseService
+    private _db: DatabaseService,
+    public network: NetworkService
   ) { }
-
 
   get internalUser(): boolean {
     return this.user.userinfo.id < 1000
@@ -41,6 +42,10 @@ export class SyncPage implements OnInit {
 
   get culture(): string {
     return this.translate.currentLang
+  }
+
+  get agent(): boolean {
+    return this.user.hasAgentAccess
   }
 
   ngOnInit() {
@@ -78,6 +83,19 @@ export class SyncPage implements OnInit {
     }
   }
 
+  async syncAllThumbnails() {
+    this.loader = await this.loadingCtrl.create({
+      spinner: 'lines',
+      message: this.translate.instant('syncPage')
+    })
+
+    await this.loader.present()
+
+    this.sync.syncThumbnails(this.user.userinfo, { force: true, loader: this.loader })
+      .then(_ => this.loader.dismiss())
+      .then(_ => this.load())
+  }
+
   private async load(): Promise<void> {
     try {
       this.loading = true
@@ -88,7 +106,7 @@ export class SyncPage implements OnInit {
       this.integrityChecksums = dataIntegrity.filter(e => e.dataTable !== 'lastSync')
 
       this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        const result = await db.query('select count(*) as c from products')
+        const result = await db.query('select count(*) as c from currentExceptions')
         if (result.values)
           this.productcount = result.values[0]['c']
         this.ref.markForCheck()
@@ -96,9 +114,8 @@ export class SyncPage implements OnInit {
 
       Filesystem.readdir({
         path: 'thumbnails',
-        directory: Directory.Documents,
+        directory: Directory.Documents
       }).then(result => {
-        console.log(result)
         this.imagecount = result.files.length
         this.ref.markForCheck()
       })

@@ -15,43 +15,44 @@ import { DatabaseService } from './core/database.service'
 import { CachingInterceptor } from './core/cache.interceptor'
 
 const createTranslateLoader =
-    (http: HttpClient) => new TranslateHttpLoader(http, './assets/i18n/', '.json')
+  (http: HttpClient) => new TranslateHttpLoader(http, './assets/i18n/', '.json')
 
 const initializeFactory =
-    (init: InitializeAppService) => () => init.initializeApp()
+  (init: InitializeAppService) => () => init.initializeApp()
 
 @NgModule({
-    declarations: [
-        AppComponent
-    ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
-        IonicModule.forRoot({
-            mode: 'ios'
-        }),
-        TranslateModule.forRoot({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: createTranslateLoader,
-                deps: [HttpClient]
-            }
-        }),
-        AppRoutingModule], providers: [
-            SQLiteService,
-            DatabaseService,
-            InitializeAppService,
-            {
-                provide: APP_INITIALIZER,
-                useFactory: initializeFactory,
-                deps: [InitializeAppService],
-                multi: true
-            },
-            {
-                provide: HTTP_INTERCEPTORS,
-                useClass: CachingInterceptor,
-                multi: true
-            },
-            { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-            provideHttpClient(withInterceptorsFromDi())
-        ]
+  declarations: [
+    AppComponent
+  ],
+  bootstrap: [AppComponent], imports: [
+    BrowserModule,
+    IonicModule.forRoot({
+      mode: 'ios'
+    }),
+    TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: createTranslateLoader,
+        deps: [HttpClient]
+      }
+    }),
+    AppRoutingModule], providers: [
+      SQLiteService,
+      DatabaseService,
+      InitializeAppService,
+      {
+        provide: APP_INITIALIZER,
+        useFactory: initializeFactory,
+        deps: [InitializeAppService],
+        multi: true
+      },
+      {
+        provide: HTTP_INTERCEPTORS,
+        useClass: CachingInterceptor,
+        multi: true
+      },
+      { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+      provideHttpClient(withInterceptorsFromDi())
+    ]
 })
 export class AppModule { }

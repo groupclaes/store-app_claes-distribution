@@ -5,6 +5,7 @@ import { BehaviorSubject } from 'rxjs'
 import { Network } from '@capacitor/network'
 import { TranslateService } from '@ngx-translate/core'
 import { ToastController } from '@ionic/angular'
+import { environment } from 'src/environments/environment'
 
 @Injectable({
   providedIn: 'root'
@@ -47,8 +48,9 @@ export class NetworkService {
     return networkStatus.connected
   }
 
-  noop() {
+  noop($event?: any) {
     this.toast(this.translate.instant('offline-message'))
+      .then(_ => $event?.target.complete())
   }
 
   private async toast(message: string, duration: number = 3000) {
@@ -61,10 +63,10 @@ export class NetworkService {
   }
 
   get online(): boolean {
-    return this._connected ?? false
+    return environment.mock_offline ? false : this._connected ?? false
   }
 
   get offline(): boolean {
-    return !this._connected ?? true
+    return !this.online
   }
 }

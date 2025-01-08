@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { ErrorAlertsService } from 'src/app/core/error-alerts.service'
 import { DepartmentsRepositoryService, IDepartmentDetailT } from 'src/app/core/repositories/departments.repository.service'
@@ -32,7 +33,8 @@ export class DepartmentDetailPage implements OnInit {
     private alertCtrl: AlertController,
     private logger: LoggingProvider,
     private error: ErrorAlertsService,
-    private location: Location
+    private location: Location,
+    public network: NetworkService
   ) {
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail

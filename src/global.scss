@@ -149,8 +149,11 @@ div.option-state {
     }
   }
 }
+
 .can-go-back {
-  ion-menu-button { display: none; }
+  ion-menu-button {
+    display: none;
+  }
 }
 
 ion-menu ion-backdrop {
@@ -255,4 +258,17 @@ ion-popover {
 
 ion-note {
   color: var(--ion-color-medium);
+}
+
+html.plt-desktop {
+  body {
+    app-root {
+      ion-app {
+        max-width: 1180px;
+        align-self: center;
+        margin: 0 auto;
+        box-shadow: 0 0 20px 0 #232323cc;
+      }
+    }
+  }
 }

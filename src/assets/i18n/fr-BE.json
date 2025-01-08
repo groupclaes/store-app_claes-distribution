@@ -68,6 +68,7 @@
   "contactsPage": "Contact",
   "showCartsHistory": "Montrer l'historique",
   "prices": "Prix",
+  "price": "Prix",
   "basePrice": "Prix de base :",
   "productInfo": "Information produit",
   "itemNum": "Numéro d'article",
@@ -319,7 +320,7 @@
     "changeCustomerDescription": "Modifier la description personnelle",
     "choseFiletype": "Choisir le type de fichier souhaité",
     "choseDeliveryMethod": "Choisir la méthode de livraison",
-    "copiedToClipboard": "Article copié dans le presse-papiers"
+    "copiedToClipboard": "Numéro d'article copié dans le presse-papiers"
   },
   "actions": {
     "title": "Actions",
@@ -484,7 +485,6 @@
     "attributes": "Caractéristiques",
     "lastSync": "Dernière synchronisation"
   },
-  
   "customer-info": {
     "alerts": {
       "invalid-customer": {
@@ -509,5 +509,8 @@
   "newItem": "Nouveau",
   "promoItem": "Promotion",
   "favoriteItem": "Favori",
-  "orderItem": "Article de commande"
+  "orderItem": "Article de commande",
+  "asap": "Le plus tôt possible",
+  "offline-message": "Vous devez être en ligne pour effectuer cette action, réessayez plus tard.",
+  "offline-footer": "Vous êtes actuellement hors ligne, certaines fonctionnalités ne sont pas disponibles."
 }

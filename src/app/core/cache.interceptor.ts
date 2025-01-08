@@ -1,6 +1,6 @@
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Observable, catchError, of, tap } from 'rxjs'
+import { Observable, catchError, tap } from 'rxjs'
 import { ThumbCacheService } from './thumb-cache.service'
 import { NetworkService } from '../@shared/network.service'
 

@@ -210,7 +210,7 @@ export class LoginPage implements OnInit {
             this.navCtrl.navigateRoot(await this.defaultPage)
           }
         } else {
-          this.toast(this.translate.instant('localData'))
+          // this.toast(this.translate.instant('localData'))
 
           if (this.user.userinfo.type === 1) {
             try {

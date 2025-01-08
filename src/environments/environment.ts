@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  version: '1.3.7-dev',
+  version: '1.3.8-dev',
   default_language: 'nl-BE',
   supported_languages: [
     'nl-BE',
@@ -13,7 +13,8 @@ export const environment = {
   // api_url: 'https://api.groupclaes.be/test/distribution',
   api_url: 'https://api.groupclaes.be/distribution',
   pcm_url: 'https://pcm.groupclaes.be/v4',
-  database_name: 'distribution-test'
+  database_name: 'distribution-test',
+  mock_offline: false
 }
 
 /*

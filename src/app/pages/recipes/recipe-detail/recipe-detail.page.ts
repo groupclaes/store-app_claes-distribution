@@ -13,7 +13,7 @@ import { UserService } from 'src/app/core/user.service'
 @Component({
   selector: 'app-detail',
   templateUrl: './recipe-detail.page.html',
-  styleUrls: ['./recipe-detail.page.scss'],
+  // styleUrls: ['./recipe-detail.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipeDetailPage implements OnInit {

@@ -35,9 +35,8 @@ export class ProductsRepositoryService {
   }
 
   getDetail(id: number, customer: Customer, culture: string): Promise<IProductDetailT> {
-
-    this._db.executeQuery<any>(async (db) => await db.query('SELECT itemnum, color FROM products WHERE color != \'#FFFFFF\''))
-      .then(console.log)
+    // this._db.executeQuery<any>(async (db) => await db.query('SELECT itemnum, color FROM products WHERE color != \'#FFFFFF\''))
+    //   .then(console.log)
 
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     const descriptionString = culture === 'nl-BE' ? 'descriptionNl' : 'descriptionFr'
@@ -94,6 +93,20 @@ export class ProductsRepositoryService {
       WHERE p.id = ?`, queryParams)
 
       const product = productResult.values[0] as IProductDetailT
+
+      const units = await db.query(`
+        SELECT p.id,
+          pu.${nameString} as unit
+        FROM products AS p 
+        INNER JOIN packingUnits AS pu
+          ON p.packId = pu.id
+        WHERE p.itemnum = ?
+          AND p.id != ?`,
+        [product.itemnum, id]
+      )
+
+      if (units.values?.length > 0)
+        product['units'] = units.values
 
       const attributesResult = await db.query(`
       SELECT attributes.${nameString} as name,

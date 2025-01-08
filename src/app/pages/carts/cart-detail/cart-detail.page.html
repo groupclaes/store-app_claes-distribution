@@ -8,7 +8,7 @@
       <!-- <ion-button tappable class="icon-only" (click)="showDeleteConfirmation()">
         <i class="fal fa-fw fa-trash"></i>
       </ion-button> -->
-      <ion-button tappable translate [disabled]="!allowSend" (click)="send()">
+      <ion-button tappable translate [disabled]="!allowSend" (click)="network.online ? send() : network.noop()">
         actions.send
       </ion-button>
     </ion-buttons>
@@ -263,3 +263,5 @@
     </ion-list>
   </ng-container>
 </ion-content>
+
+<app-offline-footer></app-offline-footer>

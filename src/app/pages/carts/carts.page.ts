@@ -70,6 +70,7 @@ export class CartsPage implements OnInit {
       this.unsendCount = await this.repo.failedCount()
 
       const carts = (await this.repo.loadUnsent(this.culture)) as ICartDetailCustom[]
+      console.debug(carts)
 
       for (const cart of carts) {
         cart.selected = true

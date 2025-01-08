@@ -51,7 +51,7 @@ export class SettingsService {
 
   init() {
     const interval: number = this.storage.get('app-syncinterval')
-    if (interval !== undefined) {
+    if (interval !== null) {
       this._syncInterval.next(interval)
     } else {
       this.storage.set('app-syncinterval', 43200000)

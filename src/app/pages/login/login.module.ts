@@ -7,6 +7,7 @@ import { IonicModule } from '@ionic/angular'
 
 import { LoginPage } from './login.page'
 import { RouterModule } from '@angular/router'
+import { CoreModule } from 'src/app/core/core.module'
 
 @NgModule({
   imports: [
@@ -14,6 +15,7 @@ import { RouterModule } from '@angular/router'
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
+    CoreModule,
     TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([
       { path: '', component: LoginPage }
@@ -23,4 +25,4 @@ import { RouterModule } from '@angular/router'
     LoginPage
   ]
 })
-export class LoginPageModule {}
+export class LoginPageModule { }

@@ -13,6 +13,7 @@ import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shippi
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment';
+import { NetworkService } from 'src/app/@shared/network.service';
 
 @Component({
   selector: 'app-cart-detail',
@@ -48,7 +49,8 @@ export class CartDetailPage implements OnInit {
     private loadingCtrl: LoadingController,
     private navCtrl: NavController,
     settings: SettingsService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    public network: NetworkService
   ) {
     settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
       this.displayThumbnail = displayThumbnail

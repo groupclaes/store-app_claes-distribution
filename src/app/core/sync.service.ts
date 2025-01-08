@@ -8,6 +8,7 @@ import { DatabaseService } from './database.service'
 import { AppCredential, AppCustomerModel, Customer } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -1683,6 +1684,48 @@ export class SyncService {
     return result
   }
 
+  async syncThumbnails(user: Customer, options: { force?: boolean, loader?: HTMLIonLoadingElement }) {
+    let itemnums: number[]
+    await this._db.executeQuery(async (db: SQLiteDBConnection) => {
+      if (user.id < 1000 && [2, 3].includes(user.type))
+        itemnums = (
+          await db.query('SELECT itemnum FROM products')
+        ).values.map(x => x.itemnum)
+      else
+        itemnums = (
+          await db.query('SELECT p.itemnum FROM currentExceptions c JOIN products p ON p.id = c.productId')
+        ).values.map(x => x.itemnum)
+    })
+
+    const runner = new SyncTaskRunner<void>(4)
+    for (let itemnum of itemnums) {
+      runner.push(() => new Promise<void>((x, y) => {
+        // check if file exists on disk, if so skip
+        Filesystem.stat({
+          path: 'thumbnails/' + itemnum + '.blob',
+          directory: Directory.Documents
+        }).then(file_info => {
+          x()
+        }).catch(err => {
+          firstValueFrom(this.api.pcmGet(`product-images/dis/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
+        })
+      }))
+    }
+
+    return new Promise<void>(res => {
+      const r = setInterval(() => {
+        if (!runner.busy) {
+          clearInterval(r)
+          res()
+        } else {
+          if (options.loader)
+            options.loader.message = `${options.loader.message.toString().split(' ')[0]} ${itemnums.length - runner.queue_length}/${itemnums.length}`
+          console.log(`completed ${itemnums.length - runner.queue_length}/${itemnums.length}`, runner.busy)
+        }
+      }, 200)
+    })
+  }
+
   /**
    * Set the checksum in the database for the given dataTable
    *
@@ -1735,6 +1778,46 @@ export class SyncService {
       .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
       .replace(/(æ|Æ)/g, 'ae')
       .toLowerCase()
+  }
+}
+
+class SyncTaskRunner<T> {
+  private queue: Function[] = []
+  private concurrency: number
+  private active_count: number = 0
+
+  constructor(concurrency: number = 4) {
+    this.concurrency = concurrency
+  }
+
+  push(fn: Function) {
+    if (this.active_count < this.concurrency)
+      this.exec(fn)
+    else
+      this.queue.push(fn)
+  }
+
+  async exec(fn: Function): Promise<void> {
+    this.active_count++
+
+    try {
+      await fn()
+    } catch (err) {
+      // console.error(err)
+    } finally {
+      this.active_count--
+
+      if (this.queue.length > 0)
+        this.exec(this.queue.shift())
+    }
+  }
+
+  get busy(): boolean {
+    return this.active_count > 0
+  }
+
+  get queue_length(): number {
+    return this.queue.length + this.active_count
   }
 }
 

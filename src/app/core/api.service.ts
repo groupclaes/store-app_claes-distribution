@@ -34,4 +34,8 @@ export class ApiService {
   postLogin(credential: AppCredential): Observable<ServerCustomer> {
     return this.http.post<ServerCustomer>(`${this.url}/appuser/login`, credential)
   }
+
+  pcmGet(endpoint: string, params?: any): Observable<Blob> {
+    return this.http.get(environment.pcm_url + '/' + endpoint, { responseType: 'blob', params })
+  }
 }

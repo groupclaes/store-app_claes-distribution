@@ -49,7 +49,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [scrollY]="false">
+<ion-content [fullscreen]="true" [scrollY]="false" color="light">
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" *ngIf="products.length > 0 && !loading" class="ion-content-scroll-host">
     <ion-list>
       <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products">
@@ -91,13 +91,5 @@
   </div>
 </ion-content>
 
-<ion-footer *ngIf="offline">
-  <ion-toolbar color="light">
-    <ion-note style="display:flex;justify-content:center;flex-direction:column;">
-      <div style="text-align: center;">
-        <i class="far fa-fw fa-wifi-slash"></i>&nbsp;
-        Je bent momenteel offline, sommige functies zijn niet beschikbaar. <ng-template [ngIf]="lastSync">Laatste sync; {{ lastSync | date:'d MMMM yyyy HH:mm':undefined:culture }}</ng-template>
-      </div>
-    </ion-note>
-  </ion-toolbar>
-</ion-footer>
+<!-- <app-offline-footer [lastSync]="lastSync"></app-offline-footer> -->
+<app-offline-footer></app-offline-footer>

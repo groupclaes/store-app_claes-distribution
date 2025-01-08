@@ -21,14 +21,15 @@
   <ion-list inset="true">
     <ion-item>
       <i slot="start" class="fal fa-fw fa-sync-alt"></i>
-      <ion-select (ionChange)="changeSyncInterval($event)" [(ngModel)]="syncInterval" interface="popover" [label]="'syncInterval' | translate">
-        <ion-select-option value="0">{{ 'always' | translate }}</ion-select-option>
-        <ion-select-option value="3600000">{{ '1hour' | translate }}</ion-select-option>
-        <ion-select-option value="14400000">{{ '4hours' | translate }}</ion-select-option>
-        <ion-select-option value="43200000" checked="true">{{ '12hours' | translate }}</ion-select-option>
-        <ion-select-option value="86400000">{{ '1day' | translate }}</ion-select-option>
-        <ion-select-option value="604800000">{{ '7days' | translate }}</ion-select-option>
-        <ion-select-option value="2419200000">{{ '1month' | translate }}</ion-select-option>
+      <ion-select (ionChange)="changeSyncInterval($event)" [(ngModel)]="syncInterval" interface="popover" labelPlacement="stacked">
+        <div slot="label">{{ 'syncInterval' | translate }}</div>
+        <ion-select-option [value]="0">{{ 'always' | translate }}</ion-select-option>
+        <ion-select-option [value]="3600000">{{ '1hour' | translate }}</ion-select-option>
+        <ion-select-option [value]="14400000">{{ '4hours' | translate }}</ion-select-option>
+        <ion-select-option [value]="43200000" checked="true">{{ '12hours' | translate }}</ion-select-option>
+        <ion-select-option [value]="86400000">{{ '1day' | translate }}</ion-select-option>
+        <ion-select-option [value]="604800000">{{ '7days' | translate }}</ion-select-option>
+        <ion-select-option [value]="2419200000">{{ '1month' | translate }}</ion-select-option>
       </ion-select>
     </ion-item>
   </ion-list>
@@ -90,3 +91,5 @@
     </ion-item>
   </ion-list> -->
 </ion-content>
+
+<app-offline-footer></app-offline-footer>

@@ -9,7 +9,7 @@ import { NetworkService } from 'src/app/@shared/network.service'
 @Component({
   selector: 'app-recipes',
   templateUrl: './recipes.page.html',
-  styleUrls: ['./recipes.page.scss'],
+  // styleUrls: ['./recipes.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipesPage implements OnInit {

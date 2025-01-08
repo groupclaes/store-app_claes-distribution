@@ -1,0 +1,11 @@
+<ion-footer *ngIf="network.offline" translucent="true">
+  <ion-toolbar color="danger">
+    <ion-text style="display:flex;justify-content:center;flex-direction:column">
+      <div style="text-align: center;white-space: pre;">
+        <i class="far fa-fw fa-wifi-slash"></i>&nbsp;
+        <span>{{ text }}</span>
+        <ng-template [ngIf]="lastSync">{{ lastSync | date:'d MMMM yyyy HH:mm':undefined:culture }}</ng-template>
+      </div>
+    </ion-text>
+  </ion-toolbar>
+</ion-footer>

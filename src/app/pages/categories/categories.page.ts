@@ -45,6 +45,8 @@ export class CategoriesPage {
 
       if (parent) {
         this.currentCategory = await this.categoriesRepository.find(parent, this.culture)
+      } else {
+        this.currentCategory = null
       }
 
       this.assortmentGroups = await this.categoriesRepository.getAssortment(this.culture, parent)

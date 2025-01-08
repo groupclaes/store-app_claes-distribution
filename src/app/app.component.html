@@ -6,15 +6,18 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
-      <ion-list>
-        <ion-item tappable button (click)="network.online ? openLeaflet() : network.noop()" *ngIf="isActivePromo">
+      <ion-list lines="none">
+        <ion-item tappable button lines="normal" (click)="network.online ? openLeaflet() : network.noop()" *ngIf="isActivePromo">
           <i slot="start" class='fal fa-fw fa-badge-percent'></i>
           <ion-label translate>leafletPage</ion-label>
         </ion-item>
-        <ion-item tappable button (click)="open('/carts')" [disabled]="isAgent && !hasActiveUser">
+        <ion-item tappable button lines="normal" (click)="open('/carts')" [disabled]="isAgent && !hasActiveUser">
           <i slot="start" class='fal fa-fw fa-shopping-basket'></i>
           <ion-label translate>cartsPage</ion-label>
-          <i slot="end" *ngIf="hasUnsendCarts" class="fal fa-fw fa-exclamation-triangle"></i>
+          <ion-text slot="end" color="warning" *ngIf="hasUnsendCarts">
+            <i class="fal fa-fw fa-exclamation-triangle"></i>
+          </ion-text>
+          <!-- <i slot="end" *ngIf="hasUnsendCarts" class="fal fa-fw fa-exclamation-triangle"></i> -->
         </ion-item>
         <ion-item tappable button (click)="open('/news')">
           <i slot="start" class='fal fa-fw fa-newspaper'></i>
@@ -22,44 +25,46 @@
         </ion-item>
       </ion-list>
       <br>
-      <ion-list>
-        <ion-item *ngIf="hasCustomers" tappable button (click)="open('/customers')">
+      <ion-list lines="none">
+        <ion-item *ngIf="hasCustomers" tappable button lines="normal" (click)="open('/customers')">
           <i slot="start" class='fal fa-fw fa-users'></i>
           <ion-label translate>customersPage</ion-label>
         </ion-item>
-        <ion-item [disabled]="!menuItemsActive" *ngIf="isAgent" tappable button (click)="open('/customers/customer-info')">
+        <ion-item [disabled]="!menuItemsActive" *ngIf="isAgent" tappable button lines="normal" (click)="open('/customers/customer-info')">
           <i slot="start" class='fal fa-fw fa-users-cog'></i>
           <ion-label translate>customerInfoPage</ion-label>
         </ion-item>
-        <ion-item [disabled]="!menuItemsActive" tappable button (click)="open('/categories')">
+        <ion-item [disabled]="!menuItemsActive" tappable button lines="normal" (click)="open('/categories')">
           <i slot="start" class='fal fa-fw fa-list'></i>
           <ion-label translate>categoriesPage</ion-label>
         </ion-item>
-        <ion-item [disabled]="!menuItemsActive" tappable button (click)="open('/products')">
+        <ion-item [disabled]="!menuItemsActive" tappable button lines="normal" (click)="open('/products')">
           <i slot="start" class='fal fa-fw fa-box-full'></i>
           <ion-label translate>productsPage</ion-label>
         </ion-item>
-        <ion-item [disabled]="!menuItemsActive" tappable button (click)="open('/recipes')">
+        <ion-item [disabled]="!menuItemsActive" tappable button lines="normal" (click)="open('/recipes')">
           <i slot="start" class='fal fa-fw fa-hat-chef'></i>
           <ion-label translate>recipesPage</ion-label>
         </ion-item>
-        <ion-item [disabled]="!menuItemsActive" tappable button (click)="open('/departments')">
+        <ion-item [disabled]="!menuItemsActive" tappable button lines="normal" (click)="open('/departments')">
           <i slot="start" class='fal fa-fw fa-sitemap'></i>
           <ion-label translate>departmentsPage</ion-label>
+        </ion-item>
+        <ion-item [disabled]="!menuItemsActive" *ngIf="isAgent" tappable button lines="normal" (click)="open('/notes')">
+          <i slot="start" class='fal fa-fw fa-sticky-note'></i>
+          <ion-label translate>notesPage</ion-label>
+          <ion-text slot="end" color="warning" *ngIf="hasUnsavedNotes">
+            <i class="fal fa-fw fa-exclamation-triangle"></i>
+          </ion-text>
         </ion-item>
         <ion-item tappable button (click)="open('/reports')">
           <i slot="start" class='fal fa-fw fa-file-chart-line'></i>
           <ion-label translate>reportsPage</ion-label>
         </ion-item>
-        <ion-item [disabled]="!menuItemsActive" *ngIf="isAgent" tappable button (click)="open('/notes')">
-          <i slot="start" class='fal fa-fw fa-sticky-note'></i>
-          <ion-label translate>notesPage</ion-label>
-          <i slot="start" *ngIf="hasUnsavedNotes" class="fal fa-fw fa-exclamation-triangle"></i>
-        </ion-item>
       </ion-list>
       <br>
-      <ion-list>
-        <ion-item tappable button (click)="open('/settings')">
+      <ion-list lines="none">
+        <ion-item tappable button (click)="open('/settings')" lines="normal">
           <i slot="start" class='fal fa-fw fa-cogs'></i>
           <ion-label translate>settingsPage</ion-label>
         </ion-item>
@@ -69,7 +74,7 @@
         </ion-item>
       </ion-list>
       <br>
-      <ion-list>
+      <ion-list lines="none">
         <ion-item tappable button (click)="open('/account/login')">
           <i slot="start" class='fal fa-fw fa-sign-out'></i>
           <ion-label translate>logout</ion-label>
@@ -78,5 +83,6 @@
     </ion-content>
   </ion-menu>
 
-  <ion-router-outlet id="content"></ion-router-outlet>
+  <ion-router-outlet id="content">
+  </ion-router-outlet>
 </ion-app>

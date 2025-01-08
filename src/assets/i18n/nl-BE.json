@@ -68,6 +68,7 @@
   "contactsPage": "Contacten",
   "showCartsHistory": "Toon historiek",
   "prices": "Prijzen:",
+  "price": "Prijs",
   "basePrice": "Basisprijs:",
   "productInfo": "Productinformatie",
   "itemNum": "Artikelnummer",
@@ -318,7 +319,7 @@
     "changeCustomerDescription": "Wijzig persoonlijke omschrijving",
     "choseFiletype": "Kies het gewenste bestandstype",
     "choseDeliveryMethod": "Kies de gewenste aflevermethode.",
-    "copiedToClipboard": "Artikel gekopieerd naar klembord"
+    "copiedToClipboard": "Artikelnummer gekopieerd naar klembord"
   },
   "actions": {
     "title": "Acties",
@@ -526,5 +527,7 @@
   "favoriteItem": "Favoriet",
   "orderItem": "Bestelartikel",
   "asap": "Zo snel mogelijk",
-  "offline-message": "Je moet online zijn om deze actie uit te voeren, probeer later nog eens."
+  "offline-message": "Je moet online zijn om deze actie uit te voeren, probeer later nog eens.",
+  "offline-footer": "Je bent momenteel offline, sommige functies zijn niet beschikbaar.",
+  "alsoAvailableUnit": "Ook verkrijgbaar als eenheid "
 }

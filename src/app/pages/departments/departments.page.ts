@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
 import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
@@ -25,7 +26,8 @@ export class DepartmentsPage implements OnInit {
     private logger: LoggingProvider,
     private departmentsRepository: DepartmentsRepositoryService,
     private alertCtrl: AlertController,
-    private cart: CartService
+    private cart: CartService,
+    public network: NetworkService
   ) { }
 
   ngOnInit() {

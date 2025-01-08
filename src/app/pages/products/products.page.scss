@@ -151,6 +151,14 @@
     height: 100%;
     width: 100%
   }
+
+  ion-item {
+    //--ion-background-color: white;
+
+    @media (prefers-color-scheme: dark) {
+      --ion-background-color: black;
+    }
+  }
 }
 
 img.icon-circle {

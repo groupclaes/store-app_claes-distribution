@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title translate="syncPage"></ion-title>
     <ion-buttons slot="end">
-      <ion-button class="icon-only" tappable (click)="fullSync()">
+      <ion-button class="icon-only" tappable (click)="network.online ? fullSync() : network.noop()">
         <i class='fal fa-fw fa-sync'></i>
       </ion-button>
     </ion-buttons>
@@ -19,7 +19,7 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-refresher slot="fixed" (ionRefresh)="fullSync($event)">
+  <ion-refresher slot="fixed" (ionRefresh)="network.online ? fullSync($event) : network.noop($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
@@ -37,6 +37,12 @@
       </ion-note>
     </ion-item>
   </ion-list>
+
+  <ion-text class="list-footer" *ngIf="internalUser || agent">
+    <ion-note>
+      Thumbnails worden automatisch opgeslagen, zo kan je zelfs zonder verbinding foto's blijven bekijken. Je kan ook <ion-text [style.cursor]="'pointer'" color="tertiary" (click)="network.online ? syncAllThumbnails() : network.noop()">hier</ion-text> klikken om alle artikels bij te werken. Foto's worden automatisch wekelijks bijgewerkt.
+    </ion-note>
+  </ion-text>
 
   <ng-container *ngIf="internalUser">
     <ion-text class="list-header">
@@ -74,3 +80,5 @@
     </ion-note>
   </ion-text>
 </ion-content>
+
+<app-offline-footer></app-offline-footer>

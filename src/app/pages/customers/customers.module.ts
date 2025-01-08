@@ -8,16 +8,18 @@ import { CustomersPageRoutingModule } from './customers-routing.module';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { CustomersPage } from './customers.page';
 import { TranslateModule } from '@ngx-translate/core';
+import { CoreModule } from 'src/app/core/core.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    CoreModule,
     CustomersPageRoutingModule,
     ScrollingModule,
     TranslateModule.forChild({ extend: true })
   ],
   declarations: [CustomersPage]
 })
-export class CustomersPageModule {}
+export class CustomersPageModule { }
