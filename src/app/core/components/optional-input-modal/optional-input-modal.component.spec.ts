@@ -1,24 +1,24 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { IonicModule } from '@ionic/angular';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing'
+import { IonicModule } from '@ionic/angular'
 
-import { OptionalInputModalComponent } from './optional-input-modal.component';
+import { OptionalInputModalComponent } from './optional-input-modal.component'
 
 describe('OptionalInputModalComponent', () => {
-  let component: OptionalInputModalComponent;
-  let fixture: ComponentFixture<OptionalInputModalComponent>;
+  let component: OptionalInputModalComponent
+  let fixture: ComponentFixture<OptionalInputModalComponent>
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ OptionalInputModalComponent ],
       imports: [IonicModule.forRoot()]
-    }).compileComponents();
+    }).compileComponents()
 
-    fixture = TestBed.createComponent(OptionalInputModalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  }));
+    fixture = TestBed.createComponent(OptionalInputModalComponent)
+    component = fixture.componentInstance
+    fixture.detectChanges()
+  }))
 
   it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+    expect(component).toBeTruthy()
+  })
+})

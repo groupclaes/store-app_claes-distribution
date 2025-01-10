@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { DatabaseService } from '../database.service';
-import { LoggingProvider } from 'src/app/@shared/logging/log.service';
-import { SQLiteDBConnection } from '@capacitor-community/sqlite';
+import { Injectable } from '@angular/core'
+import { DatabaseService } from '../database.service'
+import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 
 @Injectable({
   providedIn: 'root'
@@ -196,17 +196,17 @@ export class NotesRepositoryService {
 }
 
 export interface IVisitNote {
-  date: Date;
-  text: string;
-  customer: number;
-  address: number;
+  date: Date
+  text: string
+  customer: number
+  address: number
 }
 
 export interface IUnsentVisitNote extends IVisitNote {
-  id: number;
+  id: number
 
-  nextVisit: string;
-  customerCloseFrom?: string;
-  customerOpenFrom?: string;
-  toSend: boolean;
+  nextVisit: string
+  customerCloseFrom?: string
+  customerOpenFrom?: string
+  toSend: boolean
 }

@@ -280,7 +280,7 @@ export class ProductDetailPage implements OnInit {
         {
           text: this.translate.instant('actions.mail'),
           handler: () => {
-            this.showMailTextInput(doc.guid, 0);
+            this.showMailTextInput(doc.guid, 0)
           }
         },
         // {
@@ -386,7 +386,7 @@ export class ProductDetailPage implements OnInit {
   }
 
   openPicturePreview() {
-    this.pictureOpen = true;
+    this.pictureOpen = true
     console.log('Opened image preview')
   }
 
@@ -543,7 +543,7 @@ export class ProductDetailPage implements OnInit {
                   position: 'top'
                 })
 
-                toast.present();
+                toast.present()
               })
           }
         }
@@ -622,11 +622,11 @@ export class ProductDetailPage implements OnInit {
     if (role === 'confirm') {
       switch (type) {
         case 0:
-          this.mailDatasheet(guid, data);
+          this.mailDatasheet(guid, data)
           break
 
         case 1:
-          this.mailRecipe(guid, data);
+          this.mailRecipe(guid, data)
           break
       }
     }

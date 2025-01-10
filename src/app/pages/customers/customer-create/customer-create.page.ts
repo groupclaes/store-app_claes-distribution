@@ -1,10 +1,10 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { NavController } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
-import { LoggingProvider } from 'src/app/@shared/logging/log.service';
-import { ApiService } from 'src/app/core/api.service';
-import { UserService } from 'src/app/core/user.service';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { FormBuilder, FormGroup } from '@angular/forms'
+import { NavController } from '@ionic/angular'
+import { firstValueFrom } from 'rxjs'
+import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { ApiService } from 'src/app/core/api.service'
+import { UserService } from 'src/app/core/user.service'
 
 const _deliveryHours = [
   '06:00',
@@ -42,7 +42,7 @@ const _deliveryHours = [
   styleUrls: ['./customer-create.page.scss'],
 })
 export class CustomerCreatePage {
-  newCustomerForm: FormGroup;
+  newCustomerForm: FormGroup
 
   constructor(
     private user: UserService,

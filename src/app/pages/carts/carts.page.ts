@@ -201,5 +201,5 @@ export class CartsPage implements OnInit {
 }
 
 export interface ICartDetailCustom extends ICartDetail {
-  selected: boolean;
+  selected: boolean
 }

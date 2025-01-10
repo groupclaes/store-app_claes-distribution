@@ -31,7 +31,7 @@ export interface IReport {
 }
 
 export interface IReportT {
-  id: number;
-  name: string;
-  extension: string;
+  id: number
+  name: string
+  extension: string
 }

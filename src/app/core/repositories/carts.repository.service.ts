@@ -446,45 +446,45 @@ export class CartsRepositoryService {
 }
 
 export interface ICartDetail {
-  id: number;
-  name: string;
-  customer: number;
-  customerName?: string;
-  address: number;
-  addressName?: string;
-  serverDate: Date;
-  lastChangeDate: Date;
-  sendDate: Date;
-  send: boolean;
-  sendOk: boolean;
-  active: boolean;
-  products: ICartDetailProductT[];
-  settings?: ICartDetailSettings;
+  id: number
+  name: string
+  customer: number
+  customerName?: string
+  address: number
+  addressName?: string
+  serverDate: Date
+  lastChangeDate: Date
+  sendDate: Date
+  send: boolean
+  sendOk: boolean
+  active: boolean
+  products: ICartDetailProductT[]
+  settings?: ICartDetailSettings
 }
 
 export interface ICartDetailS extends ICartDetail {
-  settings: ICartDetailSettings;
-  products: ICartDetailProductA[];
+  settings: ICartDetailSettings
+  products: ICartDetailProductA[]
 }
 
 export interface ICartDetailProductT extends IProductInfoT {
-  amount: number;
+  amount: number
 }
 
 export interface ICartDetailProductA extends ICartDetailProductT, IProductPricesOverview, IProductOrderInfo {
 }
 
 export interface ICartDetailSettings {
-  reference: string;
-  nextDelivery: boolean;
-  deliveryDate: string;
-  deliveryMethod: string;
-  deliveryOption: string;
-  comments: string;
-  commentsPlanning: string;
-  commentsInvoice: string;
-  commentsDriver: string;
-  commentsMachines?: string;
-  acceptedTerms: boolean;
-  offer: boolean;
+  reference: string
+  nextDelivery: boolean
+  deliveryDate: string
+  deliveryMethod: string
+  deliveryOption: string
+  comments: string
+  commentsPlanning: string
+  commentsInvoice: string
+  commentsDriver: string
+  commentsMachines?: string
+  acceptedTerms: boolean
+  offer: boolean
 }

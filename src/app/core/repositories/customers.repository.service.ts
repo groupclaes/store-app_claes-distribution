@@ -83,44 +83,44 @@ export class CustomersRepositoryService {
 }
 
 export interface IContact {
-  customerId: number;
-  addressId: number;
-  id: number;
-  firstName: string;
-  name: string;
-  mailAddress: string;
-  mobileNr: string;
-  ordConf: boolean;
-  bonus: boolean;
-  invoice: boolean;
-  comMailing: boolean;
-  domiciliation: boolean;
-  reminder: boolean;
-  avatar?: string;
+  customerId: number
+  addressId: number
+  id: number
+  firstName: string
+  name: string
+  mailAddress: string
+  mobileNr: string
+  ordConf: boolean
+  bonus: boolean
+  invoice: boolean
+  comMailing: boolean
+  domiciliation: boolean
+  reminder: boolean
+  avatar?: string
 }
 
 export interface IAppDeliveryScheduleModel {
-  customerId: number;
-  addressId: number;
-  monAMFr: string;
-  monAMTo: string;
-  monPMFr: string;
-  monPMTo: string;
-  tueAMFr: string;
-  tueAMTo: string;
-  tuePMFr: string;
-  tuePMTo: string;
-  wedAMFr: string;
-  wedAMTo: string;
-  wedPMFr: string;
-  wedPMTo: string;
-  thuAMFr: string;
-  thuAMTo: string;
-  thuPMFr: string;
-  thuPMTo: string;
-  friAMFr: string;
-  friAMTo: string;
-  friPMFr: string;
-  friPMTo: string;
+  customerId: number
+  addressId: number
+  monAMFr: string
+  monAMTo: string
+  monPMFr: string
+  monPMTo: string
+  tueAMFr: string
+  tueAMTo: string
+  tuePMFr: string
+  tuePMTo: string
+  wedAMFr: string
+  wedAMTo: string
+  wedPMFr: string
+  wedPMTo: string
+  thuAMFr: string
+  thuAMTo: string
+  thuPMFr: string
+  thuPMTo: string
+  friAMFr: string
+  friAMTo: string
+  friPMFr: string
+  friPMTo: string
 }
 

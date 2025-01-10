@@ -1,11 +1,11 @@
-import { firstValueFrom } from 'rxjs';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { AppCredential, UserService } from 'src/app/core/user.service';
-import { NavController, ToastController } from '@ionic/angular';
-import { TranslateService } from '@ngx-translate/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { StorageProvider } from 'src/app/core/storage-provider.service';
-import { BrowserService } from 'src/app/core/browser.service';
+import { firstValueFrom } from 'rxjs'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { AppCredential, UserService } from 'src/app/core/user.service'
+import { NavController, ToastController } from '@ionic/angular'
+import { TranslateService } from '@ngx-translate/core'
+import { FormBuilder, FormGroup, Validators } from '@angular/forms'
+import { StorageProvider } from 'src/app/core/storage-provider.service'
+import { BrowserService } from 'src/app/core/browser.service'
 
 @Component({
   selector: 'app-signup',
@@ -65,7 +65,7 @@ export class SignupPage {
         message: this.translate.instant('signupError'),
         duration: 3000,
         position: 'top'
-      });
+      })
       await toast.present()
       this.ref.markForCheck()
     }

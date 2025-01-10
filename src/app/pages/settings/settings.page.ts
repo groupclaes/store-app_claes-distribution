@@ -1,4 +1,4 @@
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs'
 /* eslint-disable @typescript-eslint/member-delimiter-style */
 import { SettingsService } from 'src/app/core/settings.service'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core'

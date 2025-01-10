@@ -1,4 +1,4 @@
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs'
 /* eslint-disable @typescript-eslint/dot-notation */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
@@ -12,8 +12,8 @@ import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailS
 import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shipping-costs.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
-import { environment } from 'src/environments/environment';
-import { NetworkService } from 'src/app/@shared/network.service';
+import { environment } from 'src/environments/environment'
+import { NetworkService } from 'src/app/@shared/network.service'
 
 @Component({
   selector: 'app-cart-detail',
@@ -33,7 +33,7 @@ export class CartDetailPage implements OnInit {
   invoiceForm: ICartDetailSettings
 
   private _cart: ICartDetailS
-  private _history = false;
+  private _history = false
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -123,12 +123,12 @@ export class CartDetailPage implements OnInit {
   }
 
   get isHistory() {
-    return this._history && this._cart.send && this._cart.sendOk;
+    return this._history && this._cart.send && this._cart.sendOk
   }
 
   ngOnInit() {
     this.route.queryParams.subscribe(x => {
-      this._history = x['history'] === 'true';
+      this._history = x['history'] === 'true'
     })
   }
 
@@ -151,7 +151,6 @@ export class CartDetailPage implements OnInit {
 
       // Started editing, disable sending.
       if (cart.send === true && !cart.sendOk) {
-
         if (this.cart.cancelSend(cart)) {
           cart.send = false
         }
@@ -180,7 +179,7 @@ export class CartDetailPage implements OnInit {
   async send() {
     const loading = await this.loadingCtrl.create({
       message: this.translate.instant('sendingCart')
-    });
+    })
     loading.present()
     this.ref.markForCheck()
 
@@ -191,17 +190,17 @@ export class CartDetailPage implements OnInit {
       this.toastCtrl.create({
         message: this.translate.instant('cartSendError'),
         duration: 10000
-      }).then(x => x.present());
+      }).then(x => x.present())
     }
 
-    this.navCtrl.pop();
-    this.ref.markForCheck();
+    this.navCtrl.pop()
+    this.ref.markForCheck()
   }
 
   async delete() {
-    await this.cart.deleteCart(this._cart);
-    this.navCtrl.pop();
-    this.ref.markForCheck();
+    await this.cart.deleteCart(this._cart)
+    this.navCtrl.pop()
+    this.ref.markForCheck()
   }
 
   async changeProductAmount($event: any, product: ICartDetailProductA) {

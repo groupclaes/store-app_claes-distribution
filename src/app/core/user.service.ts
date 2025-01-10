@@ -155,11 +155,11 @@ export interface AppCredential {
   password: string
 }
 export interface AppRegistrationCredential extends AppCredential {
-  code: string;
+  code: string
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  given_name: string;
+  given_name: string
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  last_name: string;
+  last_name: string
 }
 
 export interface ServerCustomer {
@@ -233,7 +233,7 @@ export interface AppCustomerModel {
   delvCity: string
   delvCountry: string
   delvPhoneNum: string
-  delvLanguage: string;
+  delvLanguage: string
 }
 
 export type CustomerUserType = 1 /*: norml user */ |

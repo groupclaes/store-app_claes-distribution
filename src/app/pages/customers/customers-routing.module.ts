@@ -1,7 +1,7 @@
-import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { NgModule } from '@angular/core'
+import { Routes, RouterModule } from '@angular/router'
 
-import { CustomersPage } from './customers.page';
+import { CustomersPage } from './customers.page'
 
 const routes: Routes = [
   {
@@ -16,7 +16,7 @@ const routes: Routes = [
     path: 'customer-create',
     loadChildren: () => import('./customer-create/customer-create.module').then( m => m.CustomerCreatePageModule)
   }
-];
+]
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

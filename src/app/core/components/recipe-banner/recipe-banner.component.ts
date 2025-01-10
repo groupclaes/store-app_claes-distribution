@@ -169,25 +169,25 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
 }
 
 export interface IGetWebContentBannerResponse {
-  banners: { [key: string]: Banner };
-  count: number;
+  banners: { [key: string]: Banner }
+  count: number
 }
 
 export interface Banner {
-  meta: Meta;
-  documents: Document[];
+  meta: Meta
+  documents: Document[]
 }
 
 export interface Document {
-  url: string;
-  size: string;
-  languages: string[];
+  url: string
+  size: string
+  languages: string[]
 }
 
 export interface Meta {
-  title: { [key: string]: string };
-  description: { [key: string]: string };
-  altText: { [key: string]: string };
-  href: { [key: string]: string };
-  duration: number;
+  title: { [key: string]: string }
+  description: { [key: string]: string }
+  altText: { [key: string]: string }
+  href: { [key: string]: string }
+  duration: number
 }

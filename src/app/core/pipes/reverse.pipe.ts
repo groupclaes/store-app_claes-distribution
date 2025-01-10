@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { IProductPrice } from '../repositories/products.repository.service';
+import { Pipe, PipeTransform } from '@angular/core'
+import { IProductPrice } from '../repositories/products.repository.service'
 
 @Pipe({
   name: 'reverse'

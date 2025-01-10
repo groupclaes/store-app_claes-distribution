@@ -1,8 +1,8 @@
-import { firstValueFrom } from 'rxjs';
-import { Injectable } from '@angular/core';
-import { ProductsRepositoryService } from './repositories/products.repository.service';
-import { ApiService } from './api.service';
-import { UserService } from './user.service';
+import { firstValueFrom } from 'rxjs'
+import { Injectable } from '@angular/core'
+import { ProductsRepositoryService } from './repositories/products.repository.service'
+import { ApiService } from './api.service'
+import { UserService } from './user.service'
 
 @Injectable({
   providedIn: 'root'

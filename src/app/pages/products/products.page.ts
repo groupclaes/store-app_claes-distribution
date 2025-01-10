@@ -1,4 +1,4 @@
-import { firstValueFrom, Subscription } from 'rxjs';
+import { firstValueFrom, Subscription } from 'rxjs'
 /* eslint-disable eqeqeq */
 import { DatePipe } from '@angular/common'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
@@ -13,9 +13,9 @@ import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositori
 import { IProductT, ISortOrder, ProductsRepositoryService } from 'src/app/core/repositories/products.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
-import { NetworkService } from 'src/app/@shared/network.service';
-import { Store } from 'src/app/core/sync.service';
-import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service';
+import { NetworkService } from 'src/app/@shared/network.service'
+import { Store } from 'src/app/core/sync.service'
+import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
 
@@ -28,7 +28,7 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
 export class ProductsPage {
   private _products: IProductT[]
   private _updateCartProduct = new Subject<{ productId: number, amount: number }>()
-  private _routerEventSubscription: Subscription;
+  private _routerEventSubscription: Subscription
 
   @ViewChild(IonContent) content: IonContent
 
@@ -47,13 +47,13 @@ export class ProductsPage {
     = this._updateCartProduct.asObservable().pipe(debounceTime(500))
 
   private _filters: {
-    category: ICategoryT;
-    query: string;
-    newState: 'default' | 'active';
-    promoState: 'default' | 'active';
-    favoriteState: 'default' | 'active' | 'inactive';
-    orderState: 'default' | 'inactive';
-    attributes: AttributesFilter[];
+    category: ICategoryT
+    query: string
+    newState: 'default' | 'active'
+    promoState: 'default' | 'active'
+    favoriteState: 'default' | 'active' | 'inactive'
+    orderState: 'default' | 'inactive'
+    attributes: AttributesFilter[]
   } = {
       newState: 'default',
       promoState: 'default',
@@ -356,9 +356,9 @@ export class ProductsPage {
     let productAmount = $event.target.value ? Math.abs($event.target.value) : -1
     let showAlert = false
     this.ref.markForCheck()
-    console.debug('changeProductAmount() --start ', productId, productAmount)
+    this.logger.debug('changeProductAmount() -- start ', productId, productAmount)
 
-    console.debug(productId, productAmount,
+    this.logger.debug(productId, productAmount,
       this.user.activeUser.id, this.user.activeUser.address,
       this.user.credential)
 
@@ -395,7 +395,7 @@ export class ProductsPage {
         this.user.activeUser.id, this.user.activeUser.address,
         this.user.credential)
     }
-    console.debug('changeProductAmount() --end ', productId, productAmount)
+    this.logger.debug('changeProductAmount() -- end ', productId, productAmount)
   }
 
   newState = (product: $TSFixMe) => product.isNew ? 'active' : 'inactive'

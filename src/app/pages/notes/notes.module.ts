@@ -1,14 +1,14 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { NgModule } from '@angular/core'
+import { CommonModule } from '@angular/common'
+import { FormsModule } from '@angular/forms'
 
-import { IonicModule } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular'
 
-import { NotesPageRoutingModule } from './notes-routing.module';
+import { NotesPageRoutingModule } from './notes-routing.module'
 
-import { NotesPage } from './notes.page';
-import { TranslateModule } from '@ngx-translate/core';
-import { CoreModule } from 'src/app/core/core.module';
+import { NotesPage } from './notes.page'
+import { TranslateModule } from '@ngx-translate/core'
+import { CoreModule } from 'src/app/core/core.module'
 
 @NgModule({
   imports: [

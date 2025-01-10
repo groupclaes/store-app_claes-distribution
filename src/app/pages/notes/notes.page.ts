@@ -1,13 +1,13 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { AlertController, NavController, ToastController } from '@ionic/angular';
-import { TranslateService } from '@ngx-translate/core';
-import { firstValueFrom } from 'rxjs';
-import { LoggingProvider } from 'src/app/@shared/logging/log.service';
-import { ApiService } from 'src/app/core/api.service';
-import { IUnsentVisitNote, IVisitNote, NotesRepositoryService } from 'src/app/core/repositories/notes.repository.service';
-import { UserService } from 'src/app/core/user.service';
-import { environment } from 'src/environments/environment';
+import { ChangeDetectorRef, Component } from '@angular/core'
+import { ActivatedRoute } from '@angular/router'
+import { AlertController, NavController, ToastController } from '@ionic/angular'
+import { TranslateService } from '@ngx-translate/core'
+import { firstValueFrom } from 'rxjs'
+import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { ApiService } from 'src/app/core/api.service'
+import { IUnsentVisitNote, IVisitNote, NotesRepositoryService } from 'src/app/core/repositories/notes.repository.service'
+import { UserService } from 'src/app/core/user.service'
+import { environment } from 'src/environments/environment'
 
 @Component({
   selector: 'app-notes',
@@ -15,8 +15,8 @@ import { environment } from 'src/environments/environment';
   styleUrls: ['./notes.page.scss'],
 })
 export class NotesPage {
-  showCreate = false;
-  isEditing = false;
+  showCreate = false
+  isEditing = false
   notes: IVisitNote[]
   newNote: IUnsentVisitNote
 
@@ -102,7 +102,7 @@ export class NotesPage {
     }
     if (noteSource != null && 'id' in noteSource) {
       if ('toSend' in noteSource && !noteSource.toSend) {
-        this.newNote.id = noteSource.id as number;
+        this.newNote.id = noteSource.id as number
       }
 
       // IUnsentVisitNote

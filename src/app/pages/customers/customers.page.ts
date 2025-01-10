@@ -1,14 +1,14 @@
-import { firstValueFrom } from 'rxjs';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { AlertController, LoadingController, NavController } from '@ionic/angular';
-import { TranslateService } from '@ngx-translate/core';
-import { CartService } from 'src/app/core/cart.service';
-import { CustomersRepositoryService } from 'src/app/core/repositories/customers.repository.service';
-import { SettingsService } from 'src/app/core/settings.service';
-import { AppCustomerModel, UserService } from 'src/app/core/user.service';
-import { SyncService } from 'src/app/core/sync.service';
-import { ActivatedRoute } from '@angular/router';
-import { LoggingProvider } from 'src/app/@shared/logging/log.service';
+import { firstValueFrom } from 'rxjs'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
+import { AlertController, LoadingController, NavController } from '@ionic/angular'
+import { TranslateService } from '@ngx-translate/core'
+import { CartService } from 'src/app/core/cart.service'
+import { CustomersRepositoryService } from 'src/app/core/repositories/customers.repository.service'
+import { SettingsService } from 'src/app/core/settings.service'
+import { AppCustomerModel, UserService } from 'src/app/core/user.service'
+import { SyncService } from 'src/app/core/sync.service'
+import { ActivatedRoute } from '@angular/router'
+import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 
 @Component({
   selector: 'app-customers',
@@ -17,11 +17,11 @@ import { LoggingProvider } from 'src/app/@shared/logging/log.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomersPage {
-  _query = '';
+  _query = ''
 
-  private _customers: AppCustomerModel[] = [];
+  private _customers: AppCustomerModel[] = []
   private _loading: HTMLIonLoadingElement
-  private _filterTimeout;
+  private _filterTimeout
 
   constructor(private loadCtrl: LoadingController,
     private alertCtrl: AlertController,
@@ -37,15 +37,15 @@ export class CustomersPage {
     private logger: LoggingProvider) { }
 
   get createCustomerAllowed(): boolean {
-    return (this.user.userinfo) ? this.user.userinfo.type === 2 || this.user.userinfo.type === 3 : false;
+    return (this.user.userinfo) ? this.user.userinfo.type === 2 || this.user.userinfo.type === 3 : false
   }
 
   get customers(): AppCustomerModel[] {
-    return this._customers;
+    return this._customers
   }
 
   get searchTerm(): string {
-    return this._query || '';
+    return this._query || ''
   }
 
   async ionViewWillEnter() {
@@ -122,21 +122,21 @@ export class CustomersPage {
 
   filterCustomers(event: any) {
     try {
-      window.clearTimeout(this._filterTimeout);
+      window.clearTimeout(this._filterTimeout)
     } finally {
       this._filterTimeout = window.setTimeout(() => this.loadCustomers(event.target?.value).then(_ => this.ref.markForCheck()), 120)
     }
   }
 
   sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   private async followUp(customer: AppCustomerModel) {
     this._loading = await this.loadCtrl.create({
       spinner: 'lines',
       message: this.translate.instant('preparing') /** | translate */
-    });
+    })
     await this._loading.present()
       .then(_ => this.ref.markForCheck())
 

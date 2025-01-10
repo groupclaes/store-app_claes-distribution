@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { AlertController, NavController } from '@ionic/angular';
-import { TranslateService } from '@ngx-translate/core';
-import { LoggingProvider } from 'src/app/@shared/logging/log.service';
-import { BrowserService } from 'src/app/core/browser.service';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
+import { AlertController, NavController } from '@ionic/angular'
+import { TranslateService } from '@ngx-translate/core'
+import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { BrowserService } from 'src/app/core/browser.service'
 import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact }
-  from 'src/app/core/repositories/customers.repository.service';
-import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service';
-import { Md5 } from 'ts-md5';
+  from 'src/app/core/repositories/customers.repository.service'
+import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service'
+import { Md5 } from 'ts-md5'
 
 @Component({
   selector: 'app-customer-info',
@@ -15,9 +15,9 @@ import { Md5 } from 'ts-md5';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomerInfoPage {
-  customer: AppCustomerModel;
-  deliverySchedules: IAppDeliveryScheduleModel[];
-  contacts: IContact[];
+  customer: AppCustomerModel
+  deliverySchedules: IAppDeliveryScheduleModel[]
+  contacts: IContact[]
 
   constructor(private translate: TranslateService,
     private customerService: CustomersRepositoryService,
@@ -73,7 +73,7 @@ export class CustomerInfoPage {
           this.loadContacts()
         ])
         this.logger.debug('Fetched notes, deliveryschedules and contacts')
-        this.ref.markForCheck();
+        this.ref.markForCheck()
       }
       else {
         const alert = await this.alertCtrl.create({
@@ -86,7 +86,7 @@ export class CustomerInfoPage {
             }
           ]
         })
-        alert.present();
+        alert.present()
       }
     }
   }
@@ -109,12 +109,12 @@ export class CustomerInfoPage {
       this.user.activeUser.address)
 
     for (const contact of contacts) {
-      contact.name = contact.name.split(`''`).join(`'`);
-      contact.firstName = contact.firstName.split(`''`).join(`'`);
+      contact.name = contact.name.split(`''`).join(`'`)
+      contact.firstName = contact.firstName.split(`''`).join(`'`)
       contact.avatar = `https://www.gravatar.com/avatar/${new Md5().appendStr(contact.mailAddress).end().toString()}?s=140&d=identicon`
     }
 
-    this.contacts = contacts;
+    this.contacts = contacts
   }
 
   goToMail(mail: string) {
