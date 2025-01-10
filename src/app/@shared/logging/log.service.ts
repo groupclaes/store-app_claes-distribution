@@ -7,7 +7,7 @@ import { LogPublisher } from './log-publishers'
 })
 export class LoggingProvider {
   private publishers: LogPublisher[] = []
-  private _level: LogLevel = LogLevel.All
+  private _level: LogLevel = LogLevel.Info
   logWithDate: boolean = true
 
   constructor(private publishersService: LogPublishersService) {
@@ -114,10 +114,10 @@ export class LogEntry {
 
 export enum LogLevel {
   Off = 0,
-  Debug = 1,
-  Info = 2,
+  Fatal = 1,
+  Error = 2,
   Warn = 3,
-  Error = 4,
-  Fatal = 5,
+  Info = 4,
+  Debug = 5,
   All = 6
 }

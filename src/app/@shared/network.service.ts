@@ -6,6 +6,7 @@ import { Network } from '@capacitor/network'
 import { TranslateService } from '@ngx-translate/core'
 import { ToastController } from '@ionic/angular'
 import { environment } from 'src/environments/environment'
+import { LoggingProvider } from './logging/log.service'
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +18,7 @@ export class NetworkService {
 
   constructor(
     private translate: TranslateService,
+    private log: LoggingProvider,
     private toastCtrl: ToastController
   ) {
     this.check()
@@ -27,7 +29,7 @@ export class NetworkService {
     }, 150)
 
     Network.addListener('networkStatusChange', (ev) => {
-      console.debug('NetworkService.networkStatusChange() -- ev', ev)
+      this.log.debug('NetworkService.networkStatusChange() -- ev', ev)
       if (this._connected !== undefined && this._connected !== ev.connected) {
         this.connected.next(ev.connected)
       }
@@ -36,7 +38,7 @@ export class NetworkService {
   }
 
   async check(): Promise<boolean> {
-    console.debug('NetworkService.check() -- start')
+    this.log.debug('NetworkService.check() -- start')
     const networkStatus = await Network.getStatus()
 
     if (this._connected !== undefined && this._connected != networkStatus.connected) {
@@ -44,7 +46,7 @@ export class NetworkService {
     }
     this._connected = networkStatus.connected
 
-    console.debug('NetworkService.check() -- end', networkStatus.connected)
+    this.log.debug('NetworkService.check() -- end', networkStatus.connected)
     return networkStatus.connected
   }
 
