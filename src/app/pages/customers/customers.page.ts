@@ -140,8 +140,10 @@ export class CustomersPage {
     await this._loading.present()
       .then(_ => this.ref.markForCheck())
 
+    let skip_prepare = false
+
     // Set current active customer user
-    this.user.activeUser = {
+    const new_user = {
       id: customer.id,
       name: customer.name,
       address: customer.addressId,
@@ -155,17 +157,25 @@ export class CustomersPage {
       userCode: customer.userCode
     }
 
+    const previous_user = localStorage.getItem('active-user')
+    if (previous_user) {
+      let _prev = JSON.parse(previous_user)
+      skip_prepare = _prev.id === new_user.id && _prev.address === new_user.address
+    }
+    localStorage.setItem('active-user', JSON.stringify(new_user))
+    this.user.activeUser = new_user
+
     // Set a newly active customer
     await this.cartService.updateActive(customer.id, customer.addressId)
 
-    await this.sync.prepareCurrentExceptions(customer)
-    if (this.user.userinfo.type === 3 || this.user.userinfo.type === 2) {
-      this.logger.debug('Type 3 -- syncing prices and favourites', customer)
-      await this.sync.syncPrices(this.user.credential, 'all', true, customer.id, customer.addressId)
-      await this.sync.syncFavorites(this.user.credential, 'all', true, customer.id, customer.addressId)
+    if (!skip_prepare) {
+      await this.sync.prepareCurrentExceptions(customer)
+      if (this.user.userinfo.type === 3 || this.user.userinfo.type === 2) {
+        this.logger.debug('Type 3 -- syncing prices and favourites', customer)
+        await this.sync.syncPrices(this.user.credential, 'all', true, customer.id, customer.addressId)
+        await this.sync.syncFavorites(this.user.credential, 'all', true, customer.id, customer.addressId)
+      }
     }
-
-
 
     const newRoot = await firstValueFrom(this.settings.DisplayDefaultPage)
     await this._loading.dismiss()
