@@ -123,11 +123,9 @@ export class CustomersPage {
   filterCustomers(event: any) {
     try {
       window.clearTimeout(this._filterTimeout);
-    } catch (ex) {}
-
-    this._filterTimeout = window.setTimeout(
-      () => this.loadCustomers(event.target?.value).then(_ => this.ref.markForCheck()),
-      120);
+    } finally {
+      this._filterTimeout = window.setTimeout(() => this.loadCustomers(event.target?.value).then(_ => this.ref.markForCheck()), 120)
+    }
   }
 
   sleep(ms: number): Promise<void> {

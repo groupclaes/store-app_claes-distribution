@@ -115,7 +115,7 @@ export class ProductsPage {
 
     this._routerEventSubscription = router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(async (ev) => {
-        console.log(ev)
+        // console.log(ev)
         window.clearTimeout(fallback)
         this._filters.category = undefined
 

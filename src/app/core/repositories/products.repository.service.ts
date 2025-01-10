@@ -43,7 +43,6 @@ export class ProductsRepositoryService {
     const promoString = culture === 'nl-BE' ? 'promoNl' : 'promoFr'
     const groupNameString = culture === 'nl-BE' ? 'groupNameNl' : 'groupNameFr'
 
-    console.time('getDetail')
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const exists = await db.query(`SELECT id FROM products WHERE id = ?`, [id])
 
@@ -187,10 +186,6 @@ export class ProductsRepositoryService {
         product.basePrice = 0
         product.prices = []
       }
-
-      // attachments
-
-      console.timeEnd('getDetail')
 
       delete product.c1
       delete product.c2

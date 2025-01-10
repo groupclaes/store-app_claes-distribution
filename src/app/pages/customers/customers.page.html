@@ -17,36 +17,42 @@
       </ion-button> -->
     </ion-buttons>
   </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="true">
-  <ion-item>
+  <ion-toolbar>
     <ion-searchbar [placeholder]="'customer-info.search' | translate" type="text" id="searchInputField" (input)="filterCustomers($event)"></ion-searchbar>
-  </ion-item>
-  <ion-list-header translate="customer-info.customers" class="ion-padding"></ion-list-header>
-  <ion-list *ngIf="customers && (customers.length > 0 || searchTerm.length > 0);else noCustomers">
-    <cdk-virtual-scroll-viewport itemSize="70" style="width:100%; height: calc(100vh - 100px)">
+  </ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true" [scrollY]="false" color="light">
+  <!-- <ion-header collapse="condense">
+    <ion-toolbar color="light">
+      <ion-title size="large">
+        {{ 'customersPage' | translate }}
+        <span *ngIf="customers">
+          <span> - </span>
+          <span>{{ (customers | slice:0:200).length }}</span>
+          <span *ngIf="(customers | slice:0:200).length !== customers.length">/{{ customers.length }}</span>
+        </span>
+      </ion-title>
+    </ion-toolbar>
+  </ion-header> -->
+
+  <cdk-virtual-scroll-viewport minBufferPx="1350" maxBufferPx="2350" itemSize="57" class="ion-content-scroll-host">
+    <ion-list inset="true" *ngIf="customers && (customers.length > 0 || searchTerm.length > 0);else noCustomers">
       <ion-item *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)">
         <ion-label>
-          <div class="customer-grid">
-            <div class="customer-name text-capitalize">
-              <span [innerText]="customer.id" style="margin-right:.5em;"></span>
-              <span [innerText]="customer.name"></span>
-            </div>
-            <div class="customer-address text-capitalize" *ngIf="customer.addressId > 0">
-              <span [innerText]="customer.addressId" style="margin-right:.5em;"></span>
-              <span [innerText]="customer.addressName"></span>
-            </div>
-            <div class="customer-city text-capitalize">
-              <span *ngIf="customer.addressId === 0" [innerText]="customer.city"></span>
-              <span *ngIf="customer.addressId > 0" [innerText]="customer.delvCity"></span>
+          <div style="display:flex;height:36px;flex-direction:column;justify-content:center">
+            <span class="text-capitalize">{{ customer.name }} ({{ customer.id }})</span>
+            <div *ngIf="customer.addressId > 0">
+              <span class="text-capitalize">{{ customer.addressName }} ({{ customer.addressId }})</span>
             </div>
           </div>
         </ion-label>
-        <i slot="end" class="fal fa-fw fa-xs fa-exclamation-triangle" *ngIf="customer.hasUnsentNotes"></i>
+        <ion-note slot="end">
+          <i class="fal fa-fw fa-xs fa-exclamation-triangle" *ngIf="customer.hasUnsentNotes"></i>
+          <ion-badge color="light" class="text-capitalize">{{ customer.addressId === 0 ? customer.city : customer.delvCity }}</ion-badge>
+        </ion-note>
       </ion-item>
-    </cdk-virtual-scroll-viewport>
-  </ion-list>
+    </ion-list>
+  </cdk-virtual-scroll-viewport>
 
   <ng-template #noCustomers>
     <ion-item class="ion-padding empty-message">
