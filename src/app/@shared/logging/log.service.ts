@@ -19,6 +19,10 @@ export class LoggingProvider {
     this.writeToLog(message, LogLevel.All, optionalParams)
   }
 
+  trace(message?: string, ...optionalParams: any[]) {
+    this.writeToLog(message, LogLevel.Trace, optionalParams)
+  }
+
   debug(message?: string, ...optionalParams: any[]) {
     this.writeToLog(message, LogLevel.Debug, optionalParams)
   }
@@ -115,9 +119,10 @@ export class LogEntry {
 export enum LogLevel {
   Off = 0,
   Fatal = 1,
-  Error = 2,
-  Warn = 3,
-  Info = 4,
-  Debug = 5,
-  All = 6
+  Error = 3,
+  Warn = 4,
+  Info = 6,
+  Debug = 7,
+  Trace = 8,
+  All = 9
 }

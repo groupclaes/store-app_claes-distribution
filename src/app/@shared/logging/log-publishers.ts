@@ -17,15 +17,25 @@ export class LogConsole extends LogPublisher {
       case LogLevel.Info:
         console.log(entry.buildLogString())
         break
+
       case LogLevel.Warn:
         console.warn(entry.buildLogString())
         break
+
       case LogLevel.Fatal:
-      case LogLevel.Error:
-        console.trace(entry.buildLogString())
+        console.error(entry.buildLogString())
         break
+
+      case LogLevel.Error:
+        console.error(entry.buildLogString())
+        break
+
       case LogLevel.Debug:
         console.debug(entry.buildLogString())
+        break
+
+      case LogLevel.Trace:
+        console.trace(entry.buildLogString())
         break
     }
     return of(true)
