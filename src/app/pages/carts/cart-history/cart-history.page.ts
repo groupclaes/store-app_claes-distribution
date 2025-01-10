@@ -15,6 +15,8 @@ import { UserService } from 'src/app/core/user.service'
 export class CartHistoryPage {
   isloading = false
   _carts: ICartDetail[] = []
+  groupedView: { [key: string]: ICartDetail[] } = {}
+
   constructor(
     public navCtrl: NavController,
     private user: UserService,
@@ -57,6 +59,10 @@ export class CartHistoryPage {
     }
   }
 
+  keyDescOrder = (a: { [key: string]: any }, b: { [key: string]: any }): number => {
+    return a.key > b.key ? -1 : (b.key > a.key ? 1 : 0);
+  }
+
   /**
    * retrieves all carts that have been send by the user, even if the sending has failed.
    * @memberof CartHistoryPage
@@ -67,11 +73,14 @@ export class CartHistoryPage {
 
     this.isloading = false
     this._carts = await this.cartService.getHistoryCarts()
+    const groupByStart = (xs: any[], key: string) => {
+      return xs.reduce((rv, x) => {
+        (rv[x[key].substring(0, 10)] = rv[x[key].substring(0, 10)] || []).push(x)
+        return rv
+      }, {})
+    }
 
-    this.isloading = false;
-    this._carts = await this.cartService.getHistoryCarts();
-    console.log('Loaded history carts')
-    this.ref.markForCheck();
+    this.groupedView = groupByStart(this._carts, 'lastChangeDate')
     this.ref.markForCheck()
   }
 
@@ -82,11 +91,8 @@ export class CartHistoryPage {
 
     if (result) {
       this.logger.debug(`sendCart: ${cart.name} successfully sent cart`)
-      if (reload) {
-        await this.loadCartsInHistory()
-      }
+      if (reload) await this.loadCartsInHistory()
     } else {
-
       this.logger.error(`sendCart: ${cart.name} (${cart.id}) Failed to send cart`)
     }
   }

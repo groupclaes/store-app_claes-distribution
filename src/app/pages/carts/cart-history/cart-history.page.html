@@ -10,48 +10,48 @@
 </ion-header>
 
 <ion-content>
-  <div padding class="empty-message" *ngIf="carts && carts.length === 0">
-    <span translate="noCarts"></span>
-  </div>
+  <ng-container *ngIf="carts && carts.length === 0">
+    <div id="container">
+      <section class="no-service-orders">
+        <ion-note translate="noCarts"></ion-note>
+      </section>
+    </div>
+  </ng-container>
 
-  <ion-list inset="true" *ngIf="carts && carts.length > 0">
+  <ng-container *ngFor="let dayGroup of groupedView | keyvalue: keyDescOrder">
     <ion-text class="list-header">
-      <ion-note>{{ carts[0].lastChangeDate | date : 'HH:mm dd MMM' : null : culture }}</ion-note>
+      <ion-note>{{ dayGroup.key | date : 'EEEE dd MMMM' : null : culture }}</ion-note>
     </ion-text>
 
-    <ion-item *ngFor="let cart of carts" [routerLink]="'/carts/' + cart.id" [queryParams]="{history: true}">
-      <div class="ion-padding" style="font-size:2em;width:1.6em;padding-left: 0;">
-        <div *ngIf="cart.sendOk" style="color:green">
-          <i class="fal fa-fw fa-sm fa-check"></i>
-        </div>
-        <div *ngIf="cart.sendDate && !cart.sendOk" style="color:red">
-          <i class="fal fa-fw fa-sm fa-times"></i>
-        </div>
-        <div *ngIf="!cart.sendOk && !cart.sendDate" style="color:orange">
-          <i class="fal fa-fw fa-sm fa-info-circle"></i>
-        </div>
-      </div>
-      <div>
-        <h2>
-          {{ cart.customerName | capitalize }}
-          {{ cart.addressName | capitalize }}
-        </h2>
-        <div style="padding-bottom: 16px;font-style:italic;font-size:.8em;color:grey;">
-          <div *ngIf="cart.sendOk">
-            <span translate="sentOn"></span>
-            <span>{{ cart.sendDate | date : 'EEEE dd MMMM HH:mm' : null : culture}}</span>
-          </div>
-          <div *ngIf="cart.sendDate && !cart.sendOk">
-            <span translate="sendFailedOn"></span>
-            <span>{{ cart.sendDate | date : 'EEEE dd MMMM HH:mm' : null : culture}}</span>
-          </div>
-          <div *ngIf="!cart.sendOk && !cart.sendDate">
-            <span translate="notYetSent"></span>
-          </div>
-        </div>
-      </div>
-    </ion-item>
-  </ion-list>
+    <ion-list inset="true">
+      <ion-item *ngFor="let cart of dayGroup.value" [routerLink]="'/carts/' + cart.id" [queryParams]="{history: true}">
+        <ng-container *ngIf="cart.sendOk">
+          <i slot="start" class="fal fa-fw fa-lg fa-check" style="color:green"></i>
+        </ng-container>
+        <ng-container *ngIf="cart.sendDate && !cart.sendOk">
+          <i slot="start" class="fal fa-fw fa-lg fa-times" style="color:red"></i>
+        </ng-container>
+        <ng-container *ngIf="!cart.sendOk && !cart.sendDate">
+          <i slot="start" class="fal fa-fw fa-lg fa-info-circle" style="color:orange"></i>
+        </ng-container>
+        <ion-label>
+          {{ cart.customerName | capitalize }} <br />
+          <ion-note style="font-size:.8rem">
+            <ng-container *ngIf="cart.sendOk">
+              {{ 'sentOn' | translate }} {{ cart.sendDate | date : 'EEEE dd MMMM HH:mm' : null : culture}}
+            </ng-container>
+            <ng-container *ngIf="cart.sendDate && !cart.sendOk">
+              {{ 'sendFailedOn' | translate }} {{ cart.sendDate | date : 'EEEE dd MMMM HH:mm' : null : culture}}
+            </ng-container>
+            <ng-container *ngIf="!cart.sendOk && !cart.sendDate">
+              {{ 'notYetSent' | translate }}
+            </ng-container>
+          </ion-note>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </ng-container>
+
   <div *ngIf="isloading" padding>
     <div style="text-align:center">
       <ion-spinner mode="ios"></ion-spinner>
