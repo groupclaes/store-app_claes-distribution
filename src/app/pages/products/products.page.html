@@ -52,7 +52,7 @@
 <ion-content [fullscreen]="true" [scrollY]="false" color="light">
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" *ngIf="products.length > 0 && !loading" class="ion-content-scroll-host">
     <ion-list>
-      <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products">
+      <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; trackBy: productById">
         <ion-thumbnail *ngIf="displayThumbnail" slot="start">
           <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="48" height="48">
         </ion-thumbnail>
