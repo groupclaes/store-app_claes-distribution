@@ -83,7 +83,7 @@ export class UserService {
   syncData(force: boolean = false): Promise<boolean> {
     let culture = this.hasAgentAccess ? 'all' : this.translate.currentLang.split('-')[0]
 
-    return this.sync.fullSync(this._credential, culture, force)
+    return this.sync.fullSync(this._credential, culture, force, undefined, this._user.userId)
   }
 
   get storedCredential(): AppCredential {

@@ -62,11 +62,10 @@ export class SyncPage implements OnInit {
 
     let promise
     let culture = this.agent ? 'all' : this.translate.currentLang.split('-')[0]
-    if (this.user.activeUser != null) {
-      promise = this.sync.fullSync(this.user.credential, culture, true, this.user.activeUser)
-    } else {
-      promise = this.sync.fullSync(this.user.credential, culture, true)
-    }
+    if (this.user.activeUser != null)
+      promise = this.sync.fullSync(this.user.credential, culture, $event === undefined, this.user.activeUser, this.user.userinfo.userId)
+    else
+      promise = this.sync.fullSync(this.user.credential, culture, $event === undefined, undefined, this.user.userinfo.userId)
 
     await promise.then(_ => this.loader.dismiss())
       .then(_ => {
