@@ -4,4 +4,12 @@
     margin: 0 !important;
     width: 100% !important
   }
+
+  ion-card {
+    --ion-background-color: white;
+
+    @media (prefers-color-scheme: dark) {
+      --ion-background-color: black;
+    }
+  }
 }
