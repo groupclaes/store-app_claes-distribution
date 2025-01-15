@@ -141,12 +141,14 @@
           <ion-note translate>similarPromoProducts</ion-note>
         </ion-text>
         <div class="product-scroll-container item-color">
-          <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', promoProduct.id]" *ngFor="let promoProduct of product.promoProducts">
+          <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', item.id]" *ngFor="let item of product.promoProducts">
             <div class="product-image" *ngIf="displayThumbnail">
-              <img class="product-image" [src]="promoProduct.url | secure | async" [title]="promoProduct.name" [alt]="promoProduct.name" loading="lazy" [style]="'background-color:' + promoProduct.color" width="72" height="72">
+              <img class="product-image" [src]="item.url | secure | async" [title]="item.name" [alt]="item.name" loading="lazy" [style]="'background-color:' + item.color" width="72" height="72">
             </div>
-            <span [innerHtml]="promoProduct.name"></span>
-            <!-- <span [innerHtml]="promoProduct.unit"></span> -->
+            <small>
+              {{ item.name }}<br />
+              <ion-text color="medium">{{ item.unit | capitalize }}</ion-text>
+            </small>
           </div>
         </div>
       </ng-container>
@@ -157,16 +159,14 @@
         <ion-note translate>relatedProducts</ion-note>
       </ion-text>
       <div class="product-scroll-container item-color">
-        <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', rel.id]" *ngFor="let rel of product.relatedProducts">
+        <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', item.id]" *ngFor="let item of product.relatedProducts">
           <div class="product-image" *ngIf="displayThumbnail">
-            <img class="product-image" [src]="rel.url | secure | async" [title]=" rel.name" [alt]="rel.name" loading="lazy" [style]="'background-color:' + rel.color" width="72" height="72">
+            <img class="product-image" [src]="item.url | secure | async" [title]=" item.name" [alt]="item.name" loading="lazy" [style]="'background-color:' + item.color" width="72" height="72">
           </div>
-          <div>
-            {{ rel.name }}
-          </div>
-          <!-- <ion-note>
-            {{ rel.unit | capitalize }}
-          </ion-note> -->
+          <small>
+            {{ item.name }}<br />
+            <ion-text color="medium">{{ item.unit | capitalize }}</ion-text>
+          </small>
         </div>
       </div>
     </ng-container>
@@ -176,12 +176,14 @@
         <ion-note translate>similarProducts</ion-note>
       </ion-text>
       <div class="product-scroll-container item-color">
-        <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', similarProduct.id]" *ngFor="let similarProduct of product.similarProducts">
+        <div class="product-placeholder scrollabel-product" tappable [routerLink]="['../', item.id]" *ngFor="let item of product.similarProducts">
           <div class="product-image" *ngIf="displayThumbnail">
-            <img class="product-image" [src]="similarProduct.url | secure | async" [title]="similarProduct.name" [alt]="similarProduct.name" loading="lazy" [style]="'background-color:' + product.color" width="72" height="72">
+            <img class="product-image" [src]="item.url | secure | async" [title]="item.name" [alt]="item.name" loading="lazy" [style]="'background-color:' + product.color" width="72" height="72">
           </div>
-          <span>{{ similarProduct.name }}</span>
-          <!-- <span>{{ similarProduct.unit }}</span> -->
+          <small>
+            {{ item.name }}<br />
+            <ion-text color="medium">{{ item.unit | capitalize }}</ion-text>
+          </small>
         </div>
       </div>
     </ng-container>
