@@ -1,14 +1,14 @@
 import { environment } from './../../environments/environment'
-import { ApiService } from './api.service'
+import { ApiService, trimParameters } from './api.service'
 import { Injectable } from '@angular/core'
 import { LoggingProvider } from '../@shared/logging/log.service'
 import { StorageProvider } from './storage-provider.service'
 import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from './database.service'
-import { AppCredential, AppCustomerModel, Customer } from './user.service'
+import { AppCredential, AppCustomerModel, Customer, UserService } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
+import { Filesystem, Directory } from '@capacitor/filesystem'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -127,7 +127,7 @@ export class SyncService {
    * @param force if true syncronisation and rebuld of table will be forced
    * @memberof SyncService
    */
-  public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean, activeUser?: Customer) {
+  public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean, activeUser?: Customer, user_id?: number) {
     this.logger.log(`SyncService.FullSync() -- start`)
     culture = culture || 'all'
 
@@ -154,40 +154,40 @@ export class SyncService {
       })
 
       const step1 = await Promise.all([
-        this.syncProducts(credential, culture, forceSync),
-        this.syncPackingUnits(credential, culture, forceSync),
-        this.syncAttributes(credential, culture, forceSync),
-        this.syncProductRelations(credential, culture, forceSync),
-        this.syncCategories(credential, culture, forceSync),
-        this.syncCategoryAttributes(credential, culture, forceSync)
+        this.syncProducts(user_id, culture, forceSync),
+        this.syncPackingUnits(user_id, culture, forceSync),
+        this.syncAttributes(user_id, culture, forceSync),
+        this.syncProductRelations(user_id, culture, forceSync),
+        this.syncCategories(user_id, culture, forceSync),
+        this.syncCategoryAttributes(user_id, culture, forceSync)
       ])
 
       const step2 = await Promise.all([
-        this.syncFavorites(credential, culture, forceSync, activeUser?.userId, activeUser?.address),
-        this.syncPrices(credential, culture, forceSync, activeUser?.userId, activeUser?.address),
-        this.syncProductExceptions(credential, culture, forceSync),
-        this.syncProductTaxes(credential, culture, forceSync),
-        this.syncShippingCosts(credential, culture, forceSync),
-        this.syncProductDescriptionCustomers(credential, culture, forceSync),
-        this.syncNews(credential, culture, forceSync)
+        this.syncFavorites(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
+        this.syncPrices(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
+        this.syncProductExceptions(user_id, culture, forceSync),
+        this.syncProductTaxes(user_id, culture, forceSync),
+        this.syncShippingCosts(user_id, culture, forceSync),
+        this.syncProductDescriptionCustomers(user_id, culture, forceSync),
+        this.syncNews(user_id, culture, forceSync)
       ])
 
       const step3 = await Promise.all([
-        this.syncReports(credential, culture, forceSync),
-        this.syncRecipes(credential, culture, forceSync),
-        this.syncDatasheets(credential, culture, forceSync),
-        this.syncUsageManuals(credential, culture, forceSync),
+        this.syncReports(user_id, culture, forceSync),
+        this.syncRecipes(user_id, culture, forceSync),
+        this.syncDatasheets(user_id, culture, forceSync),
+        this.syncUsageManuals(user_id, culture, forceSync),
         this.syncRecipesModule(credential, culture, forceSync)
       ])
 
       const step4 = await Promise.all([
-        this.syncContacts(credential, culture, forceSync),
-        this.syncDeliverySchedules(credential, culture, forceSync),
-        this.syncCustomers(credential, culture, forceSync),
-        this.syncNotes(credential, culture, forceSync)
+        this.syncContacts(user_id, culture, forceSync),
+        this.syncDeliverySchedules(user_id, culture, forceSync),
+        this.syncCustomers(user_id, culture, forceSync),
+        this.syncNotes(user_id, culture, forceSync)
       ])
 
-      await this.syncDepartments(credential, culture, forceSync)
+      await this.syncDepartments(user_id, culture, forceSync)
 
       const results = step1.concat(step2, step3, step4)
 
@@ -205,17 +205,23 @@ export class SyncService {
     })
   }
 
-  async syncProducts(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProducts(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProducts()`)
-      const response = await this.api.post<any>('app/products', credential, {
-        culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'products')?.checksum ?? ''
-      })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.products && response.products.length > 0) {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
+        culture,
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'products')?.checksum ?? '',
+        uid: user_id
+      })
+
+      const response = await firstValueFrom(
+        this.api.sync<any>('products', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.products) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS products')
           await db.execute('DROP TABLE IF EXISTS productTexts')
@@ -243,7 +249,7 @@ export class SyncService {
           await db.execute('CREATE INDEX IF NOT EXISTS products_itemnum ON products (id, itemnum)')
 
           const sqlStatements: capSQLiteSet[] = []
-          response.products.forEach(async (product: any) => {
+          response.data.products.forEach(async (product: any) => {
             const nameNl: string = (product.name && product.name.nl) ? product.name.nl : null
             const nameFr: string = (product.name && product.name.fr) ? product.name.fr : null
             const descriptionNl: string = (product.description && product.description.nl) ? product.description.nl : null
@@ -253,11 +259,11 @@ export class SyncService {
             const promoNl: string = (product.promotext && product.promotext.nl) ? product.promotext.nl : null
             const promoFr: string = (product.promotext && product.promotext.fr) ? product.promotext.fr : null
             const supplierItemIdentifier: string = product.supplierItemIdentifier ? product.supplierItemIdentifier : null
-            const queryWordsNl: string = product.queryWordsNl && product.queryWordsNl.length ? product.queryWordsNl : null
-            const queryWordsFr: string = product.queryWordsFr && product.queryWordsFr.length ? product.queryWordsFr : null
+            const queryWordsNl: string = product.queryWords && product.queryWords.nl ? product.queryWords.nl : null
+            const queryWordsFr: string = product.queryWords && product.queryWords.fr ? product.queryWords.fr : null
 
             const query = 'INSERT INTO products VALUES '
-              + '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'  // 30
+              + '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)' // 30
             const textQuery = 'INSERT INTO productTexts VALUES (?, ?, ?, ?, ?, ?, ?)' // 7
             const param = [
               product.id,
@@ -305,16 +311,16 @@ export class SyncService {
             ]
             sqlStatements.push({ statement: query, values: param })
             sqlStatements.push({ statement: textQuery, values: textParam })
-            product.attributes.forEach((attribute: number) => {
+            product.attributes?.forEach((attribute: { id: number }) => {
               sqlStatements.push({
                 statement: 'INSERT INTO productAttributes VALUES (?, ?)', values: [
-                  attribute,
+                  attribute.id,
                   product.id
                 ]
               })
             })
             if (product.allergens) {
-              product.allergens.forEach((allergen: any) => {
+              product.allergens.forEach((allergen: { code: any, value: any }) => {
                 sqlStatements.push({
                   statement: 'INSERT INTO productAllergens VALUES (?, ?, ?)', values: [
                     product.id,
@@ -326,9 +332,10 @@ export class SyncService {
             }
           })
           this.logger.debug(`Inserting ${sqlStatements.length} records into various product tables`)
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted products; checksum', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'products', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
+          this.logger.log('inserted products; checksum', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'products', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncProducts() -- no changes`)
@@ -343,37 +350,37 @@ export class SyncService {
     }
   }
 
-  async syncPrices(credential: AppCredential, culture?: string, force?: boolean,
-    customerId?: number, addressId?: number) {
+  async syncPrices(user_id: number, culture?: string, force?: boolean,
+    customer_id?: number, address_id?: number) {
     try {
-      this.logger.log(`SyncProvider.syncPrices() -- customerId: ${customerId}, addressId: ${addressId}`)
+      this.logger.log(`SyncProvider.syncPrices() -- customer_id: ${customer_id}, address_id: ${address_id}`)
 
-      const params: any = {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'prices')?.checksum ?? ''
-      }
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'prices')?.checksum ?? '',
+        customer_id,
+        address_id,
+        uid: user_id
+      })
 
-      if (customerId != null && customerId > 0) {
-        params.customerId = customerId
-        params.addressId = addressId ?? 0
-      }
+      const response = await firstValueFrom(
+        this.api.sync<any>('prices', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
 
-      const response = await firstValueFrom(this.api.post<any>('app/prices', credential, params)
-        .pipe(timeout(TIMEOUT_INTERVAL)))
-      console.log(params, response)
-
-      if (response && response.prices && response.prices.length > 0) {
+      if (response && response.data.prices) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS prices')
 
           await db.execute('CREATE TABLE IF NOT EXISTS prices '
             + '(product INTEGER, price REAL, pricepromo REAL, stack INTEGER, promo BOOLEAN, discount REAL, '
             + 'customer INTEGER, address INTEGER, [group] INTEGER, PRIMARY KEY (product, customer, address, [group], stack))')
-          this.logger.log('dropped prices', 'inserts todo: ', response.prices.length)
+          this.logger.log('dropped prices', 'inserts todo: ', response.data.length)
 
           let sqlStatements: capSQLiteSet[] = []
-          if (response.prices.length > 40000) {
-            const arrays = this.chunkArray(response.prices, 40000)
+          if (response.data.length > 40000) {
+            const arrays = this.chunkArray(response.data.prices, 40000)
             arrays.forEach(async (array: any[]) => {
               sqlStatements = []
               array.forEach(async (price: $TSFixMe) => {
@@ -395,8 +402,8 @@ export class SyncService {
               await db.executeSet(sqlStatements)
               this.logger.log('inserted', array.length, 'prices')
             })
-          } else {
-            response.prices.forEach((price: $TSFixMe) => {
+          } else if (response.data.length > 0) {
+            response.data.prices.forEach((price: $TSFixMe) => {
               sqlStatements.push({
                 statement: 'INSERT INTO prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 values: [
@@ -415,8 +422,8 @@ export class SyncService {
             await db.executeSet(sqlStatements)
           }
 
-          this.logger.log('inserted prices', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'prices', response.checksumSha)
+          this.logger.log('inserted prices', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'prices', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncPrices() -- no changes`)
@@ -427,40 +434,46 @@ export class SyncService {
     }
   }
 
-  async syncPackingUnits(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncPackingUnits(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncPackingUnits()`)
 
-      const response = await this.api.post<any>('app/packing-units', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'packingUnits')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'packingUnits')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.packingUnits && response.packingUnits.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('packing-units', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.packing_units) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS packingUnits')
 
           await db.execute('CREATE TABLE IF NOT EXISTS packingUnits (id INTEGER PRIMARY KEY, nameNl STRING, nameFr STRING)')
 
           const sqlStatements: capSQLiteSet[] = []
-          response.packingUnits.forEach((packingUnit: $TSFixMe) => {
-            const nameNl: string = (packingUnit.name && packingUnit.name.nl) ? packingUnit.name.nl : null
-            const nameFr: string = (packingUnit.name && packingUnit.name.fr) ? packingUnit.name.fr : null
+          response.data.packing_units.forEach((unit: $TSFixMe) => {
+            const nameNl: string = (unit.name && unit.name.nl) ? unit.name.nl : null
+            const nameFr: string = (unit.name && unit.name.fr) ? unit.name.fr : null
             sqlStatements.push({
               statement: 'INSERT INTO packingUnits VALUES (?, ?, ?)',
               values: [
-                packingUnit.id,
+                unit.id,
                 nameNl,
                 nameFr
               ]
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted packing-units', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'packingUnits', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted packing-units', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'packingUnits', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncPackingUnits() -- no changes`)
@@ -471,20 +484,25 @@ export class SyncService {
     }
   }
 
-  async syncFavorites(credential: AppCredential, culture?: string, force?: boolean, customerId?: number, addressId?: number) {
+  async syncFavorites(user_id: number, culture?: string, force?: boolean, customer_id?: number, address_id?: number) {
     try {
       this.logger.log(`SyncProvider.syncFavorites()`)
 
-      const response = await this.api.post<any>('app/favorites', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'favorites')?.checksum ?? '',
-        customerId,
-        addressId
+        customer_id,
+        address_id,
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.favorites && response.favorites.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('favorites', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.favorites) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS favorites')
 
@@ -492,10 +510,10 @@ export class SyncService {
             + '(id INTEGER, cu INTEGER, ad INTEGER, buy INTEGER, pro INTEGER, ret INTEGER, lastB DateTime, '
             + 'lastA INTEGER, hi BOOLEAN, PRIMARY KEY (id, cu, ad))')
 
-          this.logger.log('dropped favorites', 'inserts todo: ', response.favorites.length)
+          this.logger.log('dropped favorites', 'inserts todo: ', response.data.length)
           let sqlStatements: capSQLiteSet[] = []
-          if (response.favorites.length > 40000) {
-            const arrays = this.chunkArray(response.favorites, 40000)
+          if (response.data.favorites.length > 40000) {
+            const arrays = this.chunkArray(response.data.favorites, 40000)
             arrays.forEach(async (array: any[]) => {
               sqlStatements = []
               array.forEach((favorite: $TSFixMe) => {
@@ -517,8 +535,8 @@ export class SyncService {
               await db.executeSet(sqlStatements)
               this.logger.log('inserted', array.length, 'favorites')
             })
-          } else {
-            response.favorites.forEach((favorite: $TSFixMe) => {
+          } else if (response.data.length > 0) {
+            response.data.favorites.forEach((favorite: $TSFixMe) => {
               sqlStatements.push({
                 statement: 'INSERT OR IGNORE INTO favorites VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 values: [
@@ -537,8 +555,8 @@ export class SyncService {
             await db.executeSet(sqlStatements)
           }
 
-          this.logger.log('inserted favorites', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'favorites', response.checksumSha)
+          this.logger.log('inserted favorites', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'favorites', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncFavorites() -- no changes`)
@@ -548,18 +566,23 @@ export class SyncService {
     }
   }
 
-  async syncProductExceptions(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductExceptions(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductExceptions()`)
 
-      const response = await this.api.post<any>('app/product-exceptions', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productExceptions')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productExceptions')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.productExceptions && response.productExceptions.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('products/exceptions', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.product_exceptions) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productExceptions')
           // We used to delete currentExceptions, due to unexpected outcome we changed this temporarily untill a fix is implemented
@@ -573,7 +596,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.productExceptions.forEach((excecption: $TSFixMe) => {
+          response.data.product_exceptions.forEach((excecption: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO productExceptions VALUES (?, ?, ?, ?, ?)',
               values: [
@@ -586,9 +609,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted productExceptions', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'productExceptions', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted productExceptions', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'productExceptions', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductExceptions() -- no changes`)
@@ -600,18 +624,22 @@ export class SyncService {
     }
   }
 
-  async syncAttributes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncAttributes(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncAttributes()`)
 
-      const response = await this.api.post<any>('app/attributes', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'attributes')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.attributes && response.attributes.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('attributes', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.attributes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS attributes')
 
@@ -623,7 +651,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.attributes.forEach((attribute: $TSFixMe) => {
+          response.data.attributes.forEach((attribute: $TSFixMe) => {
             const nameNl: string = (attribute.name && attribute.name.nl) ? attribute.name.nl : null
             const nameFr: string = (attribute.name && attribute.name.fr) ? attribute.name.fr : null
             const groupNameNl: string = (attribute.groupName && attribute.groupName.nl) ? attribute.groupName.nl : null
@@ -642,9 +670,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted attributes', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'attributes', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted attributes', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'attributes', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncAttributes() -- no changes`)
@@ -655,18 +684,22 @@ export class SyncService {
     }
   }
 
-  async syncCategoryAttributes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncCategoryAttributes(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncCategoryAttributes()`)
 
-      const response = await this.api.post<any>('app/category-attributes', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'categoryAttributes')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.categoryAttributes && response.categoryAttributes.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('categories/attributes', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.category_attributes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS categoryAttributes')
 
@@ -677,7 +710,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.categoryAttributes.forEach((categoryAttribute: $TSFixMe) => {
+          response.data.category_attributes.forEach((categoryAttribute: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO categoryAttributes VALUES (?, ?)',
               values: [
@@ -687,9 +720,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted categoryAttributes', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'categoryAttributes', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted categoryAttributes', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'categoryAttributes', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncCategoryAttributes() -- no changes`)
@@ -700,18 +734,23 @@ export class SyncService {
     }
   }
 
-  async syncProductRelations(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductRelations(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductRelations()`)
 
-      const response = await this.api.post<any>('app/product-relations', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productRelations')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productRelations')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.productRelations && response.productRelations.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('products/relations', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.product_relations) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productRelations')
 
@@ -722,7 +761,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.productRelations.forEach((productRelation: $TSFixMe) => {
+          response.data.product_relations.forEach((productRelation: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO productRelations VALUES (?, ?, ?)',
               values: [
@@ -733,9 +772,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted productRelations', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'productRelations', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted productRelations', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'productRelations', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductRelations() -- no changes`)
@@ -746,28 +786,32 @@ export class SyncService {
     }
   }
 
-  async syncReports(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncReports(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncReports()`)
 
-      const response = await firstValueFrom(this.api.post<any>('app/reports', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'reports')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'reports')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL)))
 
-      if (response && response.reports && response.reports.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('reports', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.reports) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS reports')
 
           await db.execute('CREATE TABLE IF NOT EXISTS reports '
             + '(id INTEGER PRIMARY KEY, extension INTEGER, nameNl STRING, nameFr STRING, onlyAgent BOOLEAN)')
 
-          this.logger.log('dropped reports')
-
           const sqlStatements: capSQLiteSet[] = []
 
-          response.reports.forEach((report: $TSFixMe) => {
+          response.data.reports.forEach((report: $TSFixMe) => {
             const nameNl: string = (report.name && report.name.nl) ? report.name.nl : null
             const nameFr: string = (report.name && report.name.fr) ? report.name.fr : null
             sqlStatements.push({
@@ -782,9 +826,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted reports', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'reports', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted reports', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'reports', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncReports() -- no changes`)
@@ -796,18 +841,23 @@ export class SyncService {
     }
   }
 
-  async syncRecipes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncRecipes(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncRecipes()`)
 
-      const response = await this.api.post<any>('app/recipes', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipes')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipes')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.recipes && response.recipes.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('pcm/recipes', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.recipes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS recipes')
 
@@ -817,7 +867,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.recipes.forEach((recipe: $TSFixMe) => {
+          response.data.recipes.forEach((recipe: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO recipes VALUES (?, ?, ?, ?)',
               values: [
@@ -829,9 +879,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted recipes', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'recipes', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted recipes', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'recipes', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncRecipes() -- no changes`)
@@ -842,18 +893,23 @@ export class SyncService {
     }
   }
 
-  async syncDatasheets(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncDatasheets(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncDatasheets()`)
 
-      const response = await this.api.post<any>('app/datasheets', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'datasheets')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'datasheets')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.datasheets && response.datasheets.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('pcm/datasheets', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.datasheets) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS datasheets')
 
@@ -864,7 +920,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.datasheets.forEach((datasheet: $TSFixMe) => {
+          response.data.datasheets.forEach((datasheet: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO datasheets VALUES (?, ?, ?, ?)',
               values: [
@@ -876,9 +932,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted datasheets', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'datasheets', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted datasheets', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'datasheets', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncDatasheets() -- no changes`)
@@ -889,18 +946,22 @@ export class SyncService {
     }
   }
 
-  async syncUsageManuals(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncUsageManuals(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncUsageManuals()`)
-
-      const response = await this.api.post<any>('app/usage-manuals', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'usageManuals')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'usageManuals')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.usageManuals && response.usageManuals.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('pcm/usage-manuals', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.usage_manuals) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS usageManuals')
 
@@ -911,7 +972,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.usageManuals.forEach((usageManual: $TSFixMe) => {
+          response.data.usage_manuals.forEach((usageManual: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO usageManuals VALUES (?, ?, ?, ?)',
               values: [
@@ -923,9 +984,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted usageManuals', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'usageManuals', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted usageManuals', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'usageManuals', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncUsageManuals() -- no changes`)
@@ -936,18 +998,23 @@ export class SyncService {
     }
   }
 
-  async syncDepartments(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncDepartments(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncDepartments()`)
 
-      const response = await this.api.post<any>('app/departments', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'departments')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'departments')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.departments && response.departments.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('departments', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.departments) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS departments')
           await db.execute('DROP TABLE IF EXISTS departmentProducts')
@@ -956,11 +1023,11 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS departmentProducts '
             + '(department INTEGER, product INTEGER, PRIMARY KEY (department, product))')
 
-          this.logger.log('dropped departments')
+          this.logger.warn('dropped departments', response.data)
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const department of response.departments) {
+          for (const department of response.data.departments) {
             sqlStatements.push({
               statement: 'INSERT INTO departments VALUES (?, ?, ?)',
               values: [
@@ -969,18 +1036,20 @@ export class SyncService {
                 department.alias
               ]
             })
-            for (const product of department.products) {
-              sqlStatements.push({
-                statement: 'INSERT INTO departmentProducts VALUES (?, ?)',
-                values: [department.id, product]
-              })
-            }
+            if (department.products)
+              for (const product of department.products) {
+                sqlStatements.push({
+                  statement: 'INSERT INTO departmentProducts VALUES (?, ?)',
+                  values: [department.id, product.id]
+                })
+              }
           }
 
-          await db.executeSet(sqlStatements)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
 
-          this.logger.log('inserted departments', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'departments', response.checksumSha)
+          this.logger.warn('inserted departments', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'departments', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncDepartments() -- no changes`)
@@ -991,18 +1060,22 @@ export class SyncService {
     }
   }
 
-  async syncCategories(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncCategories(user_id: number, culture?: string, force?: boolean) {
     try {
-      this.logger.log(`SyncProvider.syncCategories()`)
+      this.logger.debug(`SyncProvider.syncCategories()`)
 
-      const response = await this.api.post<any>('app/categories', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
         checksum: force ? '' : this.checksum.find(e => e.dataTable === 'categories')?.checksum ?? ''
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.categories && response.categories.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('categories', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.categories) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           const dropResult = await db.execute('DROP TABLE IF EXISTS categories')
 
@@ -1010,11 +1083,11 @@ export class SyncService {
             + '(id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER, nameNl STRING, '
             + 'nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
 
-          this.logger.log('dropped categories')
+          this.logger.debug('dropped categories')
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.categories.forEach((category: $TSFixMe) => {
+          response.data.categories.forEach((category: $TSFixMe) => {
             const nameNl: string = (category.name && category.name.nl) ? category.name.nl : null
             const nameFr: string = (category.name && category.name.fr) ? category.name.fr : null
             const descriptionNl: string = (category.description && category.description.nl) ? category.description.nl : null
@@ -1033,9 +1106,12 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted categories', response.categories.length, response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'categories', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements).catch(err => {
+              this.logger.error(err)
+            })
+          this.logger.debug('inserted categories', response.data.length, response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'categories', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncCategories() -- no changes`)
@@ -1046,18 +1122,23 @@ export class SyncService {
     }
   }
 
-  async syncNotes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncNotes(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncNotes()`)
 
-      const response = await this.api.post<any>('app/notes', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'notes')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'notes')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.notes && response.notes.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('notes', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.notes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS notes')
           await db.execute('CREATE TABLE IF NOT EXISTS notes (customer INTEGER, address INTEGER, date DATETIME, text STRING NULL)')
@@ -1068,7 +1149,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const note of response.notes) {
+          for (const note of response.data.notes) {
             sqlStatements.push({
               statement: 'INSERT INTO notes VALUES (?, ?, ?, ?)',
               values: [
@@ -1080,9 +1161,11 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted notes', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'notes', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
+
+          this.logger.log('inserted notes', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'notes', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncNotes() -- no changes`)
@@ -1094,18 +1177,23 @@ export class SyncService {
     }
   }
 
-  async syncProductTaxes(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductTaxes(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductTaxes()`)
 
-      const response = await this.api.post<any>('app/productTaxes', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productTaxes')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productTaxes')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.productTaxes && response.productTaxes.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('products/taxes', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.product_taxes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productTaxes')
           await db.execute('CREATE TABLE IF NOT EXISTS productTaxes (product INTEGER, description STRING, amount REAL, type STRING)')
@@ -1114,7 +1202,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.productTaxes.forEach((productTax: $TSFixMe) => {
+          response.data.product_taxes.forEach((productTax: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO productTaxes VALUES (?, ?, ?, ?)',
               values: [
@@ -1126,9 +1214,10 @@ export class SyncService {
             })
           })
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted productTaxes', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'productTaxes', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted productTaxes', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'productTaxes', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductTaxes() -- no changes`)
@@ -1139,18 +1228,23 @@ export class SyncService {
     }
   }
 
-  async syncShippingCosts(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncShippingCosts(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncShippingCosts()`)
 
-      const response = await this.api.post<any>('app/shippingCosts', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'shippingCosts')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'shippingCosts')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.shippingCosts && response.shippingCosts.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('shipping-costs', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.shipping_costs) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS shippingCosts')
           await db.execute('CREATE TABLE IF NOT EXISTS shippingCosts '
@@ -1160,7 +1254,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const shippingCost of response.shippingCosts) {
+          for (const shippingCost of response.data.shipping_costs) {
             sqlStatements.push({
               statement: 'INSERT INTO shippingCosts VALUES (?, ?, ?, ?)',
               values: [
@@ -1172,9 +1266,11 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted shippingCosts', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'shippingCosts', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
+
+          this.logger.log('inserted shippingCosts', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'shippingCosts', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncShippingCosts() -- no changes`)
@@ -1185,18 +1281,23 @@ export class SyncService {
     }
   }
 
-  async syncContacts(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncContacts(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncContacts()`)
 
-      const response = await this.api.post<any>('app/contacts', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'contacts')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'contacts')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.contacts && response.contacts.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('contacts', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.contacts) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS contacts')
           await db.execute('CREATE TABLE IF NOT EXISTS contacts '
@@ -1208,7 +1309,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const contact of response.contacts) {
+          for (const contact of response.data.contacts) {
             sqlStatements.push({
               statement: 'INSERT INTO contacts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1229,9 +1330,10 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted contacts', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'contacts', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
+          this.logger.log('inserted contacts', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'contacts', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncContacts() -- no changes`)
@@ -1242,18 +1344,23 @@ export class SyncService {
     }
   }
 
-  async syncDeliverySchedules(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncDeliverySchedules(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncDeliverySchedules()`)
 
-      const response = await this.api.post<any>('app/delivery-schedules', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'deliverySchedules')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'deliverySchedules')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.deliverySchedules && response.deliverySchedules.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('delivery-schedules', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.delivery_schedules) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS deliverySchedules')
           await db.execute('CREATE TABLE IF NOT EXISTS deliverySchedules '
@@ -1266,7 +1373,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const deliverySchedule of response.deliverySchedules) {
+          for (const deliverySchedule of response.data.delivery_schedules) {
             sqlStatements.push({
               statement: 'INSERT INTO deliverySchedules VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
@@ -1296,9 +1403,10 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted deliverySchedules', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'deliverySchedules', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
+          this.logger.log('inserted deliverySchedules', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'deliverySchedules', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncDeliverySchedules() -- no changes`)
@@ -1309,18 +1417,23 @@ export class SyncService {
     }
   }
 
-  async syncCustomers(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncCustomers(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncCustomers()`)
 
-      const response = await this.api.post<any>('app/customers', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'customers')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'customers')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.customers && response.customers.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('customers', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.customers) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS customers')
           await db.execute('CREATE TABLE IF NOT EXISTS customers '
@@ -1335,7 +1448,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const customer of response.customers) {
+          for (const customer of response.data.customers) {
             sqlStatements.push({
               // 1. id , 2. addressId, 3. addressGroupId, 4. userCode, 5. userType,
               // 6. name, 7. address, 8. streetNum, 9. zipCode, 10. city, 11. country, '
@@ -1373,10 +1486,11 @@ export class SyncService {
             })
           }
 
-          const result = await db.executeSet(sqlStatements)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
 
-          this.logger.log('inserted customers', response.checksumSha, result.changes)
-          await this.updateDataIntegrityChecksum(db, 'customers', response.checksumSha)
+          this.logger.log('inserted customers', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'customers', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncCustomers() -- no changes`)
@@ -1388,18 +1502,23 @@ export class SyncService {
     }
   }
 
-  async syncProductDescriptionCustomers(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncProductDescriptionCustomers(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductDescriptionCustomers()`)
 
-      const response = await this.api.post<any>('app/product-description-customers', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productDescriptionCustomers')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'productDescriptionCustomers')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.productDescriptionCustomers && response.productDescriptionCustomers.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('customers/product-descriptions', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.customer_product_descriptions) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS productDescriptionCustomers')
           await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)')
@@ -1408,7 +1527,7 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const descriptionCustomer of response.productDescriptionCustomers) {
+          for (const descriptionCustomer of response.data.customer_product_descriptions) {
             sqlStatements.push({
               statement: 'INSERT INTO productDescriptionCustomers VALUES (?, ?)',
               values: [
@@ -1418,9 +1537,10 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements)
-          this.logger.log('inserted productDescriptionCustomers', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'productDescriptionCustomers', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements)
+          this.logger.log('inserted productDescriptionCustomers', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'productDescriptionCustomers', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncProductDescriptionCustomers() -- no changes`)
@@ -1442,7 +1562,7 @@ export class SyncService {
         .pipe(timeout(TIMEOUT_INTERVAL))
         .toPromise()
 
-      if (response && response.recipes && response.recipes.length > 0) {
+      if (response && response.recipes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS recipesModule')
           await db.execute('CREATE TABLE IF NOT EXISTS recipesModule '
@@ -1465,7 +1585,8 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
           this.logger.log('inserted recipesModule', response.checksumSha)
           await this.updateDataIntegrityChecksum(db, 'recipesModule', response.checksumSha)
         })
@@ -1478,17 +1599,25 @@ export class SyncService {
     }
   }
 
-  async syncNews(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncNews(user_id: number, culture?: string, force?: boolean, customer_id?: number, address_id?: number) {
     try {
       this.logger.log(`SyncProvider.syncNews()`)
 
-      const response = await firstValueFrom(this.api.post<any>('app/news', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'news')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'news')?.checksum ?? '',
+        customer_id,
+        address_id,
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL)))
 
-      if (response && response.news && response.news.length > 0) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('news', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+      if (response && response.data.news) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS news')
           await db.execute('CREATE TABLE IF NOT EXISTS news '
@@ -1499,17 +1628,21 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const newsItem of response.news) {
+          for (const newsItem of response.data.news) {
+            const titleNl: string = (newsItem.title && newsItem.title.nl) ? newsItem.title.nl : null
+            const titleFr: string = (newsItem.title && newsItem.title.fr) ? newsItem.title.fr : null
+            const contentNl: string = (newsItem.content && newsItem.content.nl) ? newsItem.content.nl : null
+            const contentFr: string = (newsItem.content && newsItem.content.fr) ? newsItem.content.fr : null
             sqlStatements.push({
               statement: 'INSERT INTO news VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               values: [
                 newsItem.id,
                 newsItem.customerId,
                 newsItem.addressId,
-                newsItem.titleNl,
-                newsItem.titleFr,
-                newsItem.contentNl,
-                newsItem.contentFr,
+                titleNl,
+                titleFr,
+                contentNl,
+                contentFr,
                 newsItem.promo ? 1 : 0,
                 newsItem.spotlight ? 1 : 0,
                 newsItem.template ? 1 : 0,
@@ -1518,9 +1651,10 @@ export class SyncService {
             })
           }
 
-          await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted news', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'news', response.checksumSha)
+          if (response.data.length > 0)
+            await db.executeSet(sqlStatements, true)
+          this.logger.log('inserted news', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'news', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncNews() -- no changes`)
@@ -1735,6 +1869,7 @@ export class SyncService {
    * @memberof SyncService
    */
   private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum: string): Promise<Changes> {
+    console.log(dataTable, checksum)
     const res = await db.run(`INSERT OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
       dataTable,
       checksum,
