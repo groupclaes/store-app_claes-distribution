@@ -272,3 +272,8 @@ html.plt-desktop {
     }
   }
 }
+
+.fullscreen {
+  --width: 100vw !important;
+  --height: 100vh !important;
+}

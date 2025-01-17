@@ -380,13 +380,13 @@
 
     <ion-action-sheet *ngIf="product" [trigger]="'open-action-sheet-' + product.id" [header]="'actions.title' | translate" [buttons]="actionSheetButtons"></ion-action-sheet>
   </article>
-  <ion-modal [isOpen]="pictureOpen" style="--max-width:800px;--max-height:800px;--width:100%; --height:calc(100vw + 40px);" (didDismiss)="pictureOpen = false">
+  <ion-modal [isOpen]="pictureOpen" class="fullscreen" style="--width:100%; --height:calc(100vw + 40px);" (didDismiss)="pictureOpen = false">
     <!-- <ion-backdrop [visible]="true"></ion-backdrop> -->
     <ng-template>
       <ion-header>
         <ion-toolbar>
           <ion-buttons slot="end">
-            <ion-button (click)="modalCtrl.dismiss()">Cancel</ion-button>
+            <ion-button (click)="modalCtrl.dismiss()" translate="action.cancel"></ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
