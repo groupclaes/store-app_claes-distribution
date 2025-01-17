@@ -1,7 +1,7 @@
 import { firstValueFrom, Subscription } from 'rxjs'
 /* eslint-disable eqeqeq */
 import { DatePipe } from '@angular/common'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core'
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router'
 import { AlertController, IonContent } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
@@ -25,10 +25,11 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
   styleUrls: ['./products.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductsPage {
+export class ProductsPage implements OnInit, OnDestroy {
   private _products: IProductT[]
   private _updateCartProduct = new Subject<{ productId: number, amount: number }>()
   private _routerEventSubscription: Subscription
+  private _subs: Subscription[] = []
 
   @ViewChild(IonContent) content: IonContent
 
@@ -81,10 +82,10 @@ export class ProductsPage {
     private networkService: NetworkService
   ) {
     let fallback
-    settings.DisplayThumbnail.subscribe(displayThumbnail => {
+    this._subs.push(settings.DisplayThumbnail.subscribe(displayThumbnail => {
       this.displayThumbnail = displayThumbnail
       this.ref.markForCheck()
-    })
+    }))
     firstValueFrom(settings.DisplayDefaultFilters).then(filters => {
       if (filters.new === true) {
         this._filters.newState = 'active'
@@ -121,21 +122,33 @@ export class ProductsPage {
 
         this.load(true)
       })
-    route.queryParams.subscribe(async (params) => {
+    this._subs.push(route.queryParams.subscribe(async (params) => {
       if (params.category) {
         this._filters.category = await categoriesRepository.find(+params.category, this.culture)
         window.clearTimeout(fallback)
         this.load(true)
       }
-    })
+    }))
 
-    this.networkService.connected.subscribe(async () => {
+    this._subs.push(this.networkService.connected.subscribe(async () => {
       this.ref.markForCheck()
       const dataIntegrity = await this.repoChk.get<Store>()
       this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
-    })
+    }))
   }
 
+  ngOnInit(): void {
+
+  }
+
+  ngOnDestroy(): void {
+    this._routerEventSubscription.unsubscribe()
+
+    for (let sub of this._subs) {
+      if (!sub?.closed)
+        sub?.unsubscribe()
+    }
+  }
 
   get canPromo(): boolean {
     return this.user && this.user.activeUser && this.user.activeUser.promo && this.user.activeUser.promo == true
@@ -164,16 +177,14 @@ export class ProductsPage {
   get culture(): string { return this.translate.currentLang }
 
   get category(): number {
-    if (this._filters && this._filters.category) {
+    if (this._filters && this._filters.category)
       return this._filters.category.id
-    }
     return undefined
   }
 
   get pageTitle(): string {
-    if (this._filters && this._filters.category) {
+    if (this._filters && this._filters.category)
       return this._filters.category.name
-    }
     return this.translate.instant('productsPage')
   }
 
@@ -472,6 +483,10 @@ export class ProductsPage {
 
   get offline(): boolean {
     return this.networkService.offline
+  }
+
+  get isAgent(): boolean {
+    return this.user.hasAgentAccess
   }
 }
 

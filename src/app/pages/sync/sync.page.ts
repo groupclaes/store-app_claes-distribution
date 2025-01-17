@@ -66,19 +66,21 @@ export class SyncPage implements OnInit {
       promise = this.sync.fullSync(this.user.credential, culture, $event === undefined, this.user.activeUser, this.user.userinfo.userId)
     else
       promise = this.sync.fullSync(this.user.credential, culture, $event === undefined, undefined, this.user.userinfo.userId)
+    try {
+      await promise
 
-    await promise.then(_ => this.loader.dismiss())
-      .then(_ => {
-        this.load()
-        $event?.target.complete()
-      })
-
-    if (this.user.activeUser.id != null && this.user.activeUser.address != null) {
-      const customer = {
-        id: this.user.activeUser.id,
-        addressId: this.user.activeUser.address
-      } as AppCustomerModel
-      await this.sync.prepareCurrentExceptions(customer)
+      if (this.user.activeUser.id != null && this.user.activeUser.address != null) {
+        const customer = {
+          id: this.user.activeUser.id,
+          addressId: this.user.activeUser.address
+        } as AppCustomerModel
+        await this.sync.prepareCurrentExceptions(customer)
+      }
+    } catch (err) {
+    } finally {
+      this.loader.dismiss()
+      this.load()
+      $event?.target.complete()
     }
   }
 
