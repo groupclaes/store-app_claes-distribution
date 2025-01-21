@@ -8,10 +8,10 @@
       <form [formGroup]="accountForm" (submit)="login()">
         <ion-list inset="true" style="margin-bottom:1px">
           <ion-item>
-            <ion-input type="email" formControlName="username" autocomplete="username" name="email" [label]="'email' | translate" labelPlacement="floating"></ion-input>
+            <ion-input type="email" formControlName="username" autocomplete="username" name="email" [label]="'email' | translate" labelPlacement="stacked"></ion-input>
           </ion-item>
           <ion-item>
-            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password" [label]="'password' | translate" labelPlacement="floating"></ion-input>
+            <ion-input type="password" formControlName="password" autocomplete="current-password" name="password" [label]="'password' | translate" labelPlacement="stacked"></ion-input>
           </ion-item>
         </ion-list>
 
