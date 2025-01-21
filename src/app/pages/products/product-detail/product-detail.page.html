@@ -4,7 +4,7 @@
       <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
     <ion-title tappable (click)="copyMessage(product.itemnum + ' ' + product.name)">{{ productName }}</ion-title>
-    <ion-buttons slot="end">
+    <ion-buttons *ngIf="!isGuest" slot="end">
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
       </ion-button>
@@ -27,7 +27,7 @@
           </div>
         </div>
       </section>
-      <section class="product-prices-wrapper" *ngIf="product.prices">
+      <section class="product-prices-wrapper" *ngIf="!isGuest && product.prices">
         <ion-toolbar *ngIf="product.contentUnit && product.basePrice > 0" color="light">
           <ion-segment [(ngModel)]="showContentUnit">
             <ion-segment-button [value]="false">
@@ -110,7 +110,7 @@
       </section>
     </div>
 
-    <section class="product-actions-badges-wrapper">
+    <section *ngIf="!isGuest" class="product-actions-badges-wrapper">
       <div class="toggle-button new-toggle">
         <span [ngClass]="product.isNew === true ? 'active' : 'inactive'" translate="newToggleButton"></span>
       </div>

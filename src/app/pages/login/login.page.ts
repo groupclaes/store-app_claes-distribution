@@ -89,16 +89,20 @@ export class LoginPage implements OnInit {
   }
 
   ionViewDidEnter() {
-    const credential = this.user.storedCredential
-    if (credential) {
-      this.accountForm.setValue(credential)
-    } else {
-      this.accountForm.setValue({ username: '', password: '' })
+    try {
+      const credential = this.user.storedCredential
+      if (credential) {
+        this.accountForm.setValue(credential)
+      } else {
+        this.accountForm.setValue({ username: '', password: '' })
+      }
+    } catch {
+      this.busy = false
+      this.ref.markForCheck()
     }
 
     this.busy = true
     this.ref.markForCheck()
-
     const timer = setTimeout(() => {
       console.error('There was an error loading the database...')
       this.toast(this.translate.instant('dbLoadError'))
@@ -277,6 +281,74 @@ export class LoginPage implements OnInit {
     }
   }
 
+  async loginGuest() {
+    if (this.busy) return
+
+    this.busy = true
+    this.ref.markForCheck()
+
+    this.user.login_guest()
+    this._loading = await this.loadingCtrl.create({
+      spinner: 'lines',
+      message: this.translate.instant('syncPage')
+    })
+    this._loading.present()
+    this.ref.markForCheck()
+
+
+    try {
+      await this.user.syncData(true).catch(() => {
+        this._loading.dismiss()
+        this.busy = false
+        this.toast(this.translate.instant('syncError'))
+      })
+    } catch {
+      this._loading.dismiss()
+      this.busy = false
+      this.toast(this.translate.instant('syncError'))
+    }
+    this._loading.message = this.translate.instant('preparing')
+    this.ref.markForCheck()
+
+    const prepare = await this.sync.prepareCurrentExceptions({
+      id: this.user.userinfo.id,
+      addressId: this.user.userinfo.address,
+      addressGroupId: this.user.userinfo.addressGroup,
+      userCode: this.user.userinfo.userCode,
+      userType: this.user.userinfo.type,
+      name: '',
+      address: '',
+      streetNum: '',
+      zipCode: '',
+      city: '',
+      country: '',
+      phoneNum: '',
+      vatNum: '',
+      language: '',
+      promo: this.user.userinfo.promo,
+      fostplus: this.user.userinfo.fostplus,
+      bonusPercentage: this.user.userinfo.bonus,
+      addressName: '',
+      delvAddress: '',
+      delvStreetNum: '',
+      delvZipCode: '',
+      delvCity: '',
+      delvCountry: '',
+      delvPhoneNum: '',
+      delvLanguage: ''
+    })
+    try {
+      this._loading.dismiss()
+    } catch { }
+    this.ref.markForCheck()
+
+    if (prepare) {
+      this.navCtrl.navigateRoot(await this.defaultPage)
+    } else {
+      this.toast(this.translate.instant('unknownError'))
+    }
+  }
+
   async handleAuthError(error) {
     if (error) {
       if (error.status === 0) {
@@ -357,6 +429,7 @@ export class LoginPage implements OnInit {
 
     return new Date().getTime() - syncInterval > lastSync.getTime() ? 'SYNC' : 'CACHE'
   }
+
   private async toast(message: string, duration: number = 3000) {
     const toast = await this.toastCtrl.create({
       message,

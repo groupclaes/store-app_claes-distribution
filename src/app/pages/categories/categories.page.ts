@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
-import { NavController, AlertController } from '@ionic/angular'
+import { NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { CartService } from 'src/app/core/cart.service'
-import { CategoriesRepositoryService, ICategory, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
+import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
 import { UserService } from 'src/app/core/user.service'
 
 @Component({
@@ -24,7 +24,8 @@ export class CategoriesPage {
     private ref: ChangeDetectorRef,
     private categoriesRepository: CategoriesRepositoryService,
     private cart: CartService,
-    route: ActivatedRoute
+    route: ActivatedRoute,
+    private user: UserService
   ) {
     route.params.subscribe(params => {
       this.loadCategories(+params['id'])
@@ -32,6 +33,10 @@ export class CategoriesPage {
   }
 
   ngOnInit() {
+  }
+
+  get isGuest(): boolean {
+    return this.user.isGuest
   }
 
   async loadCategories(parent?: number) {

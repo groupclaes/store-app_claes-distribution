@@ -40,6 +40,12 @@
           <ion-label color="tertiary">{{ 'noClaesID' | translate }}</ion-label>
         </ion-item>
       </ion-list>
+
+      <ion-text class="list-footer">
+        <ion-note>
+          {{ 'continueAs' | translate }}<ion-text [style.cursor]="'pointer'" color="tertiary" (click)="network.online ? loginGuest() : network.noop()" translate="guest"></ion-text>.
+        </ion-note>
+      </ion-text>
     </div>
   </div>
 </ion-content>

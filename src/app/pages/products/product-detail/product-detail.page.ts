@@ -82,6 +82,10 @@ export class ProductDetailPage implements OnInit {
     return this.user.activeUser?.promo == true
   }
 
+  get isGuest(): boolean {
+    return this.user.isGuest
+  }
+
   get productName(): string {
     if (this._product) {
       return `${this._product.name}`
@@ -162,7 +166,7 @@ export class ProductDetailPage implements OnInit {
       }
     ]
 
-    if (this.departments.length > 0) {
+    if (this.departments?.length > 0) {
       buttons = [
         {
           text: this.translate.instant('messages.addToDepartment'),
@@ -177,7 +181,7 @@ export class ProductDetailPage implements OnInit {
 
   get otherUnits(): any[] | undefined {
     if (this._product && this._product['units']) {
-      return  this._product['units']
+      return this._product['units']
     }
     return undefined
   }
@@ -190,15 +194,16 @@ export class ProductDetailPage implements OnInit {
       this.loading = true
       this.ref.markForCheck()
 
-      this.departmentsRepo.get(this.user.activeUser.userCode).then(x => this.departments = x)
+      if (!this.user.isGuest)
+        this.departmentsRepo.get(this.user.activeUser.userCode).then(x => this.departments = x)
+      else
+        this.departments = []
 
       this._product = await this.repo.getDetail(
         id,
         this.user.activeUser,
         this.culture
       )
-
-      console.log(this.product['units'])
 
       const cart = (this.cart || this.cart.active) ? this.cart.active : null
       if (cart) {
@@ -212,7 +217,8 @@ export class ProductDetailPage implements OnInit {
       this.ref.markForCheck()
     }
 
-    this.getAttachments()
+    if (!this.user.isGuest)
+      this.getAttachments()
   }
 
   async getAttachments() {

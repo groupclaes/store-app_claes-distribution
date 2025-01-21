@@ -154,6 +154,10 @@ export class ProductsPage implements OnInit, OnDestroy {
     return this.user && this.user.activeUser && this.user.activeUser.promo && this.user.activeUser.promo == true
   }
 
+  get isGuest(): boolean {
+    return this.user.isGuest
+  }
+
   get canFilterModal(): boolean { return this._filters.category !== null }
 
   get hasAttributeFilter(): boolean {
@@ -244,6 +248,11 @@ export class ProductsPage implements OnInit, OnDestroy {
       this.logger.log('ProductsPage.ionViewDidEnter() -- end')
       this.ref.detectChanges()
     }
+  }
+
+  search(event: $TSFixMe): void {
+    this.filter.query = event.target.value
+    this.load()
   }
 
   async load(force?: boolean): Promise<void> {

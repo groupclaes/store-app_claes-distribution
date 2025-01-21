@@ -46,6 +46,27 @@ export class UserService {
     return request
   }
 
+  login_guest() {
+    this._loggedIn(
+      {
+        CustomerId: 0,
+        AddressId: 0,
+        AddressGroupId: 0,
+        UserType: 0,
+        AddressName: '',
+        CustomerName: '',
+        BonusPercentage: 0,
+        City: '',
+        Fostplus: false,
+        Promo: false
+      },
+      {
+        username: undefined,
+        password: undefined
+      }
+    )
+  }
+
   signup(credential: AppRegistrationCredential) {
     let request = this.api.post('appuser/signOn', credential).pipe(share())
 
@@ -109,9 +130,13 @@ export class UserService {
   get activeUser(): Customer {
     if (this.multiUser)
       return this._selectedCustomer
-    if (this._user && this._user.type === 1)
+    if (this._user && [0, 1].includes(this._user.type))
       return this.userinfo
     return null
+  }
+
+  get isGuest(): boolean {
+    return this._user && this._user.type === 0
   }
 
   get multiUser(): boolean {
@@ -236,7 +261,8 @@ export interface AppCustomerModel {
   delvLanguage: string
 }
 
-export type CustomerUserType = 1 /*: norml user */ |
+export type CustomerUserType = 0 /* Guest */ |
+  1 /*: norml user */ |
   2 /*: agent user */ |
   3 /*: super user */ |
   4 /*: multi user */ |

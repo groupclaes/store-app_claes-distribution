@@ -9,7 +9,7 @@
         {{ ( currentCategory === null ? 'categoriesPage' : currentCategory.name ) | translate | capitalize }}
       </span>
     </ion-title>
-    <ion-buttons slot="end">
+    <ion-buttons *ngIf="!isGuest" slot="end">
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
       </ion-button>

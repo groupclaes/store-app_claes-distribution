@@ -60,6 +60,10 @@ export class AppComponent {
     return true
   }
 
+  get isGuest(): boolean {
+    return this.user.isGuest
+  }
+
   get isAgent(): boolean {
     return this.user && this.user.hasAgentAccess
   }
@@ -118,7 +122,7 @@ export class AppComponent {
   }
 
   async open(componentName: string) {
-    if (componentName === '/account/login') {
+    if (componentName === '/account/login' && !this.isGuest) {
       const loader = await this.loadCtrl.create({
         message: this.translate.instant('logout')
       })

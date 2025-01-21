@@ -512,5 +512,8 @@
   "orderItem": "Article de commande",
   "asap": "Le plus tôt possible",
   "offline-message": "Vous devez être en ligne pour effectuer cette action, réessayez plus tard.",
-  "offline-footer": "Vous êtes actuellement hors ligne, certaines fonctionnalités ne sont pas disponibles."
+  "offline-footer": "Vous êtes actuellement hors ligne, certaines fonctionnalités ne sont pas disponibles.",
+  "alsoAvailableUnit": "Également disponible à l'unité ",
+  "guest": "qu'invité",
+  "continueAs": "Je souhaite continuer en tant "
 }

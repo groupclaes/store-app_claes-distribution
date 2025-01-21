@@ -153,43 +153,62 @@ export class SyncService {
         await this.updateDataIntegrityChecksum(db, 'lastSync', 'distribution-checksum-sha')
       })
 
-      const step1 = await Promise.all([
-        this.syncProducts(user_id, culture, forceSync),
-        this.syncPackingUnits(user_id, culture, forceSync),
-        this.syncAttributes(user_id, culture, forceSync),
-        this.syncProductRelations(user_id, culture, forceSync),
-        this.syncCategories(user_id, culture, forceSync),
-        this.syncCategoryAttributes(user_id, culture, forceSync)
-      ])
+      let results: any[]
 
-      const step2 = await Promise.all([
-        this.syncFavorites(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
-        this.syncPrices(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
-        this.syncProductExceptions(user_id, culture, forceSync),
-        this.syncProductTaxes(user_id, culture, forceSync),
-        this.syncShippingCosts(user_id, culture, forceSync),
-        this.syncProductDescriptionCustomers(user_id, culture, forceSync),
-        this.syncNews(user_id, culture, forceSync)
-      ])
+      if (user_id) {
+        const step1 = await Promise.all([
+          this.syncProducts(user_id, culture, forceSync),
+          this.syncPackingUnits(user_id, culture, forceSync),
+          this.syncAttributes(user_id, culture, forceSync),
+          this.syncProductRelations(user_id, culture, forceSync),
+          this.syncCategories(user_id, culture, forceSync),
+          this.syncCategoryAttributes(user_id, culture, forceSync)
+        ])
 
-      const step3 = await Promise.all([
-        this.syncReports(user_id, culture, forceSync),
-        this.syncRecipes(user_id, culture, forceSync),
-        this.syncDatasheets(user_id, culture, forceSync),
-        this.syncUsageManuals(user_id, culture, forceSync),
-        this.syncRecipesModule(credential, culture, forceSync)
-      ])
+        const step2 = await Promise.all([
+          this.syncFavorites(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
+          this.syncPrices(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
+          this.syncProductExceptions(user_id, culture, forceSync),
+          this.syncProductTaxes(user_id, culture, forceSync),
+          this.syncShippingCosts(user_id, culture, forceSync),
+          this.syncProductDescriptionCustomers(user_id, culture, forceSync),
+          this.syncNews(user_id, culture, forceSync)
+        ])
 
-      const step4 = await Promise.all([
-        this.syncContacts(user_id, culture, forceSync),
-        this.syncDeliverySchedules(user_id, culture, forceSync),
-        this.syncCustomers(user_id, culture, forceSync),
-        this.syncNotes(user_id, culture, forceSync)
-      ])
+        const step3 = await Promise.all([
+          this.syncReports(user_id, culture, forceSync),
+          this.syncRecipes(user_id, culture, forceSync),
+          this.syncDatasheets(user_id, culture, forceSync),
+          this.syncUsageManuals(user_id, culture, forceSync),
+          this.syncRecipesModule(credential, culture, forceSync)
+        ])
 
-      await this.syncDepartments(user_id, culture, forceSync)
+        const step4 = await Promise.all([
+          this.syncContacts(user_id, culture, forceSync),
+          this.syncDeliverySchedules(user_id, culture, forceSync),
+          this.syncCustomers(user_id, culture, forceSync),
+          this.syncNotes(user_id, culture, forceSync)
+        ])
 
-      const results = step1.concat(step2, step3, step4)
+        await this.syncDepartments(user_id, culture, forceSync)
+
+        results = step1.concat(step2, step3, step4)
+      } else {
+        const step1 = await Promise.all([
+          this.syncProducts(user_id, culture, forceSync),
+          this.syncPackingUnits(user_id, culture, forceSync),
+          this.syncProductRelations(user_id, culture, forceSync),
+          this.syncProductExceptions(user_id, culture, forceSync)
+        ])
+
+        const step2 = await Promise.all([
+          this.syncCategories(user_id, culture, forceSync),
+          this.syncCategoryAttributes(user_id, culture, forceSync),
+          this.syncAttributes(user_id, culture, forceSync)
+        ])
+
+        results = step1.concat(step2)
+      }
 
       this.logger.log('SyncService.FullSync() -- promises completed')
 
