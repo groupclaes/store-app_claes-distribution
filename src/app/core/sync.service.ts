@@ -984,6 +984,8 @@ export class SyncService {
             })
           })
 
+          console.debug(sqlStatements, response.data.length)
+
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
           this.logger.log('inserted usageManuals', response.data.checksum)

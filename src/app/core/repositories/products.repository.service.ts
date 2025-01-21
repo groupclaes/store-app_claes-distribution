@@ -528,11 +528,13 @@ export class ProductsRepositoryService {
       )
 
       const usageManuals = await db.query(
-        `SELECT guid, name
+        `SELECT guid, name, products
         FROM usageManuals
         WHERE products LIKE '%${itemnum}%' AND languages LIKE '%\"${culture}\":true%'`,
         []
       )
+
+      console.dir(usageManuals)
 
       const recipesModule = await db.query(
         `SELECT id, ${nameString} as name
