@@ -21,10 +21,10 @@ const initializeFactory =
   (init: InitializeAppService) => () => init.initializeApp()
 
 @NgModule({
+  bootstrap: [AppComponent],
   declarations: [
     AppComponent
-  ],
-  bootstrap: [AppComponent], imports: [
+  ], imports: [
     BrowserModule,
     IonicModule.forRoot({
       mode: 'ios'
@@ -37,22 +37,22 @@ const initializeFactory =
       }
     }),
     AppRoutingModule], providers: [
-      SQLiteService,
-      DatabaseService,
-      InitializeAppService,
-      {
-        provide: APP_INITIALIZER,
-        useFactory: initializeFactory,
-        deps: [InitializeAppService],
-        multi: true
-      },
-      {
-        provide: HTTP_INTERCEPTORS,
-        useClass: CachingInterceptor,
-        multi: true
-      },
-      { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-      provideHttpClient(withInterceptorsFromDi())
-    ]
+    SQLiteService,
+    DatabaseService,
+    InitializeAppService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeFactory,
+      deps: [InitializeAppService],
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: CachingInterceptor,
+      multi: true
+    },
+    {provide: RouteReuseStrategy, useClass: IonicRouteStrategy},
+    provideHttpClient(withInterceptorsFromDi())
+  ]
 })
 export class AppModule { }

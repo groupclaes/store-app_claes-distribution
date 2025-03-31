@@ -328,16 +328,18 @@ export class ProductDetailPage implements OnInit {
     }).then(sheet => sheet.present())
   }
 
-  openRecipe(recipe: IRecipeModuleEntry) {
+  openRecipe(recipe: IRecipeModuleEntry): void {
+    // https://www.claes-distribution.be/recepten/955/kippenbouten-hawai
+    // https://www.claes-distribution.be/recettes/955/cuisses-de-poulet-hawai
     switch (this.culture) {
       case 'fr-BE':
-        this.browser.open(`https://recettes.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
+        this.browser.open(`https://www.claes-distribution.be/recettes/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
           '_system', 'location=yes')
         break
 
       case 'nl-BE':
       default:
-        this.browser.open(`https://recepten.claes-distribution.be/recipe/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
+        this.browser.open(`https://www.claes-distribution.be/recepten/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
           '_system', 'location=yes')
         break
     }

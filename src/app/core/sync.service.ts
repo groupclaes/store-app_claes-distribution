@@ -180,7 +180,7 @@ export class SyncService {
           this.syncRecipes(user_id, culture, forceSync),
           this.syncDatasheets(user_id, culture, forceSync),
           this.syncUsageManuals(user_id, culture, forceSync),
-          this.syncRecipesModule(credential, culture, forceSync)
+          this.syncRecipesModule(user_id, culture, forceSync)
         ])
 
         const step4 = await Promise.all([
@@ -1572,18 +1572,23 @@ export class SyncService {
     }
   }
 
-  async syncRecipesModule(credential: AppCredential, culture?: string, force?: boolean) {
+  async syncRecipesModule(user_id: number, culture?: string, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncRecipesModule()`)
 
-      const response = await this.api.post<any>('app/recipes-module', credential, {
+      if (culture === 'all') culture = undefined
+      const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipesModule')?.checksum ?? ''
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipesModule')?.checksum ?? '',
+        uid: user_id
       })
-        .pipe(timeout(TIMEOUT_INTERVAL))
-        .toPromise()
 
-      if (response && response.recipes) {
+      const response = await firstValueFrom(
+        this.api.sync<any>('recipes', params)
+          .pipe(timeout(TIMEOUT_INTERVAL))
+      )
+
+        if (response && response.data.recipes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS recipesModule')
           await db.execute('CREATE TABLE IF NOT EXISTS recipesModule '
@@ -1593,23 +1598,25 @@ export class SyncService {
 
           const sqlStatements: capSQLiteSet[] = []
 
-          for (const recipesModule of response.recipes) {
+          for (const recipesModule of response.data.recipes) {
+            const nameNl: string = (recipesModule.name && recipesModule.name.nl) ? recipesModule.name.nl : null
+            const nameFr: string = (recipesModule.name && recipesModule.name.fr) ? recipesModule.name.fr : null
 
             sqlStatements.push({
               statement: 'INSERT INTO recipesModule VALUES (?, ?, ?, ?)',
               values: [
                 recipesModule.id,
                 recipesModule.productId,
-                recipesModule.nameNl,
-                recipesModule.nameFr
+                nameNl,
+                nameFr
               ]
             })
           }
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted recipesModule', response.checksumSha)
-          await this.updateDataIntegrityChecksum(db, 'recipesModule', response.checksumSha)
+          this.logger.log('inserted recipesModule', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'recipesModule', response.data.checksum)
         })
       } else {
         this.logger.log(`SyncProvider.syncRecipesModule() -- no changes`)
@@ -1687,8 +1694,8 @@ export class SyncService {
   }
 
   async prepareCurrentExceptions(customer: AppCustomerModel): Promise<boolean> {
-    let result = true
-    await this._db.executeQuery(async (db: SQLiteDBConnection) => {
+    let result: boolean = true
+    await this._db.executeQuery(async (db: SQLiteDBConnection): Promise<void> => {
       // Check if all tables exist
       const tables = (await db.getTableList()).values
       if (!tables.find(e => e === 'currentExceptions')) {

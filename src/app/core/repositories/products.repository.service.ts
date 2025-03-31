@@ -14,7 +14,8 @@ export class ProductsRepositoryService {
   constructor(
     private _db: DatabaseService,
     private logger: LoggingProvider
-  ) { }
+  ) {
+  }
 
   get(id?: number): Promise<IProduct[]> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -44,7 +45,9 @@ export class ProductsRepositoryService {
     const groupNameString = culture === 'nl-BE' ? 'groupNameNl' : 'groupNameFr'
 
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const exists = await db.query(`SELECT id FROM products WHERE id = ?`, [id])
+      const exists = await db.query(`SELECT id
+                                     FROM products
+                                     WHERE id = ?`, [id])
 
       if (exists.values.length === 0)
         throw new Error('Product not found!')
@@ -53,91 +56,93 @@ export class ProductsRepositoryService {
       const isPromo = `EXISTS (SELECT * FROM prices WHERE prices.product = p.id AND ( ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 ) OR ( prices.customer = ? AND ( prices.address = ? OR prices.address = 0 ) AND prices.[group] = 0 ) OR ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = ? ) ) AND prices.promo = 1)`
 
       const query = customer.id > 0 ? `SELECT p.id,
-        p.itemnum,
-        p.stackSize,
-        p.minOrder,
-        p.deliverTime,
-        p.c1,
-        p.c2,
-        p.c3,
-        p.c4,
-        p.c5,
-        p.c6,
-        p.ean,
-        p.supplierItemIdentifier,
-        p.relativeQuantity,
-        p.AvailableOn as availableOn,
-        p.isNew,
-        p.type,
-        p.contentQuantity,
-        CASE ((fav.hi = 0 OR fav.hi IS NULL) AND fav.id IS NOT NULL) WHEN 1 THEN 1 ELSE 0 END as isFavorite,
-        fav.hi as favHidden,
-        fav.buy as favA,
-        fav.lastA as favLastA,
-        fav.lastB as favLastB,
-        ${isPromo} as isPromo,
-        p.${nameString} as name,
-        pu.${nameString} as unit,
-        puc.${nameString} as contentUnit,
-        productTexts.${descriptionString} as description,
-        productTexts.${promoString} as promo,
-        ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
-        p.color
-      FROM products AS p
-      INNER JOIN packingUnits AS pu ON p.packId = pu.id
-      INNER JOIN productTexts ON p.id = productTexts.id
-      LEFT JOIN packingUnits AS puc ON p.contentUnit = puc.id
-      LEFT OUTER JOIN favorites AS fav ON fav.id = p.id AND fav.cu = ? AND fav.ad = ?
-      WHERE p.id = ?` :
+                                              p.itemnum,
+                                              p.stackSize,
+                                              p.minOrder,
+                                              p.deliverTime,
+                                              p.c1,
+                                              p.c2,
+                                              p.c3,
+                                              p.c4,
+                                              p.c5,
+                                              p.c6,
+                                              p.ean,
+                                              p.supplierItemIdentifier,
+                                              p.relativeQuantity,
+                                              p.AvailableOn                                                             as availableOn,
+                                              p.isNew,
+                                              p.type,
+                                              p.contentQuantity,
+                                              CASE ((fav.hi = 0 OR fav.hi IS NULL) AND fav.id IS NOT NULL)
+                                                WHEN 1 THEN 1
+                                                ELSE 0 END                                                              as isFavorite,
+                                              fav.hi                                                                    as favHidden,
+                                              fav.buy                                                                   as favA,
+                                              fav.lastA                                                                 as favLastA,
+                                              fav.lastB                                                                 as favLastB,
+                                              ${isPromo}                                                                as isPromo,
+                                              p.${nameString}                                                           as name,
+                                              pu.${nameString}                                                          as unit,
+                                              puc.${nameString}                                                         as contentUnit,
+                                              productTexts.${descriptionString}                                         as description,
+                                              productTexts.${promoString}                                               as promo,
+                                              ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+                                              p.color
+                                       FROM products AS p
+                                              INNER JOIN packingUnits AS pu ON p.packId = pu.id
+                                              INNER JOIN productTexts ON p.id = productTexts.id
+                                              LEFT JOIN packingUnits AS puc ON p.contentUnit = puc.id
+                                              LEFT OUTER JOIN favorites AS fav ON fav.id = p.id AND fav.cu = ? AND fav.ad = ?
+                                       WHERE p.id = ?` :
         `SELECT p.id,
-        p.itemnum,
-        p.stackSize,
-        p.minOrder,
-        p.deliverTime,
-        p.c1,
-        p.c2,
-        p.c3,
-        p.c4,
-        p.c5,
-        p.c6,
-        p.ean,
-        p.supplierItemIdentifier,
-        p.relativeQuantity,
-        p.AvailableOn as availableOn,
-        p.isNew,
-        p.type,
-        p.contentQuantity,
-        0 as isFavorite,
-        NULL as favHidden,
-        NULL as favA,
-        NULL as favLastA,
-        NULL as favLastB,
-        0 as isPromo,
-        p.${nameString} as name,
-        pu.${nameString} as unit,
-        puc.${nameString} as contentUnit,
-        productTexts.${descriptionString} as description,
-        productTexts.${promoString} as promo,
-        ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
-        p.color
-      FROM products AS p
-      INNER JOIN packingUnits AS pu ON p.packId = pu.id
-      INNER JOIN productTexts ON p.id = productTexts.id
-      LEFT JOIN packingUnits AS puc ON p.contentUnit = puc.id
-      WHERE p.id = ?`
+                p.itemnum,
+                p.stackSize,
+                p.minOrder,
+                p.deliverTime,
+                p.c1,
+                p.c2,
+                p.c3,
+                p.c4,
+                p.c5,
+                p.c6,
+                p.ean,
+                p.supplierItemIdentifier,
+                p.relativeQuantity,
+                p.AvailableOn                                                             as availableOn,
+                p.isNew,
+                p.type,
+                p.contentQuantity,
+                0                                                                         as isFavorite,
+                NULL                                                                      as favHidden,
+                NULL                                                                      as favA,
+                NULL                                                                      as favLastA,
+                NULL                                                                      as favLastB,
+                0                                                                         as isPromo,
+                p.${nameString}                                                           as name,
+                pu.${nameString}                                                          as unit,
+                puc.${nameString}                                                         as contentUnit,
+                productTexts.${descriptionString}                                         as description,
+                productTexts.${promoString}                                               as promo,
+                ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+                p.color
+         FROM products AS p
+                INNER JOIN packingUnits AS pu ON p.packId = pu.id
+                INNER JOIN productTexts ON p.id = productTexts.id
+                LEFT JOIN packingUnits AS puc ON p.contentUnit = puc.id
+         WHERE p.id = ?`
 
       const productResult = await db.query(query, queryParams)
 
       const product = productResult.values[0] as IProductDetailT
 
       const units = await db.query(`
-        SELECT p.id,
-          pu.${nameString} as unit
-        FROM products AS p 
-        INNER JOIN packingUnits AS pu
-          ON p.packId = pu.id
-        WHERE p.itemnum = ?
-          AND p.id != ?`,
+          SELECT p.id,
+                 pu.${nameString} as unit
+          FROM products AS p
+                 INNER JOIN packingUnits AS pu
+                            ON p.packId = pu.id
+          WHERE p.itemnum = ?
+            AND p.id != ?`,
         [product.itemnum, id]
       )
 
@@ -145,63 +150,93 @@ export class ProductsRepositoryService {
         product['units'] = units.values
 
       const attributesResult = await db.query(`
-      SELECT attributes.${nameString} as name,
-        attributes.${groupNameString} as groupName
-      FROM productAttributes
-      INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
-      WHERE productAttributes.product = ?`, [id])
+        SELECT attributes.${nameString}      as name,
+               attributes.${groupNameString} as groupName
+        FROM productAttributes
+               INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
+        WHERE productAttributes.product = ?`, [id])
 
-      const similarProducts = await db.query(`SELECT products.${nameString} as name,
-        products.itemnum,
-        products.id,
-        packingUnits.${nameString} as unit,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color
-      FROM productRelations AS rel
-      INNER JOIN products ON rel.product = products.id
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ? AND rel.type = 2 AND products.id != ?`, [id, id])
+      const similarProducts = await db.query(`SELECT products.${nameString}                                                           as name,
+                                                     products.itemnum,
+                                                     products.id,
+                                                     packingUnits.${nameString}                                                       as unit,
+                                                     ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                     products.color
+                                              FROM productRelations AS rel
+                                                     INNER JOIN products ON rel.product = products.id
+                                                     INNER JOIN packingUnits ON products.packId = packingUnits.id
+                                              WHERE EXISTS (SELECT *
+                                                            FROM currentExceptions
+                                                            WHERE currentExceptions.productId = products.id)
+                                                AND rel.item = ?
+                                                AND rel.type = 2
+                                                AND products.id != ?`, [id, id])
 
-      const similarProductsA = await db.query(`SELECT products.${nameString} as name,
-        products.itemnum,
-        products.id,
-        packingUnits.${nameString} as unit,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color
-      FROM products
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND products.c1 = ? AND products.c2 = ? AND products.c3 = ? AND products.c4 = ? AND products.c5 = ? AND products.c6 = ? AND products.id != ?`, [product.c1, product.c2, product.c3, product.c4, product.c5, product.c6, id])
+      const similarProductsA = await db.query(`SELECT products.${nameString}                                                           as name,
+                                                      products.itemnum,
+                                                      products.id,
+                                                      packingUnits.${nameString}                                                       as unit,
+                                                      ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                      products.color
+                                               FROM products
+                                                      INNER JOIN packingUnits ON products.packId = packingUnits.id
+                                               WHERE EXISTS (SELECT *
+                                                             FROM currentExceptions
+                                                             WHERE currentExceptions.productId = products.id)
+                                                 AND products.c1 = ?
+                                                 AND products.c2 = ?
+                                                 AND products.c3 = ?
+                                                 AND products.c4 = ?
+                                                 AND products.c5 = ?
+                                                 AND products.c6 = ?
+                                                 AND products.id != ?`, [product.c1, product.c2, product.c3, product.c4, product.c5, product.c6, id])
 
-      const relatedProducts = await db.query(`SELECT products.${nameString} as name,
-        products.itemnum,
-        products.id,
-        packingUnits.${nameString} as unit,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color
-      FROM productRelations AS rel
-      INNER JOIN products ON rel.product = products.id
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ? AND rel.type = 1 AND products.id != ?`, [id, id])
+      const relatedProducts = await db.query(`SELECT products.${nameString}                                                           as name,
+                                                     products.itemnum,
+                                                     products.id,
+                                                     packingUnits.${nameString}                                                       as unit,
+                                                     ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                     products.color
+                                              FROM productRelations AS rel
+                                                     INNER JOIN products ON rel.product = products.id
+                                                     INNER JOIN packingUnits ON products.packId = packingUnits.id
+                                              WHERE EXISTS (SELECT *
+                                                            FROM currentExceptions
+                                                            WHERE currentExceptions.productId = products.id)
+                                                AND rel.item = ?
+                                                AND rel.type = 1
+                                                AND products.id != ?`, [id, id])
 
-      const promoProducts = await db.query(`SELECT products.${nameString} as name,
-        products.itemnum,
-        products.id,
-        packingUnits.${nameString} as unit,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color
-      FROM productRelations AS rel
-      INNER JOIN products ON rel.product = products.id
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id) AND rel.item = ? AND rel.type = 3 AND products.id != ?`, [id, id])
+      const promoProducts = await db.query(`SELECT products.${nameString}                                                           as name,
+                                                   products.itemnum,
+                                                   products.id,
+                                                   packingUnits.${nameString}                                                       as unit,
+                                                   ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                   products.color
+                                            FROM productRelations AS rel
+                                                   INNER JOIN products ON rel.product = products.id
+                                                   INNER JOIN packingUnits ON products.packId = packingUnits.id
+                                            WHERE EXISTS (SELECT *
+                                                          FROM currentExceptions
+                                                          WHERE currentExceptions.productId = products.id)
+                                              AND rel.item = ?
+                                              AND rel.type = 3
+                                              AND products.id != ?`, [id, id])
 
-      const allergens = await db.query(`SELECT code, value FROM productAllergens WHERE product = ? AND LENGTH(code) > 0`, [id])
+      const allergens = await db.query(`SELECT code, value
+                                        FROM productAllergens
+                                        WHERE product = ?
+                                          AND LENGTH(code) > 0`, [id])
 
       const departments = customer.id > 0 ? await db.query(`SELECT dep.id, dep.alias, NULL as products
-      FROM departmentProducts
-      INNER JOIN departments as dep ON departmentProducts.department = dep.id
-      WHERE departmentProducts.product = ? AND dep.userCode = ?`, [id, customer.userCode]) : { values: [] }
+                                                            FROM departmentProducts
+                                                                   INNER JOIN departments as dep ON departmentProducts.department = dep.id
+                                                            WHERE departmentProducts.product = ?
+                                                              AND dep.userCode = ?`, [id, customer.userCode]) : { values: [] }
 
-      const taxes = customer.id > 0 ? await db.query(`SELECT * FROM productTaxes WHERE product = ?`, [id]) : { values: [] }
+      const taxes = customer.id > 0 ? await db.query(`SELECT *
+                                                      FROM productTaxes
+                                                      WHERE product = ?`, [id]) : { values: [] }
 
       product.attributes = attributesResult.values as IProductAttributeT[]
       product.similarProducts = (similarProducts.values as IProductInfoT[]).concat(similarProductsA.values as IProductInfoT[])
@@ -239,8 +274,8 @@ export class ProductsRepositoryService {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const queryParams = [params[0], params[1], ...params, params[0], params[1]]
-      const isPromo = `(SELECT promo FROM prices WHERE prices.product = products.id 
-          AND ( 
+      const isPromo = `(SELECT promo FROM prices WHERE prices.product = products.id
+          AND (
             ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 )
             OR ( prices.customer = ? AND ( prices.address = ? OR prices.address = 0 )
             AND prices.[group] = 0 )
@@ -248,27 +283,35 @@ export class ProductsRepositoryService {
           AND prices.stack = 1 ORDER BY address DESC, customer DESC, [group] DESC LIMIT 1 )`
 
       let query = `SELECT products.id,
-        products.nameNl,
-        products.nameFr,
-        products.minOrder,
-        products.stackSize,
-        products.itemnum,
-        products.${nameString} as name,
-        products.[type],
-        products.isNew,
-        packingUnits.${nameString} as unit,
-        EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ? AND ( favorites.hi = 0 OR favorites.hi IS NULL )) as isFavorite,
-        favorites.lastB as favLastB,
-        favorites.lastA as favLastA,
-        products.AvailableOn as availableOn,
-        ${isPromo} as isPromo,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color,
-        (SELECT description FROM productDescriptionCustomers WHERE id=products.id) as descriptionCustomer
-      FROM products
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
+                          products.nameNl,
+                          products.nameFr,
+                          products.minOrder,
+                          products.stackSize,
+                          products.itemnum,
+                          products.${nameString}                                                           as name,
+                          products.[type],
+                          products.isNew,
+                          packingUnits.${nameString}                                                       as unit,
+                          EXISTS (SELECT favorites.id
+                                  FROM favorites
+                                  WHERE favorites.id = products.id
+                                    AND favorites.cu = ?
+                                    AND favorites.ad = ?
+                                    AND (favorites.hi = 0 OR favorites.hi IS NULL))                        as isFavorite,
+                          favorites.lastB                                                                  as favLastB,
+                          favorites.lastA                                                                  as favLastA,
+                          products.AvailableOn                                                             as availableOn,
+                          ${isPromo}                                                                       as isPromo,
+                          ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                          products.color,
+                          (SELECT description
+                           FROM productDescriptionCustomers
+                           WHERE id = products.id)                                                         as descriptionCustomer
+                   FROM products
+                          INNER JOIN packingUnits ON products.packId = packingUnits.id
+                          LEFT OUTER JOIN favorites
+                                          ON favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?
+                   WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
 
 
       if (filters.category) {
@@ -346,12 +389,13 @@ export class ProductsRepositoryService {
       return result.values as IProductT[]
     })
   }
+
   queryAll(culture: string = 'nl-BE', filters: any, sortOrder: ISortOrder, params: number[]) {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const queryParams = params[0] > 0 ? [params[0], params[1], ...params, params[0], params[1]] : []
-      const isPromo = `(SELECT promo FROM prices WHERE prices.product = products.id 
-          AND ( 
+      const isPromo = `(SELECT promo FROM prices WHERE prices.product = products.id
+          AND (
             ( prices.customer = 0 AND prices.address = 0 AND prices.[group] = 0 )
             OR ( prices.customer = ? AND ( prices.address = ? OR prices.address = 0 )
             AND prices.[group] = 0 )
@@ -360,48 +404,53 @@ export class ProductsRepositoryService {
       const isFavorite = `EXISTS (SELECT favorites.id FROM favorites WHERE favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ? AND ( favorites.hi = 0 OR favorites.hi IS NULL ))`
 
       let query = params[0] > 0 ? `SELECT products.id,
-        products.nameNl,
-        products.nameFr,
-        products.minOrder,
-        products.stackSize,
-        products.itemnum,
-        products.${nameString} as name,
-        products.[type],
-        products.isNew,
-        packingUnits.${nameString} as unit,
-        ${isFavorite} as isFavorite,
-        favorites.lastB as favLastB,
-        favorites.lastA as favLastA,
-        products.AvailableOn as availableOn,
-        ${isPromo} as isPromo,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color,
-        (SELECT description FROM productDescriptionCustomers WHERE id=products.id) as descriptionCustomer
-      FROM products
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      LEFT OUTER JOIN favorites ON favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)` :
+                                          products.nameNl,
+                                          products.nameFr,
+                                          products.minOrder,
+                                          products.stackSize,
+                                          products.itemnum,
+                                          products.${nameString}                                                           as name,
+                                          products.[type],
+                                          products.isNew,
+                                          packingUnits.${nameString}                                                       as unit,
+                                          ${isFavorite}                                                                    as isFavorite,
+                                          favorites.lastB                                                                  as favLastB,
+                                          favorites.lastA                                                                  as favLastA,
+                                          products.AvailableOn                                                             as availableOn,
+                                          ${isPromo}                                                                       as isPromo,
+                                          ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                          products.color,
+                                          (SELECT description
+                                           FROM productDescriptionCustomers
+                                           WHERE id = products.id)                                                         as descriptionCustomer
+                                   FROM products
+                                          INNER JOIN packingUnits ON products.packId = packingUnits.id
+                                          LEFT OUTER JOIN favorites
+                                                          ON favorites.id = products.id AND favorites.cu = ? AND favorites.ad = ?
+                                   WHERE EXISTS (SELECT *
+                                                 FROM currentExceptions
+                                                 WHERE currentExceptions.productId = products.id)` :
         `SELECT products.id,
-        products.nameNl,
-        products.nameFr,
-        products.minOrder,
-        products.stackSize,
-        products.itemnum,
-        products.${nameString} as name,
-        products.[type],
-        products.isNew,
-        packingUnits.${nameString} as unit,
-        0 as isFavorite,
-        NULL as favLastB,
-        NULL as favLastA,
-        products.AvailableOn as availableOn,
-        0 as isPromo,
-        ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
-        products.color,
-        NULL as descriptionCustomer
-      FROM products
-      INNER JOIN packingUnits ON products.packId = packingUnits.id
-      WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
+                products.nameNl,
+                products.nameFr,
+                products.minOrder,
+                products.stackSize,
+                products.itemnum,
+                products.${nameString}                                                           as name,
+                products.[type],
+                products.isNew,
+                packingUnits.${nameString}                                                       as unit,
+                0                                                                                as isFavorite,
+                NULL                                                                             as favLastB,
+                NULL                                                                             as favLastA,
+                products.AvailableOn                                                             as availableOn,
+                0                                                                                as isPromo,
+                ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                products.color,
+                NULL                                                                             as descriptionCustomer
+         FROM products
+                INNER JOIN packingUnits ON products.packId = packingUnits.id
+         WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`
 
       if (filters.category) {
         query += ` AND (products.c1 = ? OR products.c2 = ? OR products.c3 = ? OR products.c4 = ? OR products.c5 = ? OR products.c6 = ?)`
@@ -479,7 +528,6 @@ export class ProductsRepositoryService {
     this.logger.debug('ProductsRepositoryService.getPrices(' + id + ')')
 
     let minQuantity = 1
-
     if (minQ)
       minQuantity = minQ
     else {
@@ -492,22 +540,12 @@ export class ProductsRepositoryService {
     try {
 
       const base = await db.query(
-        `SELECT price,
-        pricepromo,
-        stack,
-        promo
-      FROM prices
-      WHERE product = ? AND customer = 0 AND address = 0 AND [group] = 0`,
+        'SELECT price, pricepromo, stack, promo FROM prices WHERE product = ? AND customer = 0 AND address = 0 AND [group] = 0',
         [id]
       )
 
       let result = await db.query(
-        `SELECT price,
-        pricepromo,
-        stack,
-        promo
-      FROM prices
-      WHERE product = ? AND customer = ? AND address = ? AND [group] = 0`,
+        'SELECT price, pricepromo, stack, promo FROM prices WHERE product = ? AND customer = ? AND address = ? AND [group] = 0',
         [id, customer.id, customer.addressId ?? customer.address]
       )
 
@@ -515,12 +553,7 @@ export class ProductsRepositoryService {
         return this.calculatePricesOverview(minQuantity, customer, base.values, result.values)
 
       result = await db.query(
-        `SELECT price,
-        pricepromo,
-        stack,
-        promo
-      FROM prices
-      WHERE product = ? AND customer = ? AND address = 0 AND [group] = 0`,
+        'SELECT price, pricepromo, stack, promo FROM prices WHERE product = ? AND customer = ? AND address = 0 AND [group] = 0',
         [id, customer.id]
       )
 
@@ -528,12 +561,7 @@ export class ProductsRepositoryService {
         return this.calculatePricesOverview(minQuantity, customer, base.values, result.values)
 
       result = await db.query(
-        `SELECT price,
-        pricepromo,
-        stack,
-        promo
-      FROM prices
-      WHERE product = ? AND customer = 0 AND address = 0 AND [group] = ?`,
+        'SELECT price, pricepromo, stack, promo FROM prices WHERE product = ? AND customer = 0 AND address = 0 AND [group] = ?',
         [id, customer.addressGroupId ?? customer.addressGroup]
       )
 
@@ -547,37 +575,38 @@ export class ProductsRepositoryService {
     }
   }
 
-  async getAttachments(id: number, itemnum: string, culture: string = 'nl-BE',): Promise<IAttachmentCollection> {
+  async getAttachments(id: number, itemnum: string, culture: string = 'nl-BE'): Promise<IAttachmentCollection> {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     culture = culture.split('-')[0]
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const datasheets = await db.query(
         `SELECT guid, name
-        FROM datasheets
-        WHERE products LIKE '%${itemnum}%' AND languages LIKE '%\"${culture}\":true%'`,
+         FROM datasheets
+         WHERE products LIKE '%${itemnum}%'
+           AND languages LIKE '%\"${culture}\":true%'`,
         []
       )
 
       const recipes = await db.query(
         `SELECT guid, name
-        FROM recipes
-        WHERE products LIKE '%${itemnum}%' AND languages LIKE '%\"${culture}\":true%'`,
+         FROM recipes
+         WHERE products LIKE '%${itemnum}%'
+           AND languages LIKE '%\"${culture}\":true%'`,
         []
       )
 
       const usageManuals = await db.query(
         `SELECT guid, name, products
-        FROM usageManuals
-        WHERE products LIKE '%${itemnum}%' AND languages LIKE '%\"${culture}\":true%'`,
+         FROM usageManuals
+         WHERE products LIKE '%${itemnum}%'
+           AND languages LIKE '%\"${culture}\":true%'`,
         []
       )
 
-      console.dir(usageManuals)
-
       const recipesModule = await db.query(
         `SELECT id, ${nameString} as name
-        FROM recipesModule
-        WHERE productId = ?`,
+         FROM recipesModule
+         WHERE productId = ?`,
         [id]
       )
 
@@ -613,13 +642,18 @@ export class ProductsRepositoryService {
 
   addToFavourites(productId: number, userId: number, addressId: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      await db.query(`INSERT OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, 0);`, [productId, userId, addressId])
+      await db.query(`INSERT
+      OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, 0);`, [productId, userId, addressId])
     })
   }
 
   removeFromFavourites(productId: number, userId: number, addressId: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      await db.query(`DELETE FROM favorites WHERE id=? AND cu=? AND ad=?`, [productId, userId, addressId])
+      await db.query(`DELETE
+                      FROM favorites
+                      WHERE id = ?
+                        AND cu = ?
+                        AND ad = ?`, [productId, userId, addressId])
     })
   }
 
@@ -630,7 +664,7 @@ export class ProductsRepositoryService {
   }
 
   private calculatePricesOverview(minQuantity: number, customer: Customer,
-    basePrices: IPrice[], extraPrices: IPrice[]): IProductPricesOverview {
+                                  basePrices: IPrice[], extraPrices: IPrice[]): IProductPricesOverview {
     this.logger.debug('ProductsRepositoryService.calculatePricesOverview()', minQuantity, customer, basePrices, extraPrices)
     let basePrice = 0
     let prices = []
@@ -639,12 +673,12 @@ export class ProductsRepositoryService {
 
     if (basePrices.length > 0) {
       isPromo = basePrices.some(e => e.promo) && customer.promo == true
-      basePrice = basePrices.find(e => e.stack === minQuantity)?.price ?? 0
+      basePrice = basePrices.find(e => e.stack === minQuantity)?.price ?? basePrices.find(e => e.stack === 1)?.price ?? 0
     }
 
     if (extraPrices.length > 0) {
       for (let price of extraPrices) {
-        let amount = isPromo ? price.pricepromo : price.price
+        let amount: number = isPromo ? price.pricepromo : price.price
         amount = Math.round((amount - ((amount * bonus) / 100)) * 100) / 100
         prices.push({
           amount,

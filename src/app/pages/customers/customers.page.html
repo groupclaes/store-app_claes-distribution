@@ -37,9 +37,9 @@
 
   <cdk-virtual-scroll-viewport minBufferPx="1350" maxBufferPx="2350" itemSize="57" class="ion-content-scroll-host">
     <ion-list inset="true" *ngIf="customers && (customers.length > 0 || searchTerm.length > 0);else noCustomers">
-      <ion-item *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)">
+      <ion-item *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)" text-wrap>
         <ion-label>
-          <div style="display:flex;height:36px;flex-direction:column;justify-content:center">
+          <div style="display:flex;flex-direction:column;justify-content:center">
             <span class="text-capitalize">{{ customer.name }} ({{ customer.id }})</span>
             <div *ngIf="customer.addressId > 0">
               <span class="text-capitalize">{{ customer.addressName }} ({{ customer.addressId }})</span>
