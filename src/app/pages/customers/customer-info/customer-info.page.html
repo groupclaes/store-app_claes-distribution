@@ -8,237 +8,250 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div *ngIf="customer">
-    <ion-list>
-      <ion-list-header class="ion-padding">
-        <ion-title>
-          <span class="text-capitalize" translate="customerInfoPage"></span>
-        </ion-title>
-      </ion-list-header>
+<ion-content [fullscreen]="true" color="light">
+  <!--  <ion-header collapse="condense">-->
+  <!--    <ion-toolbar color="light">-->
+  <!--      <ion-title size="large" translate="customerInfoPage"></ion-title>-->
+  <!--    </ion-toolbar>-->
+  <!--  </ion-header>-->
+
+  <ng-template [ngIf]="customer">
+    <ion-text class="list-header">
+      <ion-note translate>customerInfoPage</ion-note>
+    </ion-text>
+
+    <ion-list inset="true">
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.customer-id' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="customer.id" />
+                   labelPlacement="fixed" [readonly]="true" [value]="customer.id"/>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.customer-name' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="customer.name" />
+                   labelPlacement="fixed" [readonly]="true" [value]="customer.name"/>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.bonus' | translate"
-          labelPlacement="fixed" [readonly]="true"
-          [value]="customer.bonusPercentage / 100 | percent:'1.1'"></ion-input>
+                   labelPlacement="fixed" [readonly]="true"
+                   [value]="customer.bonusPercentage / 100 | percent:'1.1'"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.promo' | translate"
-          labelPlacement="fixed" [readonly]="true"
-          [value]="(customer.promo ? 'yes' : 'no') | translate"></ion-input>
+                   labelPlacement="fixed" [readonly]="true"
+                   [value]="(customer.promo ? 'yes' : 'no') | translate"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.fostplus' | translate"
-          labelPlacement="fixed" [readonly]="true"
-          [value]="(customer.fostplus ? 'yes' : 'no') | translate"></ion-input>
+                   labelPlacement="fixed" [readonly]="true"
+                   [value]="(customer.fostplus ? 'yes' : 'no') | translate"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.address' | translate"
-          labelPlacement="fixed" [readonly]="true" 
-          [value]="customer.address + ' ' + customer.streetNum"></ion-input>
+                   labelPlacement="fixed" [readonly]="true"
+                   [value]="customer.address + ' ' + customer.streetNum"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.city' | translate"
-          labelPlacement="fixed" [readonly]="true" 
-          [value]="customer.zipCode + ' - ' + customer.city"></ion-input>
+                   labelPlacement="fixed" [readonly]="true"
+                   [value]="customer.zipCode + ' - ' + customer.city"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.country' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="customer.country"></ion-input>
+                   labelPlacement="fixed" [readonly]="true" [value]="customer.country"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.phoneNum' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="customer.phoneNum"></ion-input>
+                   labelPlacement="fixed" [readonly]="true" [value]="customer.phoneNum"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.vatNum' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="displayVat"></ion-input>
+                   labelPlacement="fixed" [readonly]="true" [value]="displayVat"></ion-input>
       </ion-item>
       <ion-item>
         <ion-input [label]="'pages.customer-info.fields.language' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="'languages.' + customer.language.toLowerCase() | translate"></ion-input>
+                   labelPlacement="fixed" [readonly]="true"
+                   [value]="'languages.' + customer.language.toLowerCase() | translate"></ion-input>
       </ion-item>
     </ion-list>
 
-    <ion-list *ngIf="customer.addressId !== 0">
-      <ion-list-header>
-        <ion-title>
-          <span class="text-capitalize" translate="addressInfoPage"></span>
-        </ion-title>
-      </ion-list-header>
-      <ion-item>
-        <ion-input [label]="'pages.customer-info.fields.customer-address' | translate"
-          labelPlacement="fixed" [readonly]="true" 
-          [value]="customer.address + ' - ' + customer.delvAddress"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input [label]="'pages.customer-info.fields.delivery-address' | translate"
-          labelPlacement="fixed" [readonly]="true"
-          [value]="customer.delvAddress + ' ' + customer.delvStreetNum"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input [label]="'pages.customer-info.fields.city' | translate"
-          labelPlacement="fixed" [readonly]="true"
-          [value]="customer.delvZipCode + ' - ' + customer.delvCity"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input [label]="'pages.customer-info.fields.country' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="customer.delvCountry"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input [label]="'pages.customer-info.fields.phoneNum' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="customer.delvPhoneNum"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-input [label]="'pages.customer-info.fields.language' | translate"
-          labelPlacement="fixed" [readonly]="true" [value]="'languages.' + customer.delvLanguage.toLowerCase() | translate"></ion-input>
-      </ion-item>
-    </ion-list>
+    <ng-container *ngIf="customer.addressId !== 0">
+      <ion-text class="list-header">
+        <ion-note translate>addressInfoPage</ion-note>
+      </ion-text>
 
-    <ion-list *ngFor="let deliverySchedule of deliverySchedules">
-      <ion-list-header>
-        <ion-title>
-          <span class="text-capitalize" translate="deliverySchedule"></span>
-        </ion-title>
-      </ion-list-header>
-      <ion-item *ngIf="!deliverySchedule.monAMFr && !deliverySchedule.monAMTo">
-        <div translate="closed"></div>
-      </ion-item>
-      <ion-item *ngIf="deliverySchedule.monAMFr && deliverySchedule.monAMTo">
-        <div>
-          <span translate="deliverFromMonday1"></span> {{ deliverySchedule.monAMFr }} -
-          <span translate="deliverTillMonday1"></span> {{ deliverySchedule.monAMTo }}
-        </div>
-        <div *ngIf="deliverySchedule.monPMFr && deliverySchedule.monPMTo">
-          <span translate="deliverFromMonday2"></span> {{ deliverySchedule.monPMFr }} -
-          <span translate="deliverTillMonday2"></span> {{ deliverySchedule.monPMTo }}
-        </div>
-      </ion-item>
-      <ion-item *ngIf="!deliverySchedule.tueAMFr && !deliverySchedule.tueAMTo">
-        <div translate="closed"></div>
-      </ion-item>
-      <ion-item *ngIf="deliverySchedule.tueAMFr && deliverySchedule.tueAMTo">
-        <div>
-          <span translate="deliverFromTuesday1"></span> {{ deliverySchedule.tueAMFr }} -
-          <span translate="deliverTillTuesday1"></span> {{ deliverySchedule.tueAMTo }}
-        </div>
-        <div *ngIf="deliverySchedule.tuePMFr && deliverySchedule.tuePMTo">
-          <span translate="deliverFromTuesday2"></span> {{ deliverySchedule.tuePMFr }} -
-          <span translate="deliverTillTuesday2"></span> {{ deliverySchedule.tuePMTo }}
-        </div>
-      </ion-item>
-      <ion-item *ngIf="!deliverySchedule.wedAMFr && !deliverySchedule.wedAMTo">
-        <div translate="closed"></div>
-      </ion-item>
-      <ion-item *ngIf="deliverySchedule.wedAMFr && deliverySchedule.wedAMTo">
-        <div>
-          <span translate="deliverFromWednesday1"></span> {{ deliverySchedule.wedAMFr }} -
-          <span translate="deliverTillWednesday1"></span> {{ deliverySchedule.wedAMTo }}
-        </div>
-        <div *ngIf="deliverySchedule.wedPMFr && deliverySchedule.wedPMTo">
-          <span translate="deliverFromWednesday2"></span> {{ deliverySchedule.wedPMFr }} -
-          <span translate="deliverTillWednesday2"></span> {{ deliverySchedule.wedPMTo }}
-        </div>
-      </ion-item>
-      <ion-item *ngIf="!deliverySchedule.thuAMFr && !deliverySchedule.thuAMTo">
-        <div translate="closed"></div>
-      </ion-item>
-      <ion-item *ngIf="deliverySchedule.thuAMFr && deliverySchedule.thuAMTo">
-        <div>
-          <span translate="deliverFromThursday1"></span> {{ deliverySchedule.thuAMFr }} -
-          <span translate="deliverTillThursday1"></span> {{ deliverySchedule.thuAMTo }}
-        </div>
-        <div *ngIf="deliverySchedule.thuPMFr && deliverySchedule.thuPMTo">
-          <span translate="deliverFromThursday2"></span> {{ deliverySchedule.thuPMFr }} -
-          <span translate="deliverTillThursday2"></span> {{ deliverySchedule.thuPMTo }}
-        </div>
-      </ion-item>
-      <ion-item *ngIf="!deliverySchedule.friAMFr && !deliverySchedule.friAMTo">
-        <div translate="closed"></div>
-      </ion-item>
-      <ion-item *ngIf="deliverySchedule.friAMFr && deliverySchedule.friAMTo">
-        <div>
-          <span translate="deliverFromFriday1"></span> {{ deliverySchedule.friAMFr }} -
-          <span translate="deliverTillFriday1"></span> {{ deliverySchedule.friAMTo }}
-        </div>
-        <div *ngIf="deliverySchedule.friPMFr && deliverySchedule.friPMTo">
-          <span translate="deliverFromFriday2"></span> {{ deliverySchedule.friPMFr }} -
-          <span translate="deliverTillFriday2"></span> {{ deliverySchedule.friPMTo }}
-        </div>
-      </ion-item>
-    </ion-list>
-
-    <ion-list *ngIf="contacts && contacts.length > 0">
-      <h2>
-        <span style="padding-left:8px" class="text-capitalize" translate="contactsPage"></span>
-      </h2>
-
-      <ion-card *ngFor="let item of contacts">
+      <ion-list inset="true">
         <ion-item>
-          <ion-avatar item-start>
-            <img [src]="item.avatar">
-          </ion-avatar>
-          <h2>{{ item.firstName }} {{ item.name }}</h2>
-          <p>
-            <button ion-item tappable *ngIf="item.mailAddress"
-              (click)="goToMail(item.mailAddress)">{{ item.mailAddress }}</button>
-          </p>
-          <p>
-            <button ion-item tappable *ngIf="item.mobileNr"
-              (click)="goToPhone(item.mobileNr)">{{ item.mobileNr }}</button>
-          </p>
+          <ion-input [label]="'pages.customer-info.fields.customer-address' | translate"
+                     labelPlacement="fixed" [readonly]="true"
+                     [value]="customer.address + ' - ' + customer.delvAddress"></ion-input>
         </ion-item>
+        <ion-item>
+          <ion-input [label]="'pages.customer-info.fields.delivery-address' | translate"
+                     labelPlacement="fixed" [readonly]="true"
+                     [value]="customer.delvAddress + ' ' + customer.delvStreetNum"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'pages.customer-info.fields.city' | translate"
+                     labelPlacement="fixed" [readonly]="true"
+                     [value]="customer.delvZipCode + ' - ' + customer.delvCity"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'pages.customer-info.fields.country' | translate"
+                     labelPlacement="fixed" [readonly]="true" [value]="customer.delvCountry"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'pages.customer-info.fields.phoneNum' | translate"
+                     labelPlacement="fixed" [readonly]="true" [value]="customer.delvPhoneNum"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input [label]="'pages.customer-info.fields.language' | translate"
+                     labelPlacement="fixed" [readonly]="true"
+                     [value]="'languages.' + customer.delvLanguage.toLowerCase() | translate"></ion-input>
+        </ion-item>
+      </ion-list>
+    </ng-container>
 
-        <ion-card-content>
-          <ion-row>
-            <ion-col>
-              <ion-item>
-                <ion-checkbox translate="contacts.ordConf"
-                  [checked]="item.ordConf" [disabled]="true"></ion-checkbox>
-              </ion-item>
-            </ion-col>
-            <ion-col>
-              <ion-item>
-                <ion-checkbox  translate="contacts.bonus"
-                  [checked]="item.bonus" [disabled]="true"></ion-checkbox>
-              </ion-item>
-            </ion-col>
-            <ion-col align-self-center text-center>
-              <ion-item>
-                <ion-checkbox translate="contacts.invoice"
-                  [checked]="item.invoice" [disabled]="true"></ion-checkbox>
-              </ion-item>
-            </ion-col>
-          </ion-row>
-          <ion-row>
-            <ion-col>
-              <ion-item>
-                <ion-checkbox translate="contacts.reminder"
-                  [checked]="item.reminder" disabled="true"></ion-checkbox>
-              </ion-item>
-            </ion-col>
-            <ion-col>
-              <ion-item>
-                <ion-checkbox translate="contacts.domiciliation"
-                  [checked]="item.domiciliation" disabled="true"></ion-checkbox>
-              </ion-item>
-            </ion-col>
-            <ion-col align-self-center text-center>
-              <ion-item>
-                <ion-checkbox translate="contacts.comMailing"
-                  [checked]="item.comMailing" disabled="true"></ion-checkbox>
-              </ion-item>
-            </ion-col>
-          </ion-row>
-        </ion-card-content>
-      </ion-card>
-    </ion-list>
-  </div>
+    <ng-container *ngFor="let deliverySchedule of deliverySchedules">
+      <ion-text class="list-header">
+        <ion-note translate>deliverySchedule</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
+        <ion-item *ngIf="!deliverySchedule.monAMFr && !deliverySchedule.monAMTo">
+          <div translate="closed"></div>
+        </ion-item>
+        <ion-item *ngIf="deliverySchedule.monAMFr && deliverySchedule.monAMTo">
+          <div>
+            <span translate="deliverFromMonday1"></span> {{ deliverySchedule.monAMFr }} -
+            <span translate="deliverTillMonday1"></span> {{ deliverySchedule.monAMTo }}
+          </div>
+          <div *ngIf="deliverySchedule.monPMFr && deliverySchedule.monPMTo">
+            <span translate="deliverFromMonday2"></span> {{ deliverySchedule.monPMFr }} -
+            <span translate="deliverTillMonday2"></span> {{ deliverySchedule.monPMTo }}
+          </div>
+        </ion-item>
+        <ion-item *ngIf="!deliverySchedule.tueAMFr && !deliverySchedule.tueAMTo">
+          <div translate="closed"></div>
+        </ion-item>
+        <ion-item *ngIf="deliverySchedule.tueAMFr && deliverySchedule.tueAMTo">
+          <div>
+            <span translate="deliverFromTuesday1"></span> {{ deliverySchedule.tueAMFr }} -
+            <span translate="deliverTillTuesday1"></span> {{ deliverySchedule.tueAMTo }}
+          </div>
+          <div *ngIf="deliverySchedule.tuePMFr && deliverySchedule.tuePMTo">
+            <span translate="deliverFromTuesday2"></span> {{ deliverySchedule.tuePMFr }} -
+            <span translate="deliverTillTuesday2"></span> {{ deliverySchedule.tuePMTo }}
+          </div>
+        </ion-item>
+        <ion-item *ngIf="!deliverySchedule.wedAMFr && !deliverySchedule.wedAMTo">
+          <div translate="closed"></div>
+        </ion-item>
+        <ion-item *ngIf="deliverySchedule.wedAMFr && deliverySchedule.wedAMTo">
+          <div>
+            <span translate="deliverFromWednesday1"></span> {{ deliverySchedule.wedAMFr }} -
+            <span translate="deliverTillWednesday1"></span> {{ deliverySchedule.wedAMTo }}
+          </div>
+          <div *ngIf="deliverySchedule.wedPMFr && deliverySchedule.wedPMTo">
+            <span translate="deliverFromWednesday2"></span> {{ deliverySchedule.wedPMFr }} -
+            <span translate="deliverTillWednesday2"></span> {{ deliverySchedule.wedPMTo }}
+          </div>
+        </ion-item>
+        <ion-item *ngIf="!deliverySchedule.thuAMFr && !deliverySchedule.thuAMTo">
+          <div translate="closed"></div>
+        </ion-item>
+        <ion-item *ngIf="deliverySchedule.thuAMFr && deliverySchedule.thuAMTo">
+          <div>
+            <span translate="deliverFromThursday1"></span> {{ deliverySchedule.thuAMFr }} -
+            <span translate="deliverTillThursday1"></span> {{ deliverySchedule.thuAMTo }}
+          </div>
+          <div *ngIf="deliverySchedule.thuPMFr && deliverySchedule.thuPMTo">
+            <span translate="deliverFromThursday2"></span> {{ deliverySchedule.thuPMFr }} -
+            <span translate="deliverTillThursday2"></span> {{ deliverySchedule.thuPMTo }}
+          </div>
+        </ion-item>
+        <ion-item *ngIf="!deliverySchedule.friAMFr && !deliverySchedule.friAMTo">
+          <div translate="closed"></div>
+        </ion-item>
+        <ion-item *ngIf="deliverySchedule.friAMFr && deliverySchedule.friAMTo">
+          <div>
+            <span translate="deliverFromFriday1"></span> {{ deliverySchedule.friAMFr }} -
+            <span translate="deliverTillFriday1"></span> {{ deliverySchedule.friAMTo }}
+          </div>
+          <div *ngIf="deliverySchedule.friPMFr && deliverySchedule.friPMTo">
+            <span translate="deliverFromFriday2"></span> {{ deliverySchedule.friPMFr }} -
+            <span translate="deliverTillFriday2"></span> {{ deliverySchedule.friPMTo }}
+          </div>
+        </ion-item>
+      </ion-list>
+    </ng-container>
+
+    <ng-container *ngIf="contacts && contacts.length > 0">
+      <ion-text class="list-header">
+        <ion-note translate>contactsPage</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
+        <ion-card *ngFor="let item of contacts">
+          <ion-item>
+            <ion-avatar slot="start">
+              <img [src]="item.avatar" alt="avatar">
+            </ion-avatar>
+            <h2>{{ item.firstName }} {{ item.name }}</h2>
+            <p>
+              <button ion-item tappable *ngIf="item.mailAddress"
+                      (click)="goToMail(item.mailAddress)">{{ item.mailAddress }}
+              </button>
+            </p>
+            <p>
+              <button ion-item tappable *ngIf="item.mobileNr"
+                      (click)="goToPhone(item.mobileNr)">{{ item.mobileNr }}
+              </button>
+            </p>
+          </ion-item>
+
+          <ion-card-content>
+            <ion-row>
+              <ion-col>
+                <ion-item>
+                  <ion-checkbox translate="contacts.ordConf"
+                                [checked]="item.ordConf" [disabled]="true"></ion-checkbox>
+                </ion-item>
+              </ion-col>
+              <ion-col>
+                <ion-item>
+                  <ion-checkbox translate="contacts.bonus"
+                                [checked]="item.bonus" [disabled]="true"></ion-checkbox>
+                </ion-item>
+              </ion-col>
+              <ion-col align-self-center text-center>
+                <ion-item>
+                  <ion-checkbox translate="contacts.invoice"
+                                [checked]="item.invoice" [disabled]="true"></ion-checkbox>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col>
+                <ion-item>
+                  <ion-checkbox translate="contacts.reminder"
+                                [checked]="item.reminder" disabled="true"></ion-checkbox>
+                </ion-item>
+              </ion-col>
+              <ion-col>
+                <ion-item>
+                  <ion-checkbox translate="contacts.domiciliation"
+                                [checked]="item.domiciliation" disabled="true"></ion-checkbox>
+                </ion-item>
+              </ion-col>
+              <ion-col align-self-center text-center>
+                <ion-item>
+                  <ion-checkbox translate="contacts.comMailing"
+                                [checked]="item.comMailing" disabled="true"></ion-checkbox>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+        </ion-card>
+      </ion-list>
+    </ng-container>
+  </ng-template>
 </ion-content>

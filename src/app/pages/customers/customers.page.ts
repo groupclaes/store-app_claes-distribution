@@ -24,17 +24,18 @@ export class CustomersPage {
   private _filterTimeout
 
   constructor(private loadCtrl: LoadingController,
-    private alertCtrl: AlertController,
-    private navCtrl: NavController,
-    private user: UserService,
-    private customersService: CustomersRepositoryService,
-    private cartService: CartService,
-    private settings: SettingsService,
-    private ref: ChangeDetectorRef,
-    private translate: TranslateService,
-    private sync: SyncService,
-    private route: ActivatedRoute,
-    private logger: LoggingProvider) { }
+              private alertCtrl: AlertController,
+              private navCtrl: NavController,
+              private user: UserService,
+              private customersService: CustomersRepositoryService,
+              private cartService: CartService,
+              private settings: SettingsService,
+              private ref: ChangeDetectorRef,
+              private translate: TranslateService,
+              private sync: SyncService,
+              private route: ActivatedRoute,
+              private logger: LoggingProvider) {
+  }
 
   get createCustomerAllowed(): boolean {
     return (this.user.userinfo) ? this.user.userinfo.type === 2 || this.user.userinfo.type === 3 : false
@@ -58,6 +59,7 @@ export class CustomersPage {
       this.loadCustomers().then(x => this.ref.markForCheck())
     }
   }
+
   async ionViewDidEnter() {
     this.ref.markForCheck()
   }
@@ -170,7 +172,7 @@ export class CustomersPage {
 
     if (!skip_prepare) {
       await this.sync.prepareCurrentExceptions(customer)
-      if (this.user.userinfo.type === 3 || this.user.userinfo.type === 2) {
+      if (this.user.userinfo.type === 3) { // || this.user.userinfo.type === 2
         this.logger.debug('Type 3 -- syncing prices and favourites', customer)
         await this.sync.syncPrices(this.user.userinfo.userId, 'all', true, customer.id, customer.addressId)
         await this.sync.syncFavorites(this.user.userinfo.userId, 'all', true, customer.id, customer.addressId)

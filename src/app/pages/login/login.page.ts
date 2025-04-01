@@ -1,12 +1,14 @@
-import { AppCredential, ServerCustomer, UserService } from '../../core/user.service'
+import { AppCredential, Customer, ServerCustomer, UserService } from '../../core/user.service'
 import { environment } from './../../../environments/environment'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser'
 import { LoadingController, NavController, Platform, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { HttpErrorResponse } from '@angular/common/http'
 import { SyncService } from 'src/app/core/sync.service'
-import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
+import {
+  DataIntegrityChecksumsRepositoryService
+} from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 import { StorageProvider } from 'src/app/core/storage-provider.service'
 import { CartsRepositoryService } from 'src/app/core/repositories/carts.repository.service'
 import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/current-exceptions.repository.service'
@@ -55,13 +57,23 @@ export class LoginPage implements OnInit {
 
   get defaultPage(): Promise<string> {
     if (this.user.userinfo.type > 1) {
+      // check if a customer was selected
+      const previous_user: string = localStorage.getItem('active-user')
+      if (previous_user) {
+        const _prev: Customer = JSON.parse(previous_user)
+        this.user.activeUser = _prev
+        // Set a newly active customer
+        this.cart.updateActive(_prev.id, _prev.address).then((): void => {
+        })
+        return firstValueFrom(this.settings.DisplayDefaultPage.pipe<string>(take(1)))
+      }
       return Promise.resolve('/customers')
     }
     return firstValueFrom(this.settings.DisplayDefaultPage.pipe<string>(take(1)))
   }
 
-  get backgroundImage() {
-    let size = 'small'
+  get backgroundImage(): SafeStyle {
+    let size: 'small' | 'medium' | 'large' = 'small'
     if (this.platform.width() >= 1366) {
       size = 'large'
     } else if (this.platform.width() >= 768) {
@@ -193,7 +205,8 @@ export class LoginPage implements OnInit {
             })
             try {
               this._loading.dismiss()
-            } catch { }
+            } catch {
+            }
             this.ref.markForCheck()
 
             if (prepare) {
@@ -219,7 +232,8 @@ export class LoginPage implements OnInit {
           if (this.user.userinfo.type === 1) {
             try {
               this._loading.message = this.translate.instant('preparing')
-            } catch { }
+            } catch {
+            }
             const prepare = await this.sync.prepareCurrentExceptions({
               id: this.user.userinfo.id,
               addressId: this.user.userinfo.address,
@@ -249,7 +263,8 @@ export class LoginPage implements OnInit {
             })
             try {
               this._loading.dismiss()
-            } catch { }
+            } catch {
+            }
             this.ref.markForCheck()
 
             if (prepare) {
@@ -277,7 +292,8 @@ export class LoginPage implements OnInit {
           this._loading.dismiss()
           this.ref.markForCheck()
         }
-      } catch { }
+      } catch {
+      }
     }
   }
 
@@ -339,7 +355,8 @@ export class LoginPage implements OnInit {
     })
     try {
       this._loading.dismiss()
-    } catch { }
+    } catch {
+    }
     this.ref.markForCheck()
 
     if (prepare) {
@@ -364,7 +381,8 @@ export class LoginPage implements OnInit {
             this._loading.present()
             try {
               await this.cartsRepository.deleteOld(90)
-            } catch { }
+            } catch {
+            }
             await this.exceptionsRepository.delete()
             this._loading.dismiss()
             this.ref.markForCheck()

@@ -630,6 +630,7 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
+          localStorage.removeItem('active-user')
           this.logger.log('inserted productExceptions', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'productExceptions', response.data.checksum)
         })

@@ -15,7 +15,9 @@ import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { Store } from 'src/app/core/sync.service'
-import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
+import {
+  DataIntegrityChecksumsRepositoryService
+} from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
 
@@ -23,7 +25,7 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
   selector: 'app-products',
   templateUrl: './products.page.html',
   styleUrls: ['./products.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush // comment this if there are still un-updated input fields
 })
 export class ProductsPage implements OnInit, OnDestroy {
   private _products: IProductT[]
@@ -56,14 +58,14 @@ export class ProductsPage implements OnInit, OnDestroy {
     orderState: 'default' | 'inactive'
     attributes: AttributesFilter[]
   } = {
-      newState: 'default',
-      promoState: 'default',
-      favoriteState: 'default',
-      orderState: 'default',
-      category: null,
-      query: '',
-      attributes: []
-    }
+    newState: 'default',
+    promoState: 'default',
+    favoriteState: 'default',
+    orderState: 'default',
+    category: null,
+    query: '',
+    attributes: []
+  }
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -110,7 +112,9 @@ export class ProductsPage implements OnInit, OnDestroy {
         this._filters.orderState = 'inactive'
       }
       if (this.user.activeUser) {
-        fallback = setTimeout(() => { this.load(true) }, 180)
+        fallback = setTimeout(() => {
+          this.load(true)
+        }, 180)
       }
     })
 
@@ -158,7 +162,9 @@ export class ProductsPage implements OnInit, OnDestroy {
     return this.user.isGuest
   }
 
-  get canFilterModal(): boolean { return this._filters.category !== null }
+  get canFilterModal(): boolean {
+    return this._filters.category !== null
+  }
 
   get hasAttributeFilter(): boolean {
     return this._filters.attributes && this._filters.attributes instanceof Array && this._filters.attributes.length > 0
@@ -168,17 +174,29 @@ export class ProductsPage implements OnInit, OnDestroy {
     return this._filters
   }
 
-  get newFilter(): boolean { return this._filters.newState === 'active' }
+  get newFilter(): boolean {
+    return this._filters.newState === 'active'
+  }
 
-  get promoFilter(): boolean { return this._filters.promoState === 'active' }
+  get promoFilter(): boolean {
+    return this._filters.promoState === 'active'
+  }
 
-  get favoriteFilter(): boolean { return this._filters.favoriteState === 'active' }
+  get favoriteFilter(): boolean {
+    return this._filters.favoriteState === 'active'
+  }
 
-  get orderFilter(): boolean { return this._filters.orderState === 'inactive' }
+  get orderFilter(): boolean {
+    return this._filters.orderState === 'inactive'
+  }
 
-  get products(): IProductT[] { return this._products || [] }
+  get products(): IProductT[] {
+    return this._products || []
+  }
 
-  get culture(): string { return this.translate.currentLang }
+  get culture(): string {
+    return this.translate.currentLang
+  }
 
   get category(): number {
     if (this._filters && this._filters.category)
@@ -192,7 +210,9 @@ export class ProductsPage implements OnInit, OnDestroy {
     return this.translate.instant('productsPage')
   }
 
-  get backButtonText(): string { return this.translate.instant('backButtonText') }
+  get backButtonText(): string {
+    return this.translate.instant('backButtonText')
+  }
 
   get currentCustomer(): string {
     if (this.user.hasAgentAccess) {
