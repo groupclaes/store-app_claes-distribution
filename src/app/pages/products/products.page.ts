@@ -506,8 +506,7 @@ export class ProductsPage implements OnInit, OnDestroy {
     return ''
   }
 
-  productById(index, product: IProductT) {
-    console.log(product.id, index)
+  productById(index: number, product: IProductT) {
     return product.id
   }
 

@@ -5,7 +5,7 @@ import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { BrowserService } from 'src/app/core/browser.service'
 import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact }
   from 'src/app/core/repositories/customers.repository.service'
-import { AppCustomerModel, Customer, UserService } from 'src/app/core/user.service'
+import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 import { Md5 } from 'ts-md5'
 
 @Component({
@@ -20,13 +20,14 @@ export class CustomerInfoPage {
   contacts: IContact[]
 
   constructor(private translate: TranslateService,
-    private customerService: CustomersRepositoryService,
-    private user: UserService,
-    private navCtrl: NavController,
-    private alertCtrl: AlertController,
-    private ref: ChangeDetectorRef,
-    private logger: LoggingProvider,
-    private browser: BrowserService) { }
+              private customerService: CustomersRepositoryService,
+              private user: UserService,
+              private navCtrl: NavController,
+              private alertCtrl: AlertController,
+              private ref: ChangeDetectorRef,
+              private logger: LoggingProvider,
+              private browser: BrowserService) {
+  }
 
 
   get backButtonText(): string {
@@ -44,25 +45,23 @@ export class CustomerInfoPage {
         return this.customer.vatNum
       }
 
-      const newVat = ('000000000' + vatString)
+      const newVat: string = ('000000000' + vatString)
       return 'BE' + newVat.substring(newVat.length - 10)
     }
 
     return this.customer.vatNum
   }
 
-  ionViewWillEnter() {
-    if (!this.user.userinfo) {
-      this.navCtrl.navigateRoot('/account/login')
-    } else {
-      this.loadCustomerInfo()
-      this.ref.markForCheck()
-    }
+  async ionViewWillEnter(): Promise<void> {
+    if (!this.user.userinfo)
+      await this.navCtrl.navigateRoot('/account/login')
+    else
+      await this.loadCustomerInfo()
   }
 
-  async loadCustomerInfo() {
+  async loadCustomerInfo(): Promise<void> {
     if (this.user.activeUser) {
-      const result = await this.customerService
+      const result: AppCustomerModel = await this.customerService
         .get<AppCustomerModel>(this.user.activeUser.id,
           this.user.activeUser.address)
 
@@ -74,9 +73,8 @@ export class CustomerInfoPage {
         ])
         this.logger.debug('Fetched notes, deliveryschedules and contacts')
         this.ref.markForCheck()
-      }
-      else {
-        const alert = await this.alertCtrl.create({
+      } else {
+        const alert: HTMLIonAlertElement = await this.alertCtrl.create({
           message: this.translate.instant('customer-info.alerts.invalid-customer.message'),
           header: this.translate.instant('customer-info.alerts.invalid-customer.title'),
           buttons: [
@@ -86,14 +84,15 @@ export class CustomerInfoPage {
             }
           ]
         })
-        alert.present()
+        alert.present().then((): void => {
+        })
       }
     }
   }
 
-  async loadDeliverySchedules() {
+  async loadDeliverySchedules(): Promise<void> {
     this.logger.debug('Fetching delivery schedules')
-    const deliverySchedules = await this.customerService.getDeliverySchedule(
+    const deliverySchedules: IAppDeliveryScheduleModel[] = await this.customerService.getDeliverySchedule(
       this.user.activeUser.id,
       this.user.activeUser.address)
 
@@ -101,12 +100,14 @@ export class CustomerInfoPage {
     this.logger.debug('Received delivery schedules', deliverySchedules)
   }
 
-  async loadContacts() {
+  async loadContacts(): Promise<void> {
     this.logger.debug('loading contacts')
 
-    const contacts = await this.customerService.getContacts(
+    const contacts: IContact[] = await this.customerService.getContacts(
       this.user.activeUser.id,
       this.user.activeUser.address)
+
+    console.log(contacts)
 
     for (const contact of contacts) {
       contact.name = contact.name.split(`''`).join(`'`)
@@ -117,18 +118,18 @@ export class CustomerInfoPage {
     this.contacts = contacts
   }
 
-  goToMail(mail: string) {
+  goToMail(mail: string): void {
     return this.openBrowserUrl('mailto:' + mail)
   }
 
-  goToPhone(phone: string) {
+  goToPhone(phone: string): void {
     return this.openBrowserUrl('tel:' + phone.replace('+32', '')
       .replace('(0)', '0')
       .replace(' ', '')
       .replace('-', ''))
   }
 
-  private openBrowserUrl(url: string) {
+  private openBrowserUrl(url: string): void {
     return this.browser.open(url, '_system', 'hidden=yes,location=yes')
   }
 }

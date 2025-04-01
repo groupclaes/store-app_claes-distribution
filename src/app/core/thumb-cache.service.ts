@@ -8,8 +8,8 @@ import { Observable, from, map } from 'rxjs'
 })
 export class ThumbCacheService {
   get(request: HttpRequest<any>): Observable<any> {
-    const itemnum = request.url
-      .replace('https://pcm.groupclaes.be/v4/product-images/dis/', '')
+    const itemnum: string = request.url
+      .replace('https://pcm.groupclaes.be/v4/product-images/', '')
       .replace('?s=thumb', '')
 
     return from(
@@ -26,7 +26,7 @@ export class ThumbCacheService {
 
   put(request: HttpRequest<any>, response: HttpResponse<Blob>) {
     const itemnum = request.url
-      .replace('https://pcm.groupclaes.be/v4/product-images/dis/', '')
+      .replace('https://pcm.groupclaes.be/v4/product-images/', '')
       .replace('?s=thumb', '')
 
     const reader = new FileReader()
@@ -42,9 +42,9 @@ export class ThumbCacheService {
       }
     }
     reader.readAsDataURL(response.body)
-    // console.log(request, response)
   }
 }
+
 function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
   // console.log(b64Data)
   const byteCharacters = atob(b64Data.replace('data:image/jpeg;base64,', ''))

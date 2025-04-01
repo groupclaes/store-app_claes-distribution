@@ -31,7 +31,7 @@ export class RecipesRepositoryService {
       for (const itemnum of products) {
         const productResult = await db.query(`
         SELECT
-          itemnum, products.id,products.${nameString} as name,packingUnits.${nameString} as unit, ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url
+          itemnum, products.id,products.${nameString} as name,packingUnits.${nameString} as unit, ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url
         FROM products
         INNER JOIN packingUnits ON products.packId = packingUnits.id
         WHERE EXISTS

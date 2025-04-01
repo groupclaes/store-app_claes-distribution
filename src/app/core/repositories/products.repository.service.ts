@@ -86,7 +86,7 @@ export class ProductsRepositoryService {
                                               puc.${nameString}                                                         as contentUnit,
                                               productTexts.${descriptionString}                                         as description,
                                               productTexts.${promoString}                                               as promo,
-                                              ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+                                              ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
                                               p.color
                                        FROM products AS p
                                               INNER JOIN packingUnits AS pu ON p.packId = pu.id
@@ -123,7 +123,7 @@ export class ProductsRepositoryService {
                 puc.${nameString}                                                         as contentUnit,
                 productTexts.${descriptionString}                                         as description,
                 productTexts.${promoString}                                               as promo,
-                ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+                ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
                 p.color
          FROM products AS p
                 INNER JOIN packingUnits AS pu ON p.packId = pu.id
@@ -160,7 +160,7 @@ export class ProductsRepositoryService {
                                                      products.itemnum,
                                                      products.id,
                                                      packingUnits.${nameString}                                                       as unit,
-                                                     ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                     ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                      products.color
                                               FROM productRelations AS rel
                                                      INNER JOIN products ON rel.product = products.id
@@ -176,7 +176,7 @@ export class ProductsRepositoryService {
                                                       products.itemnum,
                                                       products.id,
                                                       packingUnits.${nameString}                                                       as unit,
-                                                      ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                      ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                       products.color
                                                FROM products
                                                       INNER JOIN packingUnits ON products.packId = packingUnits.id
@@ -195,7 +195,7 @@ export class ProductsRepositoryService {
                                                      products.itemnum,
                                                      products.id,
                                                      packingUnits.${nameString}                                                       as unit,
-                                                     ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                     ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                      products.color
                                               FROM productRelations AS rel
                                                      INNER JOIN products ON rel.product = products.id
@@ -211,7 +211,7 @@ export class ProductsRepositoryService {
                                                    products.itemnum,
                                                    products.id,
                                                    packingUnits.${nameString}                                                       as unit,
-                                                   ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                                   ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                    products.color
                                             FROM productRelations AS rel
                                                    INNER JOIN products ON rel.product = products.id
@@ -302,7 +302,7 @@ export class ProductsRepositoryService {
                           favorites.lastA                                                                  as favLastA,
                           products.AvailableOn                                                             as availableOn,
                           ${isPromo}                                                                       as isPromo,
-                          ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                          ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                           products.color,
                           (SELECT description
                            FROM productDescriptionCustomers
@@ -418,7 +418,7 @@ export class ProductsRepositoryService {
                                           favorites.lastA                                                                  as favLastA,
                                           products.AvailableOn                                                             as availableOn,
                                           ${isPromo}                                                                       as isPromo,
-                                          ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                                          ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                           products.color,
                                           (SELECT description
                                            FROM productDescriptionCustomers
@@ -445,7 +445,7 @@ export class ProductsRepositoryService {
                 NULL                                                                             as favLastA,
                 products.AvailableOn                                                             as availableOn,
                 0                                                                                as isPromo,
-                ('${environment.pcm_url}/product-images/dis/' || products.itemnum || '?s=thumb') as url,
+                ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                 products.color,
                 NULL                                                                             as descriptionCustomer
          FROM products

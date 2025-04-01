@@ -1,19 +1,21 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { Directory, Filesystem } from '@capacitor/filesystem'
-import { LoadingController } from '@ionic/angular'
+import { AlertController, LoadingController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { DatabaseService } from 'src/app/core/database.service'
-import { DataIntegrityChecksumsRepositoryService } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
+import {
+  DataIntegrityChecksumsRepositoryService
+} from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 import { Store, SyncService } from 'src/app/core/sync.service'
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 
 @Component({
   selector: 'app-sync',
   templateUrl: './sync.page.html',
-  styleUrls: ['./sync.page.scss'],
+  styleUrls: ['./sync.page.scss']
 })
 export class SyncPage implements OnInit {
   loader: HTMLIonLoadingElement
@@ -31,10 +33,12 @@ export class SyncPage implements OnInit {
     private sync: SyncService,
     private repo: DataIntegrityChecksumsRepositoryService,
     private loadingCtrl: LoadingController,
+    private alertCtrl: AlertController,
     private logger: LoggingProvider,
     private _db: DatabaseService,
     public network: NetworkService
-  ) { }
+  ) {
+  }
 
   get internalUser(): boolean {
     return this.user.userinfo.id < 1000
@@ -97,6 +101,29 @@ export class SyncPage implements OnInit {
       .then(_ => this.load())
   }
 
+  async purgeThumbnails(): Promise<void> {
+    try {
+      const alert = await this.alertCtrl.create({
+        header: this.translate.instant('thumbnailsDeletionWarning'),
+        buttons: [
+          {
+            text: this.translate.instant('actions.cancel'),
+            role: 'cancel',
+            handler: (): void => {
+            }
+          }, {
+            text: this.translate.instant('yes'),
+            role: 'destructive',
+            handler: () => this.sync.deleteThumbnailsFolder().then(async (): Promise<void> => await this.load())
+          }
+        ]
+      })
+      await alert.present()
+    } catch (err) {
+      this.logger.error('SyncPage.purgeThumbnails() error', err)
+    }
+  }
+
   private async load(): Promise<void> {
     try {
       this.loading = true
@@ -118,6 +145,9 @@ export class SyncPage implements OnInit {
         directory: Directory.Documents
       }).then(result => {
         this.imagecount = result.files.length
+        this.ref.markForCheck()
+      }).catch(err => {
+        this.imagecount = 0
         this.ref.markForCheck()
       })
     } catch (err) {

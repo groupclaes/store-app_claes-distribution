@@ -412,6 +412,7 @@
         "customer-id": "Numéro client",
         "customer-name": "Nom",
         "delivery-address": "Adresse livraison",
+        "address-name": "Nom d'adresse livraison",
         "promo": "Droit à promo",
         "fostplus": "FostPlus",
         "address": "Adresse",

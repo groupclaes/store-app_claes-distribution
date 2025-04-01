@@ -23,7 +23,8 @@ export class SyncService {
     private storage: StorageProvider,
     private logger: LoggingProvider,
     private _db: DatabaseService
-  ) { }
+  ) {
+  }
 
 
   private get checksum(): Array<Store> {
@@ -100,7 +101,8 @@ export class SyncService {
     const result = []
 
     await this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      const sqlResult = await db.query(`SELECT * FROM dataIntegrityChecksums`)
+      const sqlResult = await db.query(`SELECT *
+                                        FROM dataIntegrityChecksums`)
       this.logger.log(`SyncService.loadIntegrity() -- after select`)
 
       if (!sqlResult.values || sqlResult.values.length <= 0) {
@@ -370,7 +372,7 @@ export class SyncService {
   }
 
   async syncPrices(user_id: number, culture?: string, force?: boolean,
-    customer_id?: number, address_id?: number) {
+                   customer_id?: number, address_id?: number) {
     try {
       this.logger.log(`SyncProvider.syncPrices() -- customer_id: ${customer_id}, address_id: ${address_id}`)
 
@@ -1004,8 +1006,6 @@ export class SyncService {
             })
           })
 
-          console.debug(sqlStatements, response.data.length)
-
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
           this.logger.log('inserted usageManuals', response.data.checksum)
@@ -1044,8 +1044,6 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS departments (id INTEGER PRIMARY KEY, userCode INTEGER, alias STRING)')
           await db.execute('CREATE TABLE IF NOT EXISTS departmentProducts '
             + '(department INTEGER, product INTEGER, PRIMARY KEY (department, product))')
-
-          this.logger.warn('dropped departments', response.data)
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1589,7 +1587,7 @@ export class SyncService {
           .pipe(timeout(TIMEOUT_INTERVAL))
       )
 
-        if (response && response.data.recipes) {
+      if (response && response.data.recipes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS recipesModule')
           await db.execute('CREATE TABLE IF NOT EXISTS recipesModule '
@@ -1860,7 +1858,7 @@ export class SyncService {
         ).values.map(x => x.itemnum)
     })
 
-    const runner = new SyncTaskRunner<void>(4)
+    const runner = new SyncTaskRunner<void>(6)
     for (let itemnum of itemnums) {
       runner.push(() => new Promise<void>((x, y) => {
         // check if file exists on disk, if so skip
@@ -1870,7 +1868,7 @@ export class SyncService {
         }).then(file_info => {
           x()
         }).catch(err => {
-          firstValueFrom(this.api.pcmGet(`product-images/dis/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
+          firstValueFrom(this.api.pcmGet(`product-images/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
         })
       }))
     }
@@ -1883,10 +1881,14 @@ export class SyncService {
         } else {
           if (options.loader)
             options.loader.message = `${options.loader.message.toString().split(' ')[0]} ${itemnums.length - runner.queue_length}/${itemnums.length}`
-          console.log(`completed ${itemnums.length - runner.queue_length}/${itemnums.length}`, runner.busy)
+          //console.log(`completed ${itemnums.length - runner.queue_length}/${itemnums.length}`, runner.busy)
         }
-      }, 200)
+      }, 100)
     })
+  }
+
+  async deleteThumbnailsFolder(): Promise<void> {
+    await Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Documents, recursive: true })
   }
 
   /**
@@ -1899,7 +1901,8 @@ export class SyncService {
    */
   private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum: string): Promise<Changes> {
     console.log(dataTable, checksum)
-    const res = await db.run(`INSERT OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
+    const res = await db.run(`INSERT
+    OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
       dataTable,
       checksum,
       new Date().toJSON()

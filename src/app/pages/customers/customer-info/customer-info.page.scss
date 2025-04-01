@@ -1,3 +1,13 @@
-ion-label {
-  text-align: right;
+:host {
+  card {
+    --ion-background-color: white;
+
+    @media (prefers-color-scheme: dark) {
+      --ion-background-color: black;
+    }
+  }
+
+  .border-t {
+    border-top: 1px solid var(--border-color);
+  }
 }

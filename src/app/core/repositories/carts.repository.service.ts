@@ -169,7 +169,7 @@ export class CartsRepositoryService {
           p.id,
           p.${nameString} as name,
           pu.${nameString} as unit,
-          ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+          ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
           p.color,
           p.minOrder,
           p.stackSize
@@ -310,7 +310,7 @@ export class CartsRepositoryService {
             p.id,
             p.${nameString} as name,
             pu.${nameString} as unit,
-            ('${environment.pcm_url}/product-images/dis/' || p.itemnum || '?s=thumb') as url,
+            ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
             p.color
           FROM cartProducts AS cp
           LEFT OUTER JOIN products AS p ON cp.product = p.id

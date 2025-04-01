@@ -56,9 +56,8 @@ export class CustomersRepositoryService {
   }
 
   async getContacts(id: number, address: number): Promise<IContact[]> {
-    if (!id || !address) {
+    if (!id)
       return []
-    }
 
     return await this._db.executeQuery<Promise<IContact[]>>(async (db: SQLiteDBConnection) => {
       const result = await db.query(`SELECT * FROM contacts WHERE customerId = ? AND addressId = ?`,
@@ -69,9 +68,8 @@ export class CustomersRepositoryService {
   }
 
   async getDeliverySchedule(id: number, address: number): Promise<IAppDeliveryScheduleModel[]> {
-    if (!id || !address) {
+    if (!id)
       return []
-    }
 
     return await this._db.executeQuery<Promise<IAppDeliveryScheduleModel[]>>(async (db: SQLiteDBConnection) => {
       const result = await db.query(`SELECT * FROM deliverySchedules WHERE customerId = ? AND addressId = ?`,
