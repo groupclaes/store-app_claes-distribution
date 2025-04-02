@@ -47,7 +47,7 @@ export class ThumbCacheService {
 
 function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
   // console.log(b64Data)
-  const byteCharacters = atob(b64Data.replace('data:image/jpeg;base64,', ''))
+  const byteCharacters = atob(b64Data.replace('data:' + contentType + ';base64,', ''))
   const byteArrays = []
 
   for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {

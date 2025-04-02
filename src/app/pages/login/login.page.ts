@@ -179,29 +179,7 @@ export class LoginPage implements OnInit {
             const prepare = await this.sync.prepareCurrentExceptions({
               id: this.user.userinfo.id,
               addressId: this.user.userinfo.address,
-              addressGroupId: this.user.userinfo.addressGroup,
-              userCode: this.user.userinfo.userCode,
-              userType: this.user.userinfo.type,
-              name: '',
-              address: '',
-              streetNum: '',
-              zipCode: '',
-              city: '',
-              country: '',
-              phoneNum: '',
-              vatNum: '',
-              language: '',
-              promo: this.user.userinfo.promo,
-              fostplus: this.user.userinfo.fostplus,
-              bonusPercentage: this.user.userinfo.bonus,
-              addressName: '',
-              delvAddress: '',
-              delvStreetNum: '',
-              delvZipCode: '',
-              delvCity: '',
-              delvCountry: '',
-              delvPhoneNum: '',
-              delvLanguage: ''
+              addressGroupId: this.user.userinfo.addressGroup
             })
             try {
               this._loading.dismiss()
@@ -237,29 +215,7 @@ export class LoginPage implements OnInit {
             const prepare = await this.sync.prepareCurrentExceptions({
               id: this.user.userinfo.id,
               addressId: this.user.userinfo.address,
-              addressGroupId: this.user.userinfo.addressGroup,
-              userCode: this.user.userinfo.userCode,
-              userType: this.user.userinfo.type,
-              name: '',
-              address: '',
-              streetNum: '',
-              zipCode: '',
-              city: '',
-              country: '',
-              phoneNum: '',
-              vatNum: '',
-              language: '',
-              promo: this.user.userinfo.promo,
-              fostplus: this.user.userinfo.fostplus,
-              bonusPercentage: this.user.userinfo.bonus,
-              addressName: '',
-              delvAddress: '',
-              delvStreetNum: '',
-              delvZipCode: '',
-              delvCity: '',
-              delvCountry: '',
-              delvPhoneNum: '',
-              delvLanguage: ''
+              addressGroupId: this.user.userinfo.addressGroup
             })
             try {
               this._loading.dismiss()
@@ -329,29 +285,7 @@ export class LoginPage implements OnInit {
     const prepare = await this.sync.prepareCurrentExceptions({
       id: this.user.userinfo.id,
       addressId: this.user.userinfo.address,
-      addressGroupId: this.user.userinfo.addressGroup,
-      userCode: this.user.userinfo.userCode,
-      userType: this.user.userinfo.type,
-      name: '',
-      address: '',
-      streetNum: '',
-      zipCode: '',
-      city: '',
-      country: '',
-      phoneNum: '',
-      vatNum: '',
-      language: '',
-      promo: this.user.userinfo.promo,
-      fostplus: this.user.userinfo.fostplus,
-      bonusPercentage: this.user.userinfo.bonus,
-      addressName: '',
-      delvAddress: '',
-      delvStreetNum: '',
-      delvZipCode: '',
-      delvCity: '',
-      delvCountry: '',
-      delvPhoneNum: '',
-      delvLanguage: ''
+      addressGroupId: this.user.userinfo.addressGroup
     })
     try {
       this._loading.dismiss()

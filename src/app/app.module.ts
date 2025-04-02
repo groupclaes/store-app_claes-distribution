@@ -13,6 +13,7 @@ import { SQLiteService } from './core/sqlite.service'
 import { InitializeAppService } from './core/initialize.app.service'
 import { DatabaseService } from './core/database.service'
 import { CachingInterceptor } from './core/cache.interceptor'
+import { PdfViewerModule } from 'ng2-pdf-viewer'
 
 const createTranslateLoader =
   (http: HttpClient) => new TranslateHttpLoader(http, './assets/i18n/', '.json')
@@ -29,6 +30,7 @@ const initializeFactory =
     IonicModule.forRoot({
       mode: 'ios'
     }),
+    PdfViewerModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
@@ -36,7 +38,8 @@ const initializeFactory =
         deps: [HttpClient]
       }
     }),
-    AppRoutingModule], providers: [
+    AppRoutingModule
+  ], providers: [
     SQLiteService,
     DatabaseService,
     InitializeAppService,
@@ -51,8 +54,9 @@ const initializeFactory =
       useClass: CachingInterceptor,
       multi: true
     },
-    {provide: RouteReuseStrategy, useClass: IonicRouteStrategy},
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideHttpClient(withInterceptorsFromDi())
   ]
 })
-export class AppModule { }
+export class AppModule {
+}

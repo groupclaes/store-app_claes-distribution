@@ -48,6 +48,10 @@ const routes: Routes = [
     loadChildren: () => import('./pages/news/news.module').then(m => m.NewsPageModule)
   },
   {
+    path: 'leaflet',
+    loadChildren: () => import('./pages/leaflet/leaflet.module').then(m => m.LeafletPageModule)
+  },
+  {
     path: 'departments',
     loadChildren: () => import('./pages/departments/departments.module').then(m => m.DepartmentsPageModule)
   },

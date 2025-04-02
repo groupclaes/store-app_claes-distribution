@@ -35,7 +35,7 @@
     </ion-toolbar>
   </ion-header> -->
 
-  <cdk-virtual-scroll-viewport minBufferPx="1350" maxBufferPx="2350" itemSize="57" class="ion-content-scroll-host">
+  <cdk-virtual-scroll-viewport minBufferPx="1350" maxBufferPx="2350" autosize class="ion-content-scroll-host">
     <ion-list inset="true" *ngIf="customers && (customers.length > 0 || searchTerm.length > 0);else noCustomers">
       <ion-item *cdkVirtualFor="let customer of customers | slice:0:200" tappable (click)="setActiveCustomer(customer)" text-wrap>
         <ion-label>

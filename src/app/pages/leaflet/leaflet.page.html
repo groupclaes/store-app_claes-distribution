@@ -1,0 +1,35 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>
+      {{ 'leafletPage' | translate }} {{ today | date:'MMMM YYYY':undefined:culture + '-BE' }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable
+                  style="margin-right:8px" (click)="share()">
+        {{ 'actions.mail' | translate }}&nbsp;
+        <i color="primary" class="fal fa-fw fa-share-square"></i>
+      </ion-button>
+    </ion-buttons>
+    <ion-progress-bar type="indeterminate" *ngIf="loading"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  <pdf-viewer *ngIf="fileUrl" [src]="fileUrl" [render-text]="true" [zoom]="pdfZoom" [render-text-mode]="1"
+              [show-all]="true" [stick-to-page]="true" [fit-to-page]="true"
+              (after-load-complete)="finish()"></pdf-viewer>
+  <ion-fab slot="fixed" horizontal="end" vertical="bottom">
+    <ion-fab-button size="small" (click)="zoomIn()" [disabled]="pdfZoom === 2">
+      <i class="fal fa-fw fa-plus"></i>
+    </ion-fab-button>
+    <ion-fab-button size="small" (click)="zoomOut()" [disabled]="pdfZoom === 1">
+      <i class="fal fa-fw fa-minus"></i>
+    </ion-fab-button>
+    <ion-fab-button size="small" (click)="resetZoom()" [disabled]="pdfZoom === 1">
+      <i class="fal fa-fw fa-times"></i>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

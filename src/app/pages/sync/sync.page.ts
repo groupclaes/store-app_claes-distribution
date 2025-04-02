@@ -134,7 +134,7 @@ export class SyncPage implements OnInit {
       this.integrityChecksums = dataIntegrity.filter(e => e.dataTable !== 'lastSync')
 
       this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        const result = await db.query('select count(*) as c from currentExceptions')
+        const result = await db.query('select count(*) as c from ' + (this.agent ? 'products' : 'currentExceptions'))
         if (result.values)
           this.productcount = result.values[0]['c']
         this.ref.markForCheck()

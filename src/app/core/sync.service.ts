@@ -8,7 +8,7 @@ import { DatabaseService } from './database.service'
 import { AppCredential, AppCustomerModel, Customer, UserService } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
-import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Filesystem, Directory, StatResult, Encoding } from '@capacitor/filesystem'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -101,13 +101,11 @@ export class SyncService {
     const result = []
 
     await this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      const sqlResult = await db.query(`SELECT *
-                                        FROM dataIntegrityChecksums`)
+      const sqlResult = await db.query('SELECT * FROM dataIntegrityChecksums')
       this.logger.log(`SyncService.loadIntegrity() -- after select`)
 
-      if (!sqlResult.values || sqlResult.values.length <= 0) {
+      if (!sqlResult.values || sqlResult.values.length <= 0)
         return false
-      }
 
       for (const value of sqlResult.values as Store[]) {
         value.dateChanged = new Date(value.dateChanged) || new Date()
@@ -170,7 +168,7 @@ export class SyncService {
         const step2 = await Promise.all([
           this.syncFavorites(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
           this.syncPrices(user_id, culture, forceSync, activeUser?.id, activeUser?.address),
-          this.syncProductExceptions(user_id, culture, forceSync),
+          this.syncProductExceptions(user_id, culture, activeUser, forceSync),
           this.syncProductTaxes(user_id, culture, forceSync),
           this.syncShippingCosts(user_id, culture, forceSync),
           this.syncProductDescriptionCustomers(user_id, culture, forceSync),
@@ -189,10 +187,12 @@ export class SyncService {
           this.syncContacts(user_id, culture, forceSync),
           this.syncDeliverySchedules(user_id, culture, forceSync),
           this.syncCustomers(user_id, culture, forceSync),
-          this.syncNotes(user_id, culture, forceSync)
+          this.syncNotes(user_id, culture, forceSync),
+          this.syncDepartments(user_id, culture, forceSync)
         ])
 
-        await this.syncDepartments(user_id, culture, forceSync)
+        // check if the leaflet is up-to-date
+        await this.validateLeaflet(user_id, culture)
 
         results = step1.concat(step2, step3, step4)
       } else {
@@ -200,7 +200,7 @@ export class SyncService {
           this.syncProducts(user_id, culture, forceSync),
           this.syncPackingUnits(user_id, culture, forceSync),
           this.syncProductRelations(user_id, culture, forceSync),
-          this.syncProductExceptions(user_id, culture, forceSync)
+          this.syncProductExceptions(user_id, culture, activeUser, forceSync)
         ])
 
         const step2 = await Promise.all([
@@ -401,8 +401,8 @@ export class SyncService {
 
           let sqlStatements: capSQLiteSet[] = []
           if (response.data.length > 40000) {
-            const arrays = this.chunkArray(response.data.prices, 40000)
-            arrays.forEach(async (array: any[]) => {
+            const arrays: any[] = this.chunkArray(response.data.prices, 40000)
+            arrays.forEach(async (array: any[]): Promise<void> => {
               sqlStatements = []
               array.forEach(async (price: $TSFixMe) => {
                 sqlStatements.push({
@@ -587,7 +587,7 @@ export class SyncService {
     }
   }
 
-  async syncProductExceptions(user_id: number, culture?: string, force?: boolean) {
+  async syncProductExceptions(user_id: number, culture?: string, customer?: Customer, force?: boolean) {
     try {
       this.logger.log(`SyncProvider.syncProductExceptions()`)
 
@@ -632,9 +632,18 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          localStorage.removeItem('active-user')
           this.logger.log('inserted productExceptions', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'productExceptions', response.data.checksum)
+
+          if (customer)
+            this.prepareCurrentExceptions({
+              id: customer.id,
+              addressId: customer.address,
+              addressGroupId: customer.addressGroup
+            }).then((): void => {
+            })
+          else
+            localStorage.removeItem('active-user')
         })
       } else {
         this.logger.log(`SyncProvider.syncProductExceptions() -- no changes`)
@@ -642,7 +651,7 @@ export class SyncService {
 
       return true
     } catch (err) {
-
+      localStorage.removeItem('active-user')
     }
   }
 
@@ -725,8 +734,7 @@ export class SyncService {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
           await db.execute('DROP TABLE IF EXISTS categoryAttributes')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS categoryAttributes '
-            + '(categoryId INTEGER, groupId INTEGER, PRIMARY KEY (categoryId, groupId))')
+          await db.execute('CREATE TABLE IF NOT EXISTS categoryAttributes (categoryId INTEGER, groupId INTEGER, PRIMARY KEY (categoryId, groupId))')
 
           this.logger.log('dropped categoryAttributes')
 
@@ -1692,7 +1700,11 @@ export class SyncService {
     }
   }
 
-  async prepareCurrentExceptions(customer: AppCustomerModel): Promise<boolean> {
+  async prepareCurrentExceptions(customer: {
+    id: number,
+    addressId: number,
+    addressGroupId: number
+  }): Promise<boolean> {
     let result: boolean = true
     await this._db.executeQuery(async (db: SQLiteDBConnection): Promise<void> => {
       // Check if all tables exist
@@ -1889,6 +1901,55 @@ export class SyncService {
 
   async deleteThumbnailsFolder(): Promise<void> {
     await Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Documents, recursive: true })
+  }
+
+  async validateLeaflet(user_id: number, language: string): Promise<void> {
+    // if language is set to all, all cultures should be fetched
+    const cultures: string[] = []
+    if (language === 'all') {
+      for (let supported_culture of environment.supported_languages) {
+        cultures.push(supported_culture.split('-')[0])
+      }
+    } else
+      cultures.push(language)
+
+    const date: string = new Date().toISOString()
+    const current_id = `${date.substring(0, 4)}${(date.substring(5, 7))}`
+    console.log('current_id', current_id)
+
+    for (let culture of cultures) {
+      // check if the folder exists
+      try {
+        let file_info: StatResult = await Filesystem.stat({
+          path: `leaflets/${current_id}_${culture}.pdf`,
+          directory: Directory.Cache
+        })
+        console.log('file_info', file_info)
+      } catch (err) {
+        const blob: Blob = await firstValueFrom(this.api.pcmGet(`content/dis/website/month-leaflet/${current_id}/${culture}?show`))
+        const reader = new FileReader()
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            Filesystem.writeFile({
+              path: `leaflets/${current_id}_${culture}.pdf`,
+              directory: Directory.Cache,
+              data: reader.result,
+              encoding: Encoding.UTF8,
+              recursive: true
+            })
+          }
+        }
+        reader.readAsDataURL(blob)
+      }
+      // Filesystem.stat({
+      //   path: 'thumbnails/' + itemnum + '.blob',
+      //   directory: Directory.Documents
+      // }).then(file_info => {
+      //   x()
+      // }).catch(err => {
+      //   firstValueFrom(this.api.pcmGet(`product-images/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
+      // })
+    }
   }
 
   /**

@@ -39,7 +39,11 @@
 
   <ion-text class="list-footer" *ngIf="internalUser || agent">
     <ion-note>
-      Thumbnails worden automatisch opgeslagen, zo kan je zelfs zonder verbinding foto's blijven bekijken. Je kan ook <ion-text [style.cursor]="'pointer'" color="tertiary" (click)="network.online ? syncAllThumbnails() : network.noop()">hier</ion-text> klikken om alle artikels bij te werken. Foto's worden automatisch wekelijks bijgewerkt.
+      Thumbnails worden automatisch opgeslagen, zo kan je zelfs zonder verbinding foto's blijven bekijken. Je kan ook
+      <ion-text [style.cursor]="'pointer'" color="tertiary"
+                (click)="network.online ? syncAllThumbnails() : network.noop()">hier
+      </ion-text>
+      klikken om alle artikels bij te werken. <!-- Foto's worden automatisch wekelijks bijgewerkt. -->
     </ion-note>
   </ion-text>
 
