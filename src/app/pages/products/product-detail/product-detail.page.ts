@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'
-import { ActivatedRoute } from '@angular/router'
+import { ActivatedRoute, Params } from '@angular/router'
 import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
@@ -9,14 +9,22 @@ import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { BrowserService } from 'src/app/core/browser.service'
 import { CartService } from 'src/app/core/cart.service'
-import { OptionalInputModalComponent } from 'src/app/core/components/optional-input-modal/optional-input-modal.component'
+import {
+  OptionalInputModalComponent
+} from 'src/app/core/components/optional-input-modal/optional-input-modal.component'
 import { ProductsService } from 'src/app/core/products.service'
 import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
-import { IPCMAttachmentEntry, IProductDetailT, IProductPrice, IRecipeModuleEntry, ProductsRepositoryService }
-  from 'src/app/core/repositories/products.repository.service'
+import {
+  IPCMAttachmentEntry,
+  IProductDetailT,
+  IProductPrice,
+  IRecipeModuleEntry,
+  ProductsRepositoryService
+} from 'src/app/core/repositories/products.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
+import { Share, ShareOptions } from '@capacitor/share'
 
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
 
@@ -66,19 +74,18 @@ export class ProductDetailPage implements OnInit {
     public network: NetworkService
   ) {
     logger.log('ProductDetailPage -- constructor()')
-    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
+    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
       this.displayThumbnail = displayThumbnail
     })
-    route.params.subscribe(async (params) => {
+    route.params.subscribe(async (params: Params): Promise<void> => {
       if (+params.id) {
         await this.load(+params.id)
       }
     })
-    this.network.connected.subscribe(() => this.ref.markForCheck())
+    this.network.connected.subscribe((): void => this.ref.markForCheck())
   }
 
-  get canPromo() {
-    // eslint-disable-next-line eqeqeq
+  get canPromo(): boolean {
     return this.user.activeUser?.promo == true
   }
 
@@ -396,6 +403,18 @@ export class ProductDetailPage implements OnInit {
   openPicturePreview() {
     this.pictureOpen = true
     console.log('Opened image preview')
+  }
+
+  async share(options: ShareOptions) {
+    await Share.share(options)
+  }
+
+  async shareLargeImage() {
+    await this.share({
+      title: 'Product foto ' + this._product.name,
+      // text: 'Orig',
+      url: this._product.url.replace('?s=thumb', '?s=source')
+    })
   }
 
   async removeFromDepartment(departmentId: number) {

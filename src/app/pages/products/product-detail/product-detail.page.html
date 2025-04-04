@@ -8,9 +8,8 @@
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
       </ion-button>
-      <ion-button *ngIf="product" tappable class="icon-only" [id]="'open-action-sheet-' + product.id"
-                  style="font-size: 1.5em">
-        <i class="fal fa-fw fa-ellipsis-h"></i>
+      <ion-button *ngIf="product" tappable class="icon-only" [id]="'open-action-sheet-' + product.id">
+        <i class="far fal-lg fa-fw fa-ellipsis-h"></i>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -76,13 +75,13 @@
           </ion-item>
 
           <ion-item *ngIf="isUnavailable || product.availableOn">
-            <div *ngIf="isUnavailable">
-              <span translate="productUnavailable"></span>
-            </div>
-            <div *ngIf="!isUnavailable && product.availableOn">
-              <span translate="availableOn"></span>
+            <ion-text color="danger" *ngIf="isUnavailable">
+              {{ 'productUnavailable' | translate }}
+            </ion-text>
+            <ion-text color="danger" *ngIf="!isUnavailable && product.availableOn">
+              {{ 'availableOn' | translate }}
               <span [innerText]="product.availableOn | date:'dd/MM/yyyy'"></span>
-            </div>
+            </ion-text>
           </ion-item>
         </ion-list>
 
@@ -98,7 +97,7 @@
           </ion-note>
         </ion-text>
 
-        <ion-text class="list-header">
+        <ion-text class="list-header" *ngIf="!isUnavailable && !product.availableOn">
           <ion-note>{{ amountLabel }}</ion-note>
         </ion-text>
 
@@ -106,7 +105,6 @@
           <ion-item>
             <ion-input type="number" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()"
                        *ngIf="!product.availableOn" step="1" min="0"></ion-input>
-            <!-- [label]="amountLabel" labelPlacement="stacked" -->
           </ion-item>
         </ion-list>
 
@@ -338,9 +336,9 @@
         </ion-item>
         <ion-item *ngFor="let attachment of datasheets" tappable
                   (click)="network.online ? showDocumentActionSheet(attachment) : network.noop()">
-          <ion-avatar slot="start">
-            <ion-img height="24" width="24" src="assets/icon/pdf.svg"></ion-img>
-          </ion-avatar>
+          <ion-thumbnail style="--size: 28px" slot="start">
+            <img alt="pdf icon" height="24" width="24" ngSrc="assets/icon/pdf.svg"/>
+          </ion-thumbnail>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
@@ -356,9 +354,9 @@
       <ion-list inset="true">
         <ion-item *ngFor="let attachment of usageManuals" tappable
                   (click)="network.online ? showDocumentActionSheet(attachment) : network.noop()">
-          <ion-avatar slot="start">
-            <ion-img height="24" width="24" src="assets/icon/pdf.svg"></ion-img>
-          </ion-avatar>
+          <ion-thumbnail style="--size: 28px" slot="start">
+            <img alt="pdf icon" height="24" width="24" ngSrc="assets/icon/pdf.svg"/>
+          </ion-thumbnail>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
@@ -373,9 +371,9 @@
       <ion-list inset="true">
         <ion-item *ngFor="let attachment of recipes | slice:0:recipeCount" tappable
                   (click)="network.online ? showRecipeActionSheet(attachment) : network.noop()">
-          <ion-avatar slot="start">
-            <ion-img height="24" width="24" src="assets/icon/pdf.svg"></ion-img>
-          </ion-avatar>
+          <ion-thumbnail style="--size: 28px" slot="start">
+            <img alt="pdf icon" height="24" width="24" ngSrc="assets/icon/pdf.svg"/>
+          </ion-thumbnail>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
@@ -407,8 +405,15 @@
     <ng-template>
       <ion-header>
         <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button (click)="modalCtrl.dismiss()" color="danger" translate="actions.cancel"></ion-button>
+          </ion-buttons>
           <ion-buttons slot="end">
-            <ion-button (click)="modalCtrl.dismiss()" translate="actions.cancel"></ion-button>
+            <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable
+                        (click)="shareLargeImage()">
+              {{ 'actions.share' | translate }}&nbsp;
+              <i color="primary" class="fal fa-fw fa-share-square"></i>
+            </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>

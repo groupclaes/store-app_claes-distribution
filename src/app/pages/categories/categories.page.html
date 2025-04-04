@@ -6,7 +6,7 @@
     </ion-buttons>
     <ion-title>
       <span>
-        {{ ( currentCategory === null ? 'categoriesPage' : currentCategory.name ) | translate | capitalize }}
+        {{ (currentCategory === null ? 'categoriesPage' : currentCategory.name) | translate | capitalize }}
       </span>
     </ion-title>
     <ion-buttons *ngIf="!isGuest" slot="end">
@@ -21,7 +21,7 @@
   <ion-header collapse="condense">
     <ion-toolbar color="light">
       <ion-title size="large">
-        {{ ( currentCategory === null ? 'categoriesPage' : currentCategory.name ) | translate | capitalize }}
+        {{ (currentCategory === null ? 'categoriesPage' : currentCategory.name) | translate | capitalize }}
       </ion-title>
     </ion-toolbar>
   </ion-header>
@@ -32,13 +32,14 @@
     </ion-text>
 
     <ion-list inset="true">
-      <ion-item *ngFor="let category of assortmentGroup.categories" [attr.disabled]="category.products <= 0" button tappable (click)="navigatePage(category)">
+      <ion-item *ngFor="let category of assortmentGroup.categories" [attr.disabled]="category.products <= 0" button
+                tappable (click)="navigatePage(category)">
         <ion-label>
           <span>{{ category.name | capitalize }}</span>
         </ion-label>
-        <span slot="end">
+        <ion-note slot="end">
           {{ category.products }}
-        </span>
+        </ion-note>
       </ion-item>
     </ion-list>
   </ng-container>

@@ -5,10 +5,10 @@ import { LoggingProvider } from '../@shared/logging/log.service'
 import { StorageProvider } from './storage-provider.service'
 import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from './database.service'
-import { AppCredential, AppCustomerModel, Customer, UserService } from './user.service'
+import { AppCredential, Customer } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
-import { Filesystem, Directory, StatResult, Encoding } from '@capacitor/filesystem'
+import { Directory, Filesystem, StatResult } from '@capacitor/filesystem'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -1876,7 +1876,7 @@ export class SyncService {
         // check if file exists on disk, if so skip
         Filesystem.stat({
           path: 'thumbnails/' + itemnum + '.blob',
-          directory: Directory.Documents
+          directory: Directory.Cache
         }).then(file_info => {
           x()
         }).catch(err => {
@@ -1900,7 +1900,7 @@ export class SyncService {
   }
 
   async deleteThumbnailsFolder(): Promise<void> {
-    await Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Documents, recursive: true })
+    await Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Cache, recursive: true })
   }
 
   async validateLeaflet(user_id: number, language: string): Promise<void> {
@@ -1926,20 +1926,12 @@ export class SyncService {
         })
         console.log('file_info', file_info)
       } catch (err) {
-        const blob: Blob = await firstValueFrom(this.api.pcmGet(`content/dis/website/month-leaflet/${current_id}/${culture}?show`))
-        const reader = new FileReader()
-        reader.onload = () => {
-          if (typeof reader.result === 'string') {
-            Filesystem.writeFile({
-              path: `leaflets/${current_id}_${culture}.pdf`,
-              directory: Directory.Cache,
-              data: reader.result,
-              encoding: Encoding.UTF8,
-              recursive: true
-            })
-          }
-        }
-        reader.readAsDataURL(blob)
+        await Filesystem.downloadFile({
+          url: `${environment.pcm_url}/content/dis/website/month-leaflet/${current_id}/${culture}?show`,
+          path: `leaflets/${current_id}_${culture}.pdf`,
+          directory: Directory.Cache,
+          recursive: true
+        })
       }
       // Filesystem.stat({
       //   path: 'thumbnails/' + itemnum + '.blob',

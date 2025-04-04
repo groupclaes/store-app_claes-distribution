@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { environment } from 'src/environments/environment'
 import { DatabaseService } from '../database.service'
-import { Customer, CustomerUserType } from '../user.service'
+import { Customer } from '../user.service'
 import { IDepartmentT } from './departments.repository.service'
 
 @Injectable({
@@ -69,23 +69,23 @@ export class ProductsRepositoryService {
                                               p.ean,
                                               p.supplierItemIdentifier,
                                               p.relativeQuantity,
-                                              p.AvailableOn                                                             as availableOn,
+                                              p.AvailableOn                                                         as availableOn,
                                               p.isNew,
                                               p.type,
                                               p.contentQuantity,
                                               CASE ((fav.hi = 0 OR fav.hi IS NULL) AND fav.id IS NOT NULL)
                                                 WHEN 1 THEN 1
-                                                ELSE 0 END                                                              as isFavorite,
-                                              fav.hi                                                                    as favHidden,
-                                              fav.buy                                                                   as favA,
-                                              fav.lastA                                                                 as favLastA,
-                                              fav.lastB                                                                 as favLastB,
-                                              ${isPromo}                                                                as isPromo,
-                                              p.${nameString}                                                           as name,
-                                              pu.${nameString}                                                          as unit,
-                                              puc.${nameString}                                                         as contentUnit,
-                                              productTexts.${descriptionString}                                         as description,
-                                              productTexts.${promoString}                                               as promo,
+                                                ELSE 0 END                                                          as isFavorite,
+                                              fav.hi                                                                as favHidden,
+                                              fav.buy                                                               as favA,
+                                              fav.lastA                                                             as favLastA,
+                                              fav.lastB                                                             as favLastB,
+                                              ${isPromo}                                                            as isPromo,
+                                              p.${nameString}                                                       as name,
+                                              pu.${nameString}                                                      as unit,
+                                              puc.${nameString}                                                     as contentUnit,
+                                              productTexts.${descriptionString}                                     as description,
+                                              productTexts.${promoString}                                           as promo,
                                               ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
                                               p.color
                                        FROM products AS p
@@ -108,21 +108,21 @@ export class ProductsRepositoryService {
                 p.ean,
                 p.supplierItemIdentifier,
                 p.relativeQuantity,
-                p.AvailableOn                                                             as availableOn,
+                p.AvailableOn                                                         as availableOn,
                 p.isNew,
                 p.type,
                 p.contentQuantity,
-                0                                                                         as isFavorite,
-                NULL                                                                      as favHidden,
-                NULL                                                                      as favA,
-                NULL                                                                      as favLastA,
-                NULL                                                                      as favLastB,
-                0                                                                         as isPromo,
-                p.${nameString}                                                           as name,
-                pu.${nameString}                                                          as unit,
-                puc.${nameString}                                                         as contentUnit,
-                productTexts.${descriptionString}                                         as description,
-                productTexts.${promoString}                                               as promo,
+                0                                                                     as isFavorite,
+                NULL                                                                  as favHidden,
+                NULL                                                                  as favA,
+                NULL                                                                  as favLastA,
+                NULL                                                                  as favLastB,
+                0                                                                     as isPromo,
+                p.${nameString}                                                       as name,
+                pu.${nameString}                                                      as unit,
+                puc.${nameString}                                                     as contentUnit,
+                productTexts.${descriptionString}                                     as description,
+                productTexts.${promoString}                                           as promo,
                 ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
                 p.color
          FROM products AS p
@@ -156,10 +156,10 @@ export class ProductsRepositoryService {
                INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
         WHERE productAttributes.product = ?`, [id])
 
-      const similarProducts = await db.query(`SELECT products.${nameString}                                                           as name,
+      const similarProducts = await db.query(`SELECT products.${nameString}                                                       as name,
                                                      products.itemnum,
                                                      products.id,
-                                                     packingUnits.${nameString}                                                       as unit,
+                                                     packingUnits.${nameString}                                                   as unit,
                                                      ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                      products.color
                                               FROM productRelations AS rel
@@ -172,10 +172,10 @@ export class ProductsRepositoryService {
                                                 AND rel.type = 2
                                                 AND products.id != ?`, [id, id])
 
-      const similarProductsA = await db.query(`SELECT products.${nameString}                                                           as name,
+      const similarProductsA = await db.query(`SELECT products.${nameString}                                                       as name,
                                                       products.itemnum,
                                                       products.id,
-                                                      packingUnits.${nameString}                                                       as unit,
+                                                      packingUnits.${nameString}                                                   as unit,
                                                       ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                       products.color
                                                FROM products
@@ -191,10 +191,10 @@ export class ProductsRepositoryService {
                                                  AND products.c6 = ?
                                                  AND products.id != ?`, [product.c1, product.c2, product.c3, product.c4, product.c5, product.c6, id])
 
-      const relatedProducts = await db.query(`SELECT products.${nameString}                                                           as name,
+      const relatedProducts = await db.query(`SELECT products.${nameString}                                                       as name,
                                                      products.itemnum,
                                                      products.id,
-                                                     packingUnits.${nameString}                                                       as unit,
+                                                     packingUnits.${nameString}                                                   as unit,
                                                      ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                      products.color
                                               FROM productRelations AS rel
@@ -207,10 +207,10 @@ export class ProductsRepositoryService {
                                                 AND rel.type = 1
                                                 AND products.id != ?`, [id, id])
 
-      const promoProducts = await db.query(`SELECT products.${nameString}                                                           as name,
+      const promoProducts = await db.query(`SELECT products.${nameString}                                                       as name,
                                                    products.itemnum,
                                                    products.id,
-                                                   packingUnits.${nameString}                                                       as unit,
+                                                   packingUnits.${nameString}                                                   as unit,
                                                    ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                                    products.color
                                             FROM productRelations AS rel
@@ -223,20 +223,52 @@ export class ProductsRepositoryService {
                                               AND rel.type = 3
                                               AND products.id != ?`, [id, id])
 
-      const allergens = await db.query(`SELECT code, value
-                                        FROM productAllergens
-                                        WHERE product = ?
-                                          AND LENGTH(code) > 0`, [id])
+      const allergens = await db.query(
+        'SELECT code, value ' +
+        'FROM productAllergens ' +
+        'WHERE product = ? ' +
+        'AND LENGTH(code) > 0',
+        [id]
+      )
 
-      const departments = customer.id > 0 ? await db.query(`SELECT dep.id, dep.alias, NULL as products
-                                                            FROM departmentProducts
-                                                                   INNER JOIN departments as dep ON departmentProducts.department = dep.id
-                                                            WHERE departmentProducts.product = ?
-                                                              AND dep.userCode = ?`, [id, customer.userCode]) : { values: [] }
+      let departments: { values: any[] } = { values: [] }
+      let taxes: { values: any[] } = { values: [] }
+      let prices: IProductPricesOverview | undefined = undefined
 
-      const taxes = customer.id > 0 ? await db.query(`SELECT *
-                                                      FROM productTaxes
-                                                      WHERE product = ?`, [id]) : { values: [] }
+      if (customer.id > 0) {
+        try {
+          const result: DBSQLiteValues = await db.query(
+            'SELECT dep.id, dep.alias, NULL as products ' +
+            'FROM departmentProducts ' +
+            'INNER JOIN departments as dep ON departmentProducts.department = dep.id ' +
+            'WHERE departmentProducts.product = ? ' +
+            '  AND dep.userCode = ?',
+            [id, customer.userCode]
+          )
+          departments = result as any
+        } catch (err) {
+          console.log('error while retrieving departments', err)
+        }
+        // taxes
+        try {
+          const result: DBSQLiteValues = await db.query(
+            'SELECT * ' +
+            'FROM productTaxes ' +
+            'WHERE product = ?',
+            [id]
+          )
+          taxes = result as any
+        } catch (err) {
+          console.log('error while retrieving taxes', err)
+        }
+        // prices
+        try {
+          const result: IProductPricesOverview = await this.getPrices(product.id, customer, db, product.minOrder)
+          prices = result
+        } catch (err) {
+          console.log('error while retrieving prices', err)
+        }
+      }
 
       product.attributes = attributesResult.values as IProductAttributeT[]
       product.similarProducts = (similarProducts.values as IProductInfoT[]).concat(similarProductsA.values as IProductInfoT[])
@@ -250,7 +282,6 @@ export class ProductsRepositoryService {
       product.isPromo = product.isPromo == 1
       product.isFavorite = product.isFavorite == 1
 
-      const prices = customer.id > 0 ? await this.getPrices(product.id, customer, db, product.minOrder) : undefined
       if (prices?.basePrice > 0) {
         product.prices = prices.prices
         product.basePrice = prices.basePrice
@@ -288,25 +319,25 @@ export class ProductsRepositoryService {
                           products.minOrder,
                           products.stackSize,
                           products.itemnum,
-                          products.${nameString}                                                           as name,
+                          products.${nameString}                                                       as name,
                           products.[type],
                           products.isNew,
-                          packingUnits.${nameString}                                                       as unit,
+                          packingUnits.${nameString}                                                   as unit,
                           EXISTS (SELECT favorites.id
                                   FROM favorites
                                   WHERE favorites.id = products.id
                                     AND favorites.cu = ?
                                     AND favorites.ad = ?
-                                    AND (favorites.hi = 0 OR favorites.hi IS NULL))                        as isFavorite,
-                          favorites.lastB                                                                  as favLastB,
-                          favorites.lastA                                                                  as favLastA,
-                          products.AvailableOn                                                             as availableOn,
-                          ${isPromo}                                                                       as isPromo,
+                                    AND (favorites.hi = 0 OR favorites.hi IS NULL))                    as isFavorite,
+                          favorites.lastB                                                              as favLastB,
+                          favorites.lastA                                                              as favLastA,
+                          products.AvailableOn                                                         as availableOn,
+                          ${isPromo}                                                                   as isPromo,
                           ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                           products.color,
                           (SELECT description
                            FROM productDescriptionCustomers
-                           WHERE id = products.id)                                                         as descriptionCustomer
+                           WHERE id = products.id)                                                     as descriptionCustomer
                    FROM products
                           INNER JOIN packingUnits ON products.packId = packingUnits.id
                           LEFT OUTER JOIN favorites
@@ -409,20 +440,20 @@ export class ProductsRepositoryService {
                                           products.minOrder,
                                           products.stackSize,
                                           products.itemnum,
-                                          products.${nameString}                                                           as name,
+                                          products.${nameString}                                                       as name,
                                           products.[type],
                                           products.isNew,
-                                          packingUnits.${nameString}                                                       as unit,
-                                          ${isFavorite}                                                                    as isFavorite,
-                                          favorites.lastB                                                                  as favLastB,
-                                          favorites.lastA                                                                  as favLastA,
-                                          products.AvailableOn                                                             as availableOn,
-                                          ${isPromo}                                                                       as isPromo,
+                                          packingUnits.${nameString}                                                   as unit,
+                                          ${isFavorite}                                                                as isFavorite,
+                                          favorites.lastB                                                              as favLastB,
+                                          favorites.lastA                                                              as favLastA,
+                                          products.AvailableOn                                                         as availableOn,
+                                          ${isPromo}                                                                   as isPromo,
                                           ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                                           products.color,
                                           (SELECT description
                                            FROM productDescriptionCustomers
-                                           WHERE id = products.id)                                                         as descriptionCustomer
+                                           WHERE id = products.id)                                                     as descriptionCustomer
                                    FROM products
                                           INNER JOIN packingUnits ON products.packId = packingUnits.id
                                           LEFT OUTER JOIN favorites
@@ -436,18 +467,18 @@ export class ProductsRepositoryService {
                 products.minOrder,
                 products.stackSize,
                 products.itemnum,
-                products.${nameString}                                                           as name,
+                products.${nameString}                                                       as name,
                 products.[type],
                 products.isNew,
-                packingUnits.${nameString}                                                       as unit,
-                0                                                                                as isFavorite,
-                NULL                                                                             as favLastB,
-                NULL                                                                             as favLastA,
-                products.AvailableOn                                                             as availableOn,
-                0                                                                                as isPromo,
+                packingUnits.${nameString}                                                   as unit,
+                0                                                                            as isFavorite,
+                NULL                                                                         as favLastB,
+                NULL                                                                         as favLastA,
+                products.AvailableOn                                                         as availableOn,
+                0                                                                            as isPromo,
                 ('${environment.pcm_url}/product-images/' || products.itemnum || '?s=thumb') as url,
                 products.color,
-                NULL                                                                             as descriptionCustomer
+                NULL                                                                         as descriptionCustomer
          FROM products
                 INNER JOIN packingUnits ON products.packId = packingUnits.id
          WHERE EXISTS (SELECT * FROM currentExceptions WHERE currentExceptions.productId = products.id)`

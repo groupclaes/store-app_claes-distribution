@@ -1,9 +1,9 @@
 import { ChangeDetectorRef, Component, HostListener } from '@angular/core'
 import { TranslateService } from '@ngx-translate/core'
-import { Directory, Encoding, Filesystem, ReadFileResult } from '@capacitor/filesystem'
-import { EmailComposer, HasAccountResult } from 'capacitor-email-composer'
-import { environment } from '../../../environments/environment'
+import { Directory, Filesystem, GetUriResult, ReadFileResult } from '@capacitor/filesystem'
 import { NavController } from '@ionic/angular'
+import { UserService } from '../../core/user.service'
+import { Share } from '@capacitor/share'
 
 const ZOOM_STEP: number = 0.125
 const DEFAULT_ZOOM: number = 1
@@ -48,16 +48,22 @@ export class LeafletPage {
   public fileUrl: string = undefined
   public today: Date = new Date()
   public loading: boolean = true
+  public culture: string = undefined
+  public canShare: boolean = false
 
   constructor(
     private ref: ChangeDetectorRef,
     private translate: TranslateService,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private user: UserService
   ) {
-    setTimeout((): void => {
-      this.loading = true
-      this.load().then()
-    }, 1500)
+    this.culture = this.translate.currentLang.split('-')[0]
+    this.loading = true
+    this.load().then()
+
+    Share.canShare().then(share => {
+      this.canShare = share.value
+    })
   }
 
   finish(): void {
@@ -66,33 +72,69 @@ export class LeafletPage {
   }
 
   async load(): Promise<void> {
+    this.loading = true
+    this.fileUrl = undefined
     const date: string = new Date().toISOString()
     const current_id: string = `${date.substring(0, 4)}${(date.substring(5, 7))}`
 
     const result: ReadFileResult = await Filesystem.readFile({
       path: `leaflets/${current_id}_${this.culture}.pdf`,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8
+      directory: Directory.Cache
     })
-    this.fileUrl = result.data as string
+
+    if (typeof result.data === 'string') {
+      this.fileUrl = 'data:application/pdf;base64,' + result.data
+    } else {
+      const reader = new FileReader()
+      reader.onload = (): void => {
+        if (typeof reader.result === 'string') {
+          this.fileUrl = reader.result
+          this.ref.markForCheck()
+        }
+      }
+      reader.readAsDataURL(result.data)
+    }
+
+    // const uri: GetUriResult = await Filesystem.getUri({
+    //   path: `leaflets/${current_id}_${this.culture}.pdf`,
+    //   directory: Directory.Cache
+    // })
+    // this.fileUrl = uri.uri
+
     this.ref.markForCheck()
   }
 
   async share(): Promise<void> {
-    const canShare: HasAccountResult = await EmailComposer.hasAccount()
-    // const email = await this.account.getEmail()
-    const filename: string = 'Promofolder.pdf'
-    if (canShare.hasAccount)
-      await EmailComposer.open({
-        subject: 'Claes Distribution Promofolder',
-        to: environment.production ? [] : ['jamie.vangeysel@groupclaes.be'],
-        body: '',
-        attachments: [{
-          type: 'base64',
-          path: this.fileUrl.replace('data:application/pdf;base64,', ''),
-          name: filename
-        }]
-      })
+    const date: string = new Date().toISOString()
+    const current_id: string = `${date.substring(0, 4)}${(date.substring(5, 7))}`
+
+    const uri: GetUriResult = await Filesystem.getUri({
+      path: `leaflets/${current_id}_${this.culture}.pdf`,
+      directory: Directory.Cache
+    })
+
+    await Share.share({
+      title: 'Promofolder.pdf',
+      text: 'Claes Distribution Promofolder',
+      url: uri.uri
+    })
+
+    return
+
+    // const canShare: HasAccountResult = await EmailComposer.hasAccount()
+    // // const email = await this.account.getEmail()
+    // const filename: string = 'Promofolder.pdf'
+    // if (canShare.hasAccount)
+    //   await EmailComposer.open({
+    //     subject: 'Claes Distribution Promofolder',
+    //     to: environment.production ? [] : ['jamie.vangeysel@groupclaes.be'],
+    //     body: '',
+    //     attachments: [{
+    //       type: 'base64',
+    //       path: this.fileUrl.replace('data:application/pdf;base64,', ''),
+    //       name: filename
+    //     }]
+    //   })
   }
 
   public zoomIn(): void {
@@ -108,7 +150,7 @@ export class LeafletPage {
     this.pdfZoom = DEFAULT_ZOOM
   }
 
-  get culture(): string {
-    return this.translate.currentLang.split('-')[0]
+  get isAgent(): boolean {
+    return this.user.hasAgentAccess
   }
 }

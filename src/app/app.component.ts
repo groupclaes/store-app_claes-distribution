@@ -12,6 +12,8 @@ import { StorageProvider } from './core/storage-provider.service'
 import { CartService } from './core/cart.service'
 import { BrowserService } from './core/browser.service'
 import { NetworkService } from './@shared/network.service'
+import { Directory, Filesystem } from '@capacitor/filesystem'
+
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
 
@@ -45,6 +47,10 @@ export class AppComponent {
 
     platform.ready().then(() => {
       logger.log('MyApp.constructor() -- Platform is ready')
+
+      Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Documents, recursive: true }).then(() => {
+        console.log('Old thumbs cleared!')
+      })
 
       this.navCtrl.navigateRoot('/account/login')
     })

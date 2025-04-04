@@ -8,7 +8,7 @@ const routes: Routes = [
   },
   {
     path: 'account/signup',
-    loadChildren: () => import('./pages/signup/signup.module').then( m => m.SignupPageModule)
+    loadChildren: () => import('./pages/signup/signup.module').then(m => m.SignupPageModule)
   },
   {
     path: 'account/login',
@@ -42,6 +42,14 @@ const routes: Routes = [
   {
     path: 'recipes/:guid',
     loadChildren: () => import('./pages/recipes/recipe-detail/recipe-detail.module').then(m => m.RecipeDetailPageModule)
+  },
+  {
+    path: 'datasheets',
+    loadChildren: () => import('./pages/datasheets/datasheets.module').then(m => m.DatashetsPageModule)
+  },
+  {
+    path: 'datasheets/:guid',
+    loadChildren: () => import('./pages/datasheets/datasheet-detail/datasheet-detail.module').then(m => m.DatasheetDetailPageModule)
   },
   {
     path: 'news',
@@ -85,11 +93,11 @@ const routes: Routes = [
   },
   {
     path: 'customers',
-    loadChildren: () => import('./pages/customers/customers.module').then( m => m.CustomersPageModule)
+    loadChildren: () => import('./pages/customers/customers.module').then(m => m.CustomersPageModule)
   },
   {
     path: 'notes',
-    loadChildren: () => import('./pages/notes/notes.module').then( m => m.NotesPageModule)
+    loadChildren: () => import('./pages/notes/notes.module').then(m => m.NotesPageModule)
   }
 ]
 
@@ -99,4 +107,5 @@ const routes: Routes = [
   ],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {
+}

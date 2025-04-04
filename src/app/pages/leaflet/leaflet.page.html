@@ -7,13 +7,23 @@
       {{ 'leafletPage' | translate }} {{ today | date:'MMMM YYYY':undefined:culture + '-BE' }}
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable
-                  style="margin-right:8px" (click)="share()">
-        {{ 'actions.mail' | translate }}&nbsp;
+      <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable (click)="share()"
+                  [disabled]="!canShare">
+        {{ 'actions.share' | translate }}&nbsp;
         <i color="primary" class="fal fa-fw fa-share-square"></i>
       </ion-button>
     </ion-buttons>
     <ion-progress-bar type="indeterminate" *ngIf="loading"></ion-progress-bar>
+  </ion-toolbar>
+  <ion-toolbar *ngIf="isAgent">
+    <ion-segment [(ngModel)]="culture" (ionChange)="load()">
+      <ion-segment-button value="nl">
+        {{ 'nl-BE' | translate }}
+      </ion-segment-button>
+      <ion-segment-button value="fr">
+        {{ 'fr-BE' | translate }}
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
 </ion-header>
 

@@ -1,5 +1,5 @@
 import { firstValueFrom } from 'rxjs'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
 import { AlertController, LoadingController, NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { CartService } from 'src/app/core/cart.service'
@@ -9,6 +9,7 @@ import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 import { SyncService } from 'src/app/core/sync.service'
 import { ActivatedRoute } from '@angular/router'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
 
 @Component({
   selector: 'app-customers',
@@ -17,6 +18,7 @@ import { LoggingProvider } from 'src/app/@shared/logging/log.service'
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomersPage {
+  @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
   _query = ''
 
   private _customers: AppCustomerModel[] = []
@@ -68,9 +70,8 @@ export class CustomersPage {
     this._customers = []
     this.ref.markForCheck()
 
-    if (overrideQuery !== undefined) {
+    if (overrideQuery !== undefined)
       this._query = overrideQuery
-    }
 
     const customers = await this.customersService.searchCustomers<any>(this.searchTerm)
 
@@ -83,6 +84,7 @@ export class CustomersPage {
     this.logger.debug('Received customers', customers.length)
 
     this._customers = customers
+    this.virtualScroll.scrollToIndex(0)
   }
 
   setActiveCustomer(customer: AppCustomerModel) {
@@ -184,5 +186,9 @@ export class CustomersPage {
     this.ref.markForCheck()
 
     this.navCtrl.navigateRoot(newRoot)
+  }
+
+  get isAgent(): boolean {
+    return this.user.hasAgentAccess
   }
 }

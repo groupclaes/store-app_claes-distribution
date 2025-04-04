@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { AlertController, LoadingController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
@@ -19,12 +19,12 @@ import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 })
 export class SyncPage implements OnInit {
   loader: HTMLIonLoadingElement
-  loading = true
+  loading: boolean = true
   lastSync: Date
   integrityChecksums: Array<Store> = []
 
-  productcount = 0
-  imagecount = 0
+  productcount: number = 0
+  imagecount: number = 0
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -41,7 +41,7 @@ export class SyncPage implements OnInit {
   }
 
   get internalUser(): boolean {
-    return this.user.userinfo.id < 1000
+    return this.user.activeUser.id > 0 && this.user.activeUser.id < 1000
   }
 
   get culture(): string {
@@ -52,11 +52,11 @@ export class SyncPage implements OnInit {
     return this.user.hasAgentAccess
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.load()
   }
 
-  async fullSync($event?: any) {
+  async fullSync($event?: any): Promise<void> {
     this.loader = await this.loadingCtrl.create({
       spinner: 'lines',
       message: this.translate.instant('syncPage')
@@ -88,7 +88,7 @@ export class SyncPage implements OnInit {
     }
   }
 
-  async syncAllThumbnails() {
+  async syncAllThumbnails(): Promise<void> {
     this.loader = await this.loadingCtrl.create({
       spinner: 'lines',
       message: this.translate.instant('syncPage')
@@ -97,13 +97,13 @@ export class SyncPage implements OnInit {
     await this.loader.present()
 
     this.sync.syncThumbnails(this.user.userinfo, { force: true, loader: this.loader })
-      .then(_ => this.loader.dismiss())
-      .then(_ => this.load())
+      .then((): Promise<boolean> => this.loader.dismiss())
+      .then((): Promise<void> => this.load())
   }
 
   async purgeThumbnails(): Promise<void> {
     try {
-      const alert = await this.alertCtrl.create({
+      const alert: HTMLIonAlertElement = await this.alertCtrl.create({
         header: this.translate.instant('thumbnailsDeletionWarning'),
         buttons: [
           {
@@ -129,12 +129,12 @@ export class SyncPage implements OnInit {
       this.loading = true
       this.ref.markForCheck()
 
-      const dataIntegrity = await this.repo.get<Store>()
-      this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
-      this.integrityChecksums = dataIntegrity.filter(e => e.dataTable !== 'lastSync')
+      const dataIntegrity: Store[] = await this.repo.get<Store>()
+      this.lastSync = dataIntegrity.find((e: Store): boolean => e.dataTable === 'lastSync').dateChanged
+      this.integrityChecksums = dataIntegrity.filter((e: Store): boolean => e.dataTable !== 'lastSync')
 
-      this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        const result = await db.query('select count(*) as c from ' + (this.agent ? 'products' : 'currentExceptions'))
+      await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<void> => {
+        const result: DBSQLiteValues = await db.query('select count(*) as c from ' + (this.agent ? 'products' : 'currentExceptions'))
         if (result.values)
           this.productcount = result.values[0]['c']
         this.ref.markForCheck()
@@ -142,7 +142,7 @@ export class SyncPage implements OnInit {
 
       Filesystem.readdir({
         path: 'thumbnails',
-        directory: Directory.Documents
+        directory: Directory.Cache
       }).then(result => {
         this.imagecount = result.files.length
         this.ref.markForCheck()

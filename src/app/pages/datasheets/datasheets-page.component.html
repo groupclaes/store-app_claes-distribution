@@ -1,0 +1,52 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title translate="datasheetsPage"></ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
+        <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="300"
+                   [placeholder]="'searchInput' | translate" (ionInput)="filter($event)">
+    </ion-searchbar>
+    <ion-progress-bar type="indeterminate" *ngIf="loading"></ion-progress-bar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  <cdk-virtual-scroll-viewport style="height: 100%; width: 100%" minBufferPx="1350" maxBufferPx="2350" itemSize="75"
+                               class="ion-content-scroll-host">
+    <ion-list inset="true" *ngIf="!loading">
+      <ion-item button *cdkVirtualFor="let datasheet of datsheets" tappable
+                (click)="network.online ? openDatasheet(datasheet.guid) : network.noop()">
+        <!-- [routerLink]="[datasheet.guid]" -->
+        <!--        <ion-note style="font-family: Monaco, 'Lucida Console', monospace" slot="start">-->
+        <!--          {{ datasheet.itemnum }}-->
+        <!--        </ion-note>-->
+        <ion-label>
+          <strong>
+            {{ datasheet.itemnum }}
+          </strong>
+          <br>
+          <ion-text style="font-size:clamp(.875rem, 3vw, 0.875rem)">
+            {{ datasheet.product_name }}
+          </ion-text>
+          <br>
+          <ion-note style="font-size: .875rem" color="medium" class="ion-text-wrap">
+            {{ 'lastPurchase' | translate }}: {{ datasheet.lastB | date:'dd/MM/YYYY' }}
+          </ion-note>
+        </ion-label>
+        <!--        <ion-note slot="end">-->
+        <!--          {{ datasheet.guid }}-->
+        <!--        </ion-note>-->
+      </ion-item>
+    </ion-list>
+  </cdk-virtual-scroll-viewport>
+</ion-content>
+
+<app-offline-footer></app-offline-footer>

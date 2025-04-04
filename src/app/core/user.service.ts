@@ -99,6 +99,7 @@ export class UserService {
     this._credential.password = ''
     await this.sync.dropTables()
     this.storage.set('credential', this._credential)
+    localStorage.removeItem('active-user')
   }
 
   syncData(force: boolean = false): Promise<boolean> {
@@ -179,6 +180,7 @@ export interface AppCredential {
   username: string
   password: string
 }
+
 export interface AppRegistrationCredential extends AppCredential {
   code: string
   // eslint-disable-next-line @typescript-eslint/naming-convention

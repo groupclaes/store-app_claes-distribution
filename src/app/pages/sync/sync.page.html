@@ -54,10 +54,17 @@
 
     <ion-list inset="true">
       <ion-item *ngFor="let checksum of integrityChecksums">
-        <ion-label>{{ 'checksum.' + checksum.dataTable | translate }}</ion-label>
-        <ion-note slot="end">
-          {{ checksum.dateChanged | date:'dd/MM/yyyy HH:mm':undefined:culture }}
-        </ion-note>
+        <ion-label>
+          <strong>{{ 'checksum.' + checksum.dataTable | translate }}</strong><br>
+          {{ checksum.dateChanged | date:'EEEE d MMMM yy HH:mm':undefined:culture }}<br>
+          <ion-text color="medium" style="font-family:'Courier New',Courier,monospace;font-size:12px">{{ checksum.checksum }}</ion-text>
+        </ion-label>
+<!--        <ion-note slot="end" style="font-family:'Courier New',Courier,monospace;font-size:12px">-->
+        <!--          {{ checksum.checksum }}-->
+        <!--        </ion-note>-->
+        <!--        <ion-note slot="end">-->
+        <!--          {{ checksum.dateChanged | date:'dd/MM/yyyy HH:mm':undefined:culture }}-->
+        <!--        </ion-note>-->
         <!-- <div item-start>
         <span [innerText]="checksum.dateChanged | date: 'dd/MM HH:mm'" style="font-size:12px;line-height:16px"></span>
       </div>
@@ -75,7 +82,7 @@
     <ion-note>
       <ng-container *ngIf="lastSync">
         {{ 'pages.sync.lastsync' | translate }}
-        {{ lastSync | date:'d MMMM yyyy HH:mm':undefined:culture }}
+        {{ lastSync | date:'EEEE d MMMM yyyy HH:mm':undefined:culture }}
       </ng-container>
       <ng-container *ngIf="!lastSync">
         {{ 'pages.sync.neversynced' | translate }}

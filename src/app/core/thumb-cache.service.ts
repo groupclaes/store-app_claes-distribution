@@ -1,7 +1,7 @@
 import { HttpRequest, HttpResponse } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
-import { Observable, from, map } from 'rxjs'
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem'
+import { from, map, Observable } from 'rxjs'
 
 @Injectable({
   providedIn: 'root'
@@ -15,12 +15,14 @@ export class ThumbCacheService {
     return from(
       Filesystem.readFile({
         path: 'thumbnails/' + itemnum + '.blob',
-        directory: Directory.Documents,
+        directory: Directory.Cache,
         encoding: Encoding.UTF8
       })
     )
-      .pipe(map(r => new HttpResponse({
+      .pipe(map(r => (typeof r.data === 'string') ? new HttpResponse({
         body: b64toBlob(r.data, 'image/jpeg')
+      }) : new HttpResponse({
+        body: r
       })))
   }
 
@@ -35,7 +37,7 @@ export class ThumbCacheService {
         Filesystem.writeFile({
           path: 'thumbnails/' + itemnum + '.blob',
           data: reader.result,
-          directory: Directory.Documents,
+          directory: Directory.Cache,
           encoding: Encoding.UTF8,
           recursive: true
         })

@@ -1,0 +1,40 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ recipe.name }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  <ion-text class="list-header">
+    <ion-note translate>products</ion-note>
+  </ion-text>
+
+  <ion-list [inset]="true" *ngIf="!loading">
+    <ion-item button *ngFor="let product of recipe.products" tappable [routerLink]="['/products', product.id]">
+      <ion-avatar *ngIf="displayThumbnail" slot="start">
+        <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="32" height="32" />
+      </ion-avatar>
+      <ion-label>
+        {{ product.name }}
+      </ion-label>
+      <ion-note slot="end">
+        {{ product.unit }}
+      </ion-note>
+    </ion-item>
+  </ion-list>
+
+  <ion-list inset="true">
+    <ion-item detail="false" button tappable (click)="open()" [disabled]="network.offline">
+      <ion-label color="tertiary" style="text-align:center">{{ 'showRecipe' | translate }}</ion-label>
+    </ion-item>
+    <!-- mailing recipe has been deprecated in favour of using the new recipes module -->
+    <!-- <ion-item detail="false" button tappable (click)="mail()" [disabled]="network.offline">
+      <ion-label color="tertiary" style="text-align:center">{{ 'mailRecipe' | translate }}</ion-label>
+    </ion-item> -->
+  </ion-list>
+</ion-content>
+
+<app-offline-footer></app-offline-footer>

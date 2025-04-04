@@ -1,4 +1,4 @@
-:host {
+app-products {
   div.add-to-cart {
     width: 72px;
 
@@ -33,8 +33,8 @@
       display: grid;
       grid-gap: .4em;
       grid-template-columns: 1fr 1fr 1fr 1fr
-        /* 1fr */
-      ;
+      /* 1fr */
+    ;
 
       div.toggle-button.new-toggle {
         grid-row: 1;
@@ -86,8 +86,8 @@
 
       @media screen and (min-width: 580px) {
         grid-template-columns: auto auto auto auto 1fr auto
-          /* auto */
-        ;
+        /* auto */
+      ;
 
         div.toggle-button.new-toggle {
           grid-row: 1;
@@ -159,97 +159,46 @@
       --ion-background-color: black;
     }
   }
-}
 
-img.icon-circle {
-  display: block;
-  border-radius: 100%;
-  border-width: 1px;
-  border-style: solid;
-  object-fit: cover;
-}
+  ion-thumbnail {
+    --size: 32px;
 
-div.product-listitem-grid {
-  display: grid;
-  grid-template-columns: auto 1fr 65px;
-  grid-column-gap: .5em;
+    @media screen and (min-width: 600px) {
+      --size: 48px;
+    }
+  }
 
-  div.product-options {
+  ion-label.ion-text-wrap {
+    min-height: 60px;
     display: flex;
-    grid-column: 1;
-    grid-row: 2;
+    justify-content: center;
+    flex-direction: column;
 
-    div.option-state {
-      flex: 1 100%;
-      margin: .45em 0;
-      cursor: default;
+    .product-info-block {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
 
-      span {
-        font-weight: bold;
-        border-radius: 3px;
-        padding: .1em .15em;
-        line-height: 2em;
+      .product-options {
+        display: flex;
+        gap: .5em
       }
     }
-  }
 
-  div.product-name {
-    align-self: center;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    width: 100%;
-    grid-column: 1 / 4;
-    grid-row: 1;
-    padding-top: .375rem;
-
-    span {
-      line-height: 22px;
-      text-overflow: ellipsis;
-      max-height: 44px;
-      max-width: 100%;
-    }
-  }
-
-  div.product-packing-unit {
-    align-self: center;
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    font-size: 13px;
-    text-align: right;
-    grid-column: 3;
-    grid-row: 2;
-
-    span {
-      line-height: 22px;
-    }
-  }
-
-  div.add-to-cart {
-    display: none;
-  }
-
-  @media screen and (min-width: 375px) {
-    div.product-packing-unit {
-      grid-column: 2;
-      grid-row: 2;
-    }
-  }
-
-  @media screen and (min-width: 650px) {
-    div.product-options {
-      grid-row: 1;
+    ion-note {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 14px;
     }
 
-    div.product-name {
-      padding-top: 0;
-      grid-column: 2;
-      grid-row: 1;
-    }
+    @media screen and (min-width: 600px) {
+      flex-direction: row;
 
-    div.product-packing-unit {
-      grid-column: 3;
-      grid-row: 1;
+      ion-note {
+        font-size: initial;
+      }
     }
   }
 }

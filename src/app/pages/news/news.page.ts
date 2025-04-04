@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
-import { NewsRepositoryService } from 'src/app/core/repositories/news.repository.service'
+import { INewsT, NewsRepositoryService } from 'src/app/core/repositories/news.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 
@@ -14,7 +14,7 @@ import { UserService } from 'src/app/core/user.service'
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewsPage implements OnInit {
-  loading = true
+  loading: boolean = true
   news: any[]
   displayThumbnail: boolean
 
@@ -28,22 +28,23 @@ export class NewsPage implements OnInit {
     private cart: CartService,
     settings: SettingsService
   ) {
-    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
+    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
       this.displayThumbnail = displayThumbnail
     })
     // this.statistics.newsPageView(this.user.userinfo.userId)
   }
 
-  ngOnInit() {
-    this.load()
+  ngOnInit(): void {
+    this.load().then((): void => {
+    })
   }
 
-  async load() {
+  async load(): Promise<void> {
     try {
       this.loading = true
       this.ref.markForCheck()
 
-      const news = await this.newsRepository.get(
+      const news: INewsT[] = await this.newsRepository.get(
         this.user.activeUser.id,
         this.user.activeUser.address,
         this.culture
@@ -59,7 +60,6 @@ export class NewsPage implements OnInit {
       }
       this.news = news
 
-      console.log(this.news)
     } catch (err) {
       this.logger.error(err)
     } finally {
@@ -68,8 +68,8 @@ export class NewsPage implements OnInit {
     }
   }
 
-  b64DecodeUnicode(str) {
-    // Going backwards: from bytestream, to percent-encoding, to original string.
+  b64DecodeUnicode(str: any): string {
+    // Going backwards: from byte stream, to percent-encoding, to original string.
     return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
     ).join(''))
   }
@@ -82,7 +82,7 @@ export class NewsPage implements OnInit {
       .replace('/<!doctype html>/gi', '')
   }
 
-  safe(html: string) {
+  safe(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html)
   }
 
@@ -92,7 +92,8 @@ export class NewsPage implements OnInit {
 
   get cartLink(): any[] {
     const params: any[] = ['/carts']
-    if (this.cart.active) params.push(this.cart.active.id)
+    if (this.cart.active)
+      params.push(this.cart.active.id)
     return params
   }
 }

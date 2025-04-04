@@ -23,7 +23,8 @@
         <div class="toggle-button new-toggle" tappable (click)="toggleNewFilter()" [attr.disabled]="loading">
           <span [ngClass]="filter.newState" translate="newToggleButton"></span>
         </div>
-        <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable (click)="togglePromoFilter()">
+        <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable
+             (click)="togglePromoFilter()">
           <span [ngClass]="filter.promoState" translate="promoToggleButton"></span>
         </div>
         <div class="toggle-button favorite-toggle" tappable (click)="toggleFavoriteFilter()" [attr.disabled]="loading">
@@ -33,7 +34,8 @@
           <span [ngClass]="filter.orderState" translate="orderToggleButton"></span>
         </div>
         <div class="search-query">
-          <input [placeholder]="'searchInput' | translate" class="control-color" style="width:100%" type="text" [(ngModel)]="filter.query" (change)="load()" />
+          <input [placeholder]="'searchInput' | translate" class="control-color" style="width:100%" type="text"
+                 [(ngModel)]="filter.query" (change)="load()"/>
         </div>
         <div class="toggle-button reset-button" tappable (click)="resetFilters()" [attr.disabled]="loading">
           <span class="default">
@@ -43,7 +45,8 @@
       </div>
     </ng-container>
     <ng-container *ngIf="isGuest">
-      <ion-searchbar [placeholder]="'searchInput' | translate" type="text" id="searchInputField" (input)="search($event)"></ion-searchbar>
+      <ion-searchbar [placeholder]="'searchInput' | translate" type="text" id="searchInputField"
+                     (input)="search($event)"></ion-searchbar>
     </ng-container>
   </ion-toolbar>
 </ion-header>
@@ -51,33 +54,42 @@
 <ion-content [fullscreen]="true" [scrollY]="false" color="light">
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" class="ion-content-scroll-host">
     <ion-list>
-      <ion-item tabbapble [routerLink]="[product.id]" *cdkVirtualFor="let product of products; templateCacheSize: 0; let i = index; trackBy: productById">
+      <ion-item tabbapble [routerLink]="[product.id]"
+                *cdkVirtualFor="let product of products; templateCacheSize: 0; let i = index; trackBy: productById"
+                [color]="product.availableOn ? 'light' : undefined">
         <ion-thumbnail *ngIf="displayThumbnail" slot="start">
-          <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name" loading="lazy" [style]="'background-color:' + product.color" width="48" height="48">
+          <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name"
+               loading="lazy" [style]="'background-color:' + product.color" width="48" height="48">
         </ion-thumbnail>
 
-        <ion-label class="ion-text-wrap" style="min-height:60px;display:flex;justify-content:center;">
-          <div style="display:flex;flex-direction:column;justify-content:center;flex:1">
-            <div class="product-options" style="display:flex;gap:.5em" *ngIf="!isGuest">
+        <ion-label class="ion-text-wrap">
+          <div class="product-info-block">
+            <ion-text color="danger" *ngIf="product.availableOn">
+              {{ availableDescription(product) }}
+            </ion-text>
+            <div class="product-options" *ngIf="!isGuest">
               <ion-badge color="secondary" *ngIf="product.isNew == true" translate="newItem"></ion-badge>
-              <ion-badge color="danger" *ngIf="this.canPromo && product.isPromo == true  && (filter.promoState !== 'active' || !isAgent)" translate="promoItem"></ion-badge>
-              <ion-badge color="warning" *ngIf="product.isFavorite && (filter.favoriteState !== 'active' || !isAgent)" translate="favoriteItem"></ion-badge>
-              <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderItem"></ion-badge>
+              <ion-badge color="danger"
+                         *ngIf="this.canPromo && product.isPromo == true  && (filter.promoState !== 'active' || !isAgent)"
+                         translate="promoItem"></ion-badge>
+              <ion-badge color="warning" *ngIf="product.isFavorite && (filter.favoriteState !== 'active' || !isAgent)"
+                         translate="favoriteItem"></ion-badge>
+              <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderToggleButton"></ion-badge>
+              <!-- translate="orderItem"  -->
             </div>
             <span style="font-size:clamp(6px, 3vw, 0.875rem)">{{ product.name }}</span>
             <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
               {{ favinfo(product) }}
             </div>
-            <ion-badge color="light" *ngIf="product.availableOn">
-              {{ availableDescription(product) }}
-            </ion-badge>
           </div>
-          <ion-note style="display:flex;flex-direction:column;justify-content:center">
+          <ion-note>
             {{ product.unit | capitalize }}
           </ion-note>
         </ion-label>
         <div *ngIf="!isGuest" slot="end" class="add-to-cart" (click)="$event.stopPropagation();$event.preventDefault()">
-          <input [attr.id]="'product-' + product.id" [value]="product.amount ?? null" [disabled]="product.availableOn !== null" placeholder="0" class="control-color" type="tel" (input)="changeProductAmount($event, product)" />
+          <input [attr.id]="'product-' + product.id" [value]="product.amount ?? null"
+                 [disabled]="product.availableOn !== null" placeholder="0" class="control-color" type="tel"
+                 (input)="changeProductAmount($event, product)"/>
         </div>
       </ion-item>
     </ion-list>
@@ -90,5 +102,4 @@
   </div>
 </ion-content>
 
-<!-- <app-offline-footer [lastSync]="lastSync"></app-offline-footer> -->
 <app-offline-footer></app-offline-footer>

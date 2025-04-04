@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core'
-import { CommonModule, NgOptimizedImage } from '@angular/common'
+import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { IonicModule } from '@ionic/angular'
-import { ProductDetailPage } from './product-detail.page'
+import { DatasheetDetailPage } from './datasheet-detail.page'
 import { TranslateModule } from '@ngx-translate/core'
 import { RouterModule } from '@angular/router'
 import { CoreModule } from 'src/app/core/core.module'
@@ -10,15 +10,14 @@ import { CoreModule } from 'src/app/core/core.module'
 @NgModule({
   imports: [
     CommonModule,
-    CoreModule,
     FormsModule,
     IonicModule,
+    CoreModule,
     TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
-      path: '', component: ProductDetailPage
-    }]),
-    NgOptimizedImage
+      path: '', component: DatasheetDetailPage
+    }])
   ],
-  declarations: [ProductDetailPage]
+  declarations: [DatasheetDetailPage]
 })
-export class ProductDetailPageModule {}
+export class DatasheetDetailPageModule {}

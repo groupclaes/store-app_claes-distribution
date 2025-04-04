@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
 
 @Injectable({
@@ -7,7 +7,8 @@ import { DatabaseService } from '../database.service'
 })
 export class CustomersRepositoryService {
 
-  constructor(private _db: DatabaseService) { }
+  constructor(private _db: DatabaseService) {
+  }
 
   get<T>(id?: number, address?: number, limit: number = null): Promise<T> {
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
@@ -19,8 +20,11 @@ export class CustomersRepositoryService {
         return customers.values as T[]
       }
       const result = await db.query(
-        `SELECT * FROM customers WHERE id = ? AND addressId = ?` + (limit != null ? ' LIMIT ' + limit : ''),
-        [ id, address ]
+        `SELECT *
+         FROM customers
+         WHERE id = ?
+           AND addressId = ?` + (limit != null ? ' LIMIT ' + limit : ''),
+        [id, address]
       )
 
       if (result.values?.length === 1) {
@@ -31,16 +35,39 @@ export class CustomersRepositoryService {
     })
   }
 
+  async getDatasheets(id: number, address: number, culture: string, searchQuery: string): Promise<any[]> {
+    // , [d].[name]
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<any[]> => {
+      let search: string = searchQuery.trim().length > 0 ? 'AND ([p].[itemnum] LIKE ? || \'%\') ' : ''
+      const query: string = 'SELECT [p].[itemnum], [p].[nameNl] AS product_name, [d].[name], [f].[lastB], [d].[guid] ' +
+        'FROM currentExceptions [c] ' +
+        'INNER JOIN products [p] ON [p].[id] = [c].[productId] ' +
+        'INNER JOIN [favorites] [f] ON [f].id = [p].[id] AND [f].[cu] = ? AND [f].[ad] = ? ' +
+        'INNER JOIN datasheets [d] ON [d].[products] LIKE \'%\' || [p].[itemnum] || \'%\' AND languages LIKE \'%"\' || ? || \'":true%\' ' +
+        'WHERE ( [f].[hi] = 0 OR [f].[hi] IS NULL ) AND [f].[lastB] IS NOT NULL ' + search +
+        'ORDER BY [f].[lastB] DESC '
+
+      const params: any[] = [id, address, culture]
+      if (search.length > 0)
+        params.push(searchQuery.trim().toLocaleLowerCase())
+
+      console.debug(search, query, params)
+      const result: DBSQLiteValues = await db.query(query, params)
+
+      return result.values as any[]
+    })
+  }
+
   searchCustomers<T>(searchQuery: string, limit?: string): Promise<T[]> {
     const custnum = parseInt(searchQuery, 10)
 
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       // Debug
       let query = 'SELECT c.*, '
-      + 'EXISTS (SELECT 1 FROM unsentNotes n WHERE n.customer = c.id AND n.address = c.addressId) AS `hasUnsentNotes` '
-      + 'FROM customers c '
-      + `WHERE (LOWER(name) LIKE '%' || ? || '%') OR (LOWER(addressName) LIKE '%' || ? || '%') `
-      + `OR (LOWER(city) LIKE '%' || ? || '%') OR (LOWER(delvCity) LIKE '%' || ? || '%')`
+        + 'EXISTS (SELECT 1 FROM unsentNotes n WHERE n.customer = c.id AND n.address = c.addressId) AS `hasUnsentNotes` '
+        + 'FROM customers c '
+        + `WHERE (LOWER(name) LIKE '%' || ? || '%') OR (LOWER(addressName) LIKE '%' || ? || '%') `
+        + `OR (LOWER(city) LIKE '%' || ? || '%') OR (LOWER(delvCity) LIKE '%' || ? || '%')`
 
       if (!isNaN(custnum) && custnum > 0) {
         query += ` OR id = ${custnum} OR address = ${custnum}`
@@ -60,8 +87,11 @@ export class CustomersRepositoryService {
       return []
 
     return await this._db.executeQuery<Promise<IContact[]>>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT * FROM contacts WHERE customerId = ? AND addressId = ?`,
-        [ id, address ])
+      const result = await db.query(`SELECT *
+                                     FROM contacts
+                                     WHERE customerId = ?
+                                       AND addressId = ?`,
+        [id, address])
 
       return result.values as IContact[]
     })
@@ -72,8 +102,11 @@ export class CustomersRepositoryService {
       return []
 
     return await this._db.executeQuery<Promise<IAppDeliveryScheduleModel[]>>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT * FROM deliverySchedules WHERE customerId = ? AND addressId = ?`,
-        [ id, address ])
+      const result = await db.query(`SELECT *
+                                     FROM deliverySchedules
+                                     WHERE customerId = ?
+                                       AND addressId = ?`,
+        [id, address])
 
       return result.values as IAppDeliveryScheduleModel[]
     })

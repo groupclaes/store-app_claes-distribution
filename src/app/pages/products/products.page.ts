@@ -1,12 +1,17 @@
 import { firstValueFrom, Subscription } from 'rxjs'
-/* eslint-disable eqeqeq */
 import { DatePipe } from '@angular/common'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core'
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router'
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core'
+import { ActivatedRoute, NavigationEnd, Params, Router } from '@angular/router'
 import { AlertController, IonContent } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { Observable, Subject, of } from 'rxjs'
-import { debounceTime, filter, take } from 'rxjs/operators'
+import { filter, take } from 'rxjs/operators'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
@@ -14,50 +19,36 @@ import { IProductT, ISortOrder, ProductsRepositoryService } from 'src/app/core/r
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { NetworkService } from 'src/app/@shared/network.service'
-import { Store } from 'src/app/core/sync.service'
-import {
-  DataIntegrityChecksumsRepositoryService
-} from 'src/app/core/repositories/data-integrity-checksums.repository.service'
+import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
+import { ICartDetail, ICartDetailProductT } from '../../core/repositories/carts.repository.service'
 
-const UNAVAILABLE_AFTER = new Date('2050-12-31')
+const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.page.html',
   styleUrls: ['./products.page.scss'],
+  encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush // comment this if there are still un-updated input fields
 })
-export class ProductsPage implements OnInit, OnDestroy {
+export class ProductsPage implements OnDestroy {
   private _products: IProductT[]
-  private _updateCartProduct = new Subject<{ productId: number, amount: number }>()
   private _routerEventSubscription: Subscription
   private _subs: Subscription[] = []
 
   @ViewChild(IonContent) content: IonContent
+  @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
 
-  loading = true
-  loadingAdditional = false
-  noMoreProducts = false
+  loading: boolean = true
+  loadingAdditional: boolean = false
+  noMoreProducts: boolean = false
   lastSync: Date
 
-  page = 0
-  increment = 36
-  limit = 252
-  displayThumbnail = false
+  displayThumbnail: boolean = false
   sortOrder: ISortOrder = 'itemNum$ASC'
 
-  updateCartProduct: Observable<{ productId: number, amount: number }>
-    = this._updateCartProduct.asObservable().pipe(debounceTime(500))
-
-  private _filters: {
-    category: ICategoryT
-    query: string
-    newState: 'default' | 'active'
-    promoState: 'default' | 'active'
-    favoriteState: 'default' | 'active' | 'inactive'
-    orderState: 'default' | 'inactive'
-    attributes: AttributesFilter[]
-  } = {
+  private _debounce_timer: number
+  private _filters: IProductFilters = {
     newState: 'default',
     promoState: 'default',
     favoriteState: 'default',
@@ -77,72 +68,50 @@ export class ProductsPage implements OnInit, OnDestroy {
     private datePipe: DatePipe,
     categoriesRepository: CategoriesRepositoryService,
     private repo: ProductsRepositoryService,
-    private repoChk: DataIntegrityChecksumsRepositoryService,
     private settings: SettingsService,
     route: ActivatedRoute,
     router: Router,
-    private networkService: NetworkService
+    public network: NetworkService
   ) {
-    let fallback
-    this._subs.push(settings.DisplayThumbnail.subscribe(displayThumbnail => {
+    let fallback: number
+
+    this._subs.push(settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
       this.displayThumbnail = displayThumbnail
       this.ref.markForCheck()
     }))
-    firstValueFrom(settings.DisplayDefaultFilters).then(filters => {
-      if (filters.new === true) {
-        this._filters.newState = 'active'
-      } else {
-        this._filters.newState = 'default'
-      }
-      if (filters.promo === true) {
-        this._filters.promoState = 'active'
-      } else {
-        this._filters.promoState = 'default'
-      }
-      if (filters.favorite === true) {
-        this._filters.favoriteState = 'active'
-      } else if (filters.favorite === false) {
-        this._filters.favoriteState = 'default'
-      } else {
-        this._filters.favoriteState = 'inactive'
-      }
-      if (filters.order === true) {
-        this._filters.orderState = 'default'
-      } else {
-        this._filters.orderState = 'inactive'
-      }
+    firstValueFrom(settings.DisplayDefaultFilters).then((filters: $TSFixMe): void => {
+      this._filters.newState = (filters.new === true) ? 'active' : 'default'
+      this._filters.promoState = (filters.promo === true) ? 'active' : 'default'
+      this._filters.orderState = (filters.order === true) ? 'default' : 'inactive'
+
+      this._filters.favoriteState = (filters.favorite === true) ? 'active' : (
+        (filters.favorite === false) ? 'default' : 'inactive'
+      )
+
       if (this.user.activeUser) {
-        fallback = setTimeout(() => {
-          this.load(true)
+        fallback = window.setTimeout(async (): Promise<void> => {
+          await this.load(true)
         }, 180)
       }
     })
 
     this._routerEventSubscription = router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe(async (ev) => {
-        // console.log(ev)
+      .subscribe(async (): Promise<void> => {
         window.clearTimeout(fallback)
         this._filters.category = undefined
-
-        this.load(true)
+        await this.load(true)
       })
-    this._subs.push(route.queryParams.subscribe(async (params) => {
+    this._subs.push(route.queryParams.subscribe(async (params: Params): Promise<void> => {
       if (params.category) {
         this._filters.category = await categoriesRepository.find(+params.category, this.culture)
         window.clearTimeout(fallback)
-        this.load(true)
+        await this.load(true)
       }
     }))
 
-    this._subs.push(this.networkService.connected.subscribe(async () => {
+    this.network.connected.subscribe((): void => {
       this.ref.markForCheck()
-      const dataIntegrity = await this.repoChk.get<Store>()
-      this.lastSync = dataIntegrity.find(e => e.dataTable === 'lastSync').dateChanged
-    }))
-  }
-
-  ngOnInit(): void {
-
+    })
   }
 
   ngOnDestroy(): void {
@@ -162,32 +131,12 @@ export class ProductsPage implements OnInit, OnDestroy {
     return this.user.isGuest
   }
 
-  get canFilterModal(): boolean {
-    return this._filters.category !== null
-  }
-
-  get hasAttributeFilter(): boolean {
-    return this._filters.attributes && this._filters.attributes instanceof Array && this._filters.attributes.length > 0
-  }
-
   get filter(): $TSFixMe {
     return this._filters
   }
 
-  get newFilter(): boolean {
-    return this._filters.newState === 'active'
-  }
-
-  get promoFilter(): boolean {
-    return this._filters.promoState === 'active'
-  }
-
   get favoriteFilter(): boolean {
     return this._filters.favoriteState === 'active'
-  }
-
-  get orderFilter(): boolean {
-    return this._filters.orderState === 'inactive'
   }
 
   get products(): IProductT[] {
@@ -225,11 +174,10 @@ export class ProductsPage implements OnInit, OnDestroy {
     return ''
   }
 
-  get cartLink(): any[] {
-    const params: any[] = ['/carts']
-    if (this.cart.active) {
+  get cartLink(): $TSFixMe[] {
+    const params: $TSFixMe[] = ['/carts']
+    if (this.cart.active)
       params.push(this.cart.active.id)
-    }
     return params
   }
 
@@ -237,7 +185,7 @@ export class ProductsPage implements OnInit, OnDestroy {
     this._routerEventSubscription.unsubscribe()
   }
 
-  async ionViewDidEnter() {
+  async ionViewDidEnter(): Promise<void> {
     try {
       this.logger.log('ProductsPage.ionViewDidEnter() -- start')
       await this.cart.loadCarts()
@@ -250,15 +198,10 @@ export class ProductsPage implements OnInit, OnDestroy {
           this.cart.active.products) {
           // update cart amounts
           for (const product of this.products) {
-            const pr = this.cart.active.products.find(x => x.id == product.id)
-            if (pr) {
-              product.amount = pr.amount
-            } else {
-              product.amount = null
-            }
+            product.amount = this.cart.active.products.find((x: ICartDetailProductT): boolean => x.id == product.id)?.amount ?? null
           }
         } else {
-          this.products.forEach(x => x.amount = null)
+          this.products.forEach((x: IProductT): $TSFixMe => x.amount = null)
         }
         this.ref.markForCheck()
       }
@@ -270,18 +213,16 @@ export class ProductsPage implements OnInit, OnDestroy {
     }
   }
 
-  search(event: $TSFixMe): void {
+  async search(event: $TSFixMe): Promise<void> {
     this.filter.query = event.target.value
-    this.load()
+    await this.load()
   }
 
   async load(force?: boolean): Promise<void> {
-    if (!force) {
-      if (this.loading === true) {
+    if (!force)
+      if (this.loading === true)
         return
-      }
-    }
-    this.page = 0
+
     this._products = []
     this.noMoreProducts = false
     this.loading = true
@@ -293,27 +234,26 @@ export class ProductsPage implements OnInit, OnDestroy {
       this.user.activeUser.addressGroup
     ])
 
-    const cart = (this.cart || this.cart.active) ? this.cart.active : null
+    const cart: ICartDetail = (this.cart || this.cart.active) ? this.cart.active : null
 
     for (const product of products) {
       product.isNew = product.isNew == 1
       product.isPromo = product.isPromo == 1
       product.isFavorite = product.isFavorite == 1
 
-      if (cart) {
-        const cartProduct = cart.products.find(x => x.id == product.id)
-        product.amount = (cartProduct != undefined) ? cartProduct.amount : null
-      }
+      if (cart)
+        product.amount = cart.products.find((x: ICartDetailProductT): boolean => x.id == product.id)?.amount ?? null
     }
 
     this._products = products
 
     this.loading = false
     this.loadingAdditional = false
+    this.virtualScroll.scrollToIndex(0)
     this.ref.markForCheck()
   }
 
-  toggleNewFilter() {
+  async toggleNewFilter(): Promise<void> {
     switch (this._filters.newState) {
       case 'active':
         this._filters.newState = 'default'
@@ -323,10 +263,10 @@ export class ProductsPage implements OnInit, OnDestroy {
         this._filters.newState = 'active'
         break
     }
-    this.load()
+    await this.load()
   }
 
-  togglePromoFilter() {
+  async togglePromoFilter(): Promise<void> {
     switch (this._filters.promoState) {
       case 'active':
         this._filters.promoState = 'default'
@@ -336,10 +276,10 @@ export class ProductsPage implements OnInit, OnDestroy {
         this._filters.promoState = 'active'
         break
     }
-    this.load()
+    await this.load()
   }
 
-  toggleFavoriteFilter() {
+  async toggleFavoriteFilter(): Promise<void> {
     switch (this._filters.favoriteState) {
       case 'active':
         this._filters.favoriteState = 'inactive'
@@ -353,10 +293,10 @@ export class ProductsPage implements OnInit, OnDestroy {
         this._filters.favoriteState = 'default'
         break
     }
-    this.load()
+    await this.load()
   }
 
-  toggleOrderFilter() {
+  async toggleOrderFilter(): Promise<void> {
     switch (this._filters.orderState) {
       case 'default':
         this._filters.orderState = 'inactive'
@@ -366,130 +306,110 @@ export class ProductsPage implements OnInit, OnDestroy {
         this._filters.orderState = 'default'
         break
     }
-    this.load()
+    await this.load()
   }
 
-  changeSortOrder() {
+  async changeSortOrder(): Promise<void> {
     if (this.sortOrder !== 'itemNum$ASC' && !this.favoriteFilter) {
       // revert to normal
       this.sortOrder = 'itemNum$ASC'
-      this.load()
+      await this.load()
     }
     switch (this.sortOrder) {
       case 'itemNum$ASC':
-        // set sortorder to favoriteBoughtDateDesc
+        // set sort order to favoriteBoughtDateDesc
         this.sortOrder = 'favoriteBoughtDate$DESC'
-        this.load()
+        await this.load()
         break
 
       default:
-        // set sortorder to default
+        // set sort order to default
         this.sortOrder = 'itemNum$ASC'
-        this.load()
+        await this.load()
         break
     }
   }
 
-  async changeProductAmount($event: any, product: $TSFixMe) {
-    const productId = product.id
-    // make sure no negative values are passed if defined
-    let productAmount = $event.target.value ? Math.abs($event.target.value) : -1
-    let showAlert = false
-    this.ref.markForCheck()
-    this.logger.debug('changeProductAmount() -- start ', productId, productAmount)
+  changeProductAmount($event: $TSFixMe, product: $TSFixMe): void {
+    clearTimeout(this._debounce_timer)
+    this._debounce_timer = window.setTimeout(async (): Promise<void> => {
+      const productId: number = product.id
+      // make sure no negative values are passed if defined
+      let productAmount: number = $event.target.value ? Math.abs($event.target.value) : -1
+      let showAlert: boolean = false
+      this.ref.markForCheck()
+      this.logger.debug('changeProductAmount() -- start ', productId, productAmount,
+        this.user.activeUser.id, this.user.activeUser.address,
+        this.user.credential)
 
-    this.logger.debug(productId, productAmount,
-      this.user.activeUser.id, this.user.activeUser.address,
-      this.user.credential)
-
-    // check if item had minorderQuantity
-    if (product.minOrder > 1) {
-      this.logger.info('this product has a minOrderquantity')
-      if (productAmount > 0 && productAmount < product.minOrder) {
-        productAmount = product.minOrder
-        product.amount = productAmount
-        this.ref.markForCheck()
-        showAlert = true
+      // check if item had minOrderQuantity
+      if (product.minOrder > 1) {
+        this.logger.info('this product has a minOrderQuantity')
+        if (productAmount > 0 && productAmount < product.minOrder) {
+          productAmount = product.minOrder
+          product.amount = productAmount
+          this.ref.markForCheck()
+          showAlert = true
+        }
       }
-    }
 
-    if (product.stackSize > 1) {
-      if (productAmount > 0 && (productAmount % product.stackSize) != 0) {
-        const subr = Math.floor(productAmount / product.stackSize) + 1
+      if (product.stackSize > 1) {
+        if (productAmount > 0 && (productAmount % product.stackSize) != 0) {
+          const i: number = Math.floor(productAmount / product.stackSize) + 1
 
-        productAmount = subr * product.stackSize
-        product.amount = productAmount
-        this.ref.markForCheck()
-        showAlert = true
+          productAmount = i * product.stackSize
+          product.amount = productAmount
+          this.ref.markForCheck()
+          showAlert = true
+        }
       }
-    }
 
-    if (showAlert) {
-      const alert = await this.alertCtrl.create({
-        header: this.translate.instant('invalidAmountError'),
-        message: this.translate.instant('invalidAmountMessageError') + productAmount
-      })
-      alert.present()
-    } else {
+      // Always update amount even if it has been changed by validation
       await this.cart.setProduct(productId, productAmount,
         this.user.activeUser.id, this.user.activeUser.address,
         this.user.credential)
-    }
-    this.logger.debug('changeProductAmount() -- end ', productId, productAmount)
+
+      if (showAlert) {
+        const alert: HTMLIonAlertElement = await this.alertCtrl.create({
+          header: this.translate.instant('invalidAmountError'),
+          message: this.translate.instant('invalidAmountMessageError') + productAmount
+        })
+        alert.present()
+      }
+      this.logger.debug('changeProductAmount() -- end ', productId, productAmount)
+    }, 200)
   }
 
-  newState = (product: $TSFixMe) => product.isNew ? 'active' : 'inactive'
+  newState: (product: $TSFixMe) => 'active' | 'inactive' = (product: $TSFixMe): 'active' | 'inactive' => product.isNew ? 'active' : 'inactive'
 
-  promoState = (product: $TSFixMe) => this.canPromo && product.isPromo ? 'active' : 'inactive'
+  promoState: (product: $TSFixMe) => 'active' | 'inactive' = (product: $TSFixMe): 'active' | 'inactive' => this.canPromo && product.isPromo ? 'active' : 'inactive'
 
-  favoriteState = (product: $TSFixMe) => product.isFavorite ? 'active' : 'inactive'
+  favoriteState: (product: $TSFixMe) => 'active' | 'inactive' = (product: $TSFixMe): 'active' | 'inactive' => product.isFavorite ? 'active' : 'inactive'
 
-  orderState = (product: $TSFixMe) => product.type === 'B' ? 'active' : 'inactive'
+  orderState: (product: $TSFixMe) => 'active' | 'inactive' = (product: $TSFixMe): 'active' | 'inactive' => product.type === 'B' ? 'active' : 'inactive'
 
-  resetFilters() {
-    this.settings.DisplayDefaultFilters.pipe(take(1)).toPromise().then((filters: $TSFixMe) => {
-      if (filters.new === true) {
-        this._filters.newState = 'active'
-      } else {
-        this._filters.newState = 'default'
-      }
-      if (filters.promo === true) {
-        this._filters.promoState = 'active'
-      } else {
-        this._filters.promoState = 'default'
-      }
-      if (filters.favorite === true) {
-        this._filters.favoriteState = 'active'
-      } else if (filters.favorite === false) {
-        this._filters.favoriteState = 'default'
-      } else {
-        this._filters.favoriteState = 'inactive'
-      }
-      if (filters.order === true) {
-        this._filters.orderState = 'default'
-      } else {
-        this._filters.orderState = 'inactive'
-      }
-      this._filters.attributes = []
-      this._filters.query = ''
+  resetFilters(): void {
+    firstValueFrom(this.settings.DisplayDefaultFilters.pipe(take(1)))
+      .then(async (filters: $TSFixMe): Promise<void> => {
+        this._filters.newState = (filters.new === true) ? 'active' : 'default'
+        this._filters.promoState = (filters.promo === true) ? 'active' : 'default'
+        this._filters.orderState = (filters.order === true) ? 'default' : 'inactive'
 
-      if (this.user.activeUser) {
-        this.load()
-      }
-    })
-  }
+        this._filters.favoriteState = (filters.favorite === true) ? 'active' : (
+          (filters.favorite === false) ? 'default' : 'inactive'
+        )
 
-  isUnavailable(product: any): boolean {
-    if (product.AvailableOn) {
-      return new Date(product.AvailableOn + '.000Z') >= UNAVAILABLE_AFTER
-    }
+        this._filters.attributes = []
+        this._filters.query = ''
 
-    return false
+        if (this.user.activeUser)
+          await this.load()
+      })
   }
 
   favinfo(product: IProductT): string {
     if (product.isFavorite) {
-      const lastPurchaseDate = this.datePipe.transform(product.favLastB, 'dd/MM/yyyy', undefined, this.culture)
+      const lastPurchaseDate: string = this.datePipe.transform(product.favLastB, 'dd/MM/yyyy', undefined, this.culture)
       return `${this.translate.instant('lastPurchase')}: ${lastPurchaseDate} ${product.favLastA}x`
     }
     return null
@@ -500,18 +420,14 @@ export class ProductsPage implements OnInit, OnDestroy {
       if (new Date(product.availableOn).toISOString() === UNAVAILABLE_AFTER.toISOString()) {
         return this.translate.instant('productUnavailable')
       }
-      const availableOn = this.datePipe.transform(product.availableOn, 'dd/MM/yyyy', undefined, this.culture)
+      const availableOn: string = this.datePipe.transform(product.availableOn, 'dd/MM/yyyy', undefined, this.culture)
       return `${this.translate.instant('availableOn')} ${availableOn}`
     }
     return ''
   }
 
-  productById(index: number, product: IProductT) {
+  productById(index: number, product: IProductT): number {
     return product.id
-  }
-
-  get offline(): boolean {
-    return this.networkService.offline
   }
 
   get isAgent(): boolean {
@@ -522,4 +438,14 @@ export class ProductsPage implements OnInit, OnDestroy {
 export class AttributesFilter {
   group: number
   selected: number[]
+}
+
+export interface IProductFilters {
+  category: ICategoryT
+  query: string
+  newState: 'default' | 'active'
+  promoState: 'default' | 'active'
+  favoriteState: 'default' | 'active' | 'inactive'
+  orderState: 'default' | 'inactive'
+  attributes: AttributesFilter[]
 }
