@@ -41,7 +41,7 @@ export class SyncPage implements OnInit {
   }
 
   get internalUser(): boolean {
-    return this.user.activeUser.id > 0 && this.user.activeUser.id < 1000
+    return this.user.userinfo.id > 0 && this.user.userinfo.id < 1000
   }
 
   get culture(): string {

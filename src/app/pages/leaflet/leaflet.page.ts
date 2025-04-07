@@ -78,8 +78,8 @@ export class LeafletPage {
     const current_id: string = `${date.substring(0, 4)}${(date.substring(5, 7))}`
 
     const result: ReadFileResult = await Filesystem.readFile({
-      path: `leaflets/${current_id}_${this.culture}.pdf`,
-      directory: Directory.Cache
+      path: `${current_id}_${this.culture}.pdf`,
+      directory: Directory.Documents
     })
 
     if (typeof result.data === 'string') {
@@ -95,18 +95,19 @@ export class LeafletPage {
       reader.readAsDataURL(result.data)
     }
 
-    // const uri: GetUriResult = await Filesystem.getUri({
-    //   path: `leaflets/${current_id}_${this.culture}.pdf`,
-    //   directory: Directory.Cache
-    // })
-    // this.fileUrl = uri.uri
-
     this.ref.markForCheck()
   }
 
   async share(): Promise<void> {
     const date: string = new Date().toISOString()
     const current_id: string = `${date.substring(0, 4)}${(date.substring(5, 7))}`
+
+    await Filesystem.copy({
+      from: `${current_id}_${this.culture}.pdf`,
+      directory: Directory.Documents,
+      to: `leaflets/${current_id}_${this.culture}.pdf`,
+      toDirectory: Directory.Cache
+    })
 
     const uri: GetUriResult = await Filesystem.getUri({
       path: `leaflets/${current_id}_${this.culture}.pdf`,
@@ -120,21 +121,6 @@ export class LeafletPage {
     })
 
     return
-
-    // const canShare: HasAccountResult = await EmailComposer.hasAccount()
-    // // const email = await this.account.getEmail()
-    // const filename: string = 'Promofolder.pdf'
-    // if (canShare.hasAccount)
-    //   await EmailComposer.open({
-    //     subject: 'Claes Distribution Promofolder',
-    //     to: environment.production ? [] : ['jamie.vangeysel@groupclaes.be'],
-    //     body: '',
-    //     attachments: [{
-    //       type: 'base64',
-    //       path: this.fileUrl.replace('data:application/pdf;base64,', ''),
-    //       name: filename
-    //     }]
-    //   })
   }
 
   public zoomIn(): void {

@@ -8,7 +8,7 @@ import { DatabaseService } from './database.service'
 import { AppCredential, Customer } from './user.service'
 import { timeout } from 'rxjs/operators'
 import { firstValueFrom } from 'rxjs'
-import { Directory, Filesystem, StatResult } from '@capacitor/filesystem'
+import { Directory, Filesystem } from '@capacitor/filesystem'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -1906,41 +1906,31 @@ export class SyncService {
   async validateLeaflet(user_id: number, language: string): Promise<void> {
     // if language is set to all, all cultures should be fetched
     const cultures: string[] = []
-    if (language === 'all') {
+    if (language === 'all')
       for (let supported_culture of environment.supported_languages) {
         cultures.push(supported_culture.split('-')[0])
       }
-    } else
+    else
       cultures.push(language)
 
     const date: string = new Date().toISOString()
     const current_id = `${date.substring(0, 4)}${(date.substring(5, 7))}`
-    console.log('current_id', current_id)
 
     for (let culture of cultures) {
       // check if the folder exists
       try {
-        let file_info: StatResult = await Filesystem.stat({
-          path: `leaflets/${current_id}_${culture}.pdf`,
-          directory: Directory.Cache
+        await Filesystem.stat({
+          path: `${current_id}_${culture}.pdf`,
+          directory: Directory.Documents
         })
-        console.log('file_info', file_info)
       } catch (err) {
         await Filesystem.downloadFile({
           url: `${environment.pcm_url}/content/dis/website/month-leaflet/${current_id}/${culture}?show`,
-          path: `leaflets/${current_id}_${culture}.pdf`,
-          directory: Directory.Cache,
+          path: `${current_id}_${culture}.pdf`,
+          directory: Directory.Documents,
           recursive: true
         })
       }
-      // Filesystem.stat({
-      //   path: 'thumbnails/' + itemnum + '.blob',
-      //   directory: Directory.Documents
-      // }).then(file_info => {
-      //   x()
-      // }).catch(err => {
-      //   firstValueFrom(this.api.pcmGet(`product-images/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
-      // })
     }
   }
 

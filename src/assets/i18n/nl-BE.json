@@ -175,7 +175,7 @@
   "minorderStack": "Bestellen per",
   "attributes": "Kenmerken",
   "description": "Beschrijving",
-  "promotion": "Promotie",
+  "promotion": "Promo",
   "selectaDepartment": "Selecteer een afdeling",
   "reports": "Rapporten",
   "productRelations": "Productrelaties",
@@ -529,7 +529,7 @@
     "customers": "Klanten"
   },
   "newItem": "Nieuw",
-  "promoItem": "Promotie",
+  "promoItem": "Promo",
   "favoriteItem": "Favoriet",
   "orderItem": "Bestelartikel",
   "asap": "Zo snel mogelijk",
