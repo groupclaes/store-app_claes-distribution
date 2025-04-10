@@ -5,7 +5,7 @@ const config: CapacitorElectronConfig = {
   appName: 'Claes Store',
   webDir: 'www',
   server: {
-    hostname: 'shop.claes-distribution.be'
+    hostname: 'shop.claes-distribution.com'
   },
   bundledWebRuntime: false,
   plugins: {
