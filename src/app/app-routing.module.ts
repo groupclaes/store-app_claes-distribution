@@ -36,6 +36,14 @@ const routes: Routes = [
     loadChildren: () => import('./pages/reports/reports.module').then(m => m.ReportsPageModule)
   },
   {
+    path: 'web-recipes',
+    loadChildren: () => import('./pages/web-recipes/web-recipes.module').then(m => m.WebRecipesPageModule)
+  },
+  {
+    path: 'web-recipes/:id/:name',
+    loadChildren: () => import('./pages/web-recipes/web-recipe-detail/web-recipe-detail.module').then(m => m.WebRecipeDetailPageModule)
+  },
+  {
     path: 'recipes',
     loadChildren: () => import('./pages/recipes/recipes.module').then(m => m.RecipesPageModule)
   },

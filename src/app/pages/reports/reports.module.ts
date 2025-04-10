@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { IonicModule } from '@ionic/angular'
 import { ReportsPage } from './reports.page'
+import { CoreModule } from '../../core/core.module'
 
 @NgModule({
   imports: [
@@ -14,7 +15,8 @@ import { ReportsPage } from './reports.page'
     TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
       path: '', component: ReportsPage
-    }])
+    }]),
+    CoreModule
   ],
   declarations: [ReportsPage]
 })

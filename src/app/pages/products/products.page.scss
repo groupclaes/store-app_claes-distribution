@@ -1,4 +1,4 @@
-app-products {
+:host {
   div.add-to-cart {
     width: 72px;
 
@@ -152,19 +152,19 @@ app-products {
     width: 100%
   }
 
-  ion-item {
-    //--ion-background-color: white;
-
-    @media (prefers-color-scheme: dark) {
-      --ion-background-color: black;
-    }
-  }
-
   ion-thumbnail {
     --size: 32px;
 
     @media screen and (min-width: 600px) {
       --size: 48px;
+    }
+  }
+
+  ion-item {
+    //--ion-background-color: white;
+
+    @media (prefers-color-scheme: dark) {
+      --ion-background-color: black;
     }
   }
 

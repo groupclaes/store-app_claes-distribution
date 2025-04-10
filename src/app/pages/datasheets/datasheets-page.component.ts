@@ -8,7 +8,7 @@ import { BrowserService } from '../../core/browser.service'
 import { environment } from '../../../environments/environment'
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
 import { FileOpener, FileOpenerOptions } from '@capacitor-community/file-opener'
-import { Directory, Filesystem, GetUriResult } from '@capacitor/filesystem'
+import { Directory, Filesystem, GetUriResult, ProgressStatus } from '@capacitor/filesystem'
 
 @Component({
   selector: 'app-datasheets',
@@ -24,6 +24,9 @@ export class DatasheetsPage implements OnInit {
   @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
 
   loading: boolean = true
+  isDownloading: boolean = false
+  progress: number = 0
+  buffer: number = 0
   private _datsheets: IPCMObject[]
   private _query: string = ''
 
@@ -86,6 +89,9 @@ export class DatasheetsPage implements OnInit {
   }
 
   async downloadAllDatasheets(): Promise<void> {
+    this.isDownloading = true
+    this.ref.markForCheck()
+
     // create key<value> object key is the guid and value is the array of itemnums linked to the datasheet
     let body: { [key: string]: string[] } = {}
     for (const datasheet of this._datsheets) {
@@ -95,33 +101,53 @@ export class DatasheetsPage implements OnInit {
         body[datasheet.guid] = [datasheet.itemnum]
     }
 
-    console.log('Download all datasheets', body, this.culture.split('-')[0])
-    const fn: string = `datasheets_${this.user.activeUser.id}-${this.user.activeUser.address}_${new Date().toISOString().substring(0, 10)}.zip`
-
-    await Filesystem.downloadFile({
-      url: `${environment.pcm_url}/content/download`,
-      data: body,
-      headers: { 'content-type': 'application/json; charset=UTF-8' },
-      directory: Directory.Documents,
-      path: `${fn}`,
-      recursive: true,
-      method: 'POST'
-    })
-
-    const uri: GetUriResult = await Filesystem.getUri({
-      directory: Directory.Documents,
-      path: `${fn}`
-    })
-
     try {
-      const fileOpenerOptions: FileOpenerOptions = {
-        filePath: uri.uri,
-        contentType: 'application/zip',
-        openWithDefault: true
+      const extra: string = this.user.userinfo.type === 2 ? `_${this.user.activeUser.id}-${this.user.activeUser.address}` : ''
+      const fn: string = `datasheets${extra}_${new Date().toISOString().substring(0, 10)}.zip`
+
+      this.progress = 0
+      this.ref.markForCheck()
+
+      await Filesystem.addListener('progress', (progress: ProgressStatus): void => {
+        this.progress = progress.bytes / progress.contentLength
+        this.buffer = Math.min(this.progress + .1, 1)
+        this.ref.markForCheck()
+      })
+      this.buffer = .1
+      await Filesystem.downloadFile({
+        url: `${environment.pcm_url}/content/download`,
+        data: body,
+        headers: { 'content-type': 'application/json; charset=UTF-8' },
+        directory: Directory.Documents,
+        path: `${fn}`,
+        recursive: true,
+        method: 'POST',
+        progress: true
+      })
+      this.progress = 1
+      this.ref.markForCheck()
+
+      const uri: GetUriResult = await Filesystem.getUri({
+        directory: Directory.Documents,
+        path: `${fn}`
+      })
+      this.isDownloading = false
+      this.ref.markForCheck()
+      await Filesystem.removeAllListeners()
+
+      try {
+        const fileOpenerOptions: FileOpenerOptions = {
+          filePath: uri.uri,
+          contentType: 'application/zip',
+          openWithDefault: true
+        }
+        await FileOpener.open(fileOpenerOptions)
+      } catch (e) {
+        console.log('Error opening file', e)
       }
-      await FileOpener.open(fileOpenerOptions)
-    } catch (e) {
-      console.log('Error opening file', e)
+    } finally {
+      this.isDownloading = false
+      this.ref.markForCheck()
     }
   }
 

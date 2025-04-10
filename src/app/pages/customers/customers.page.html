@@ -17,6 +17,11 @@
         </ng-container>
       </ng-container>
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
+        <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar *ngIf="isAgent">
     <ion-searchbar [placeholder]="'customer-info.search' | translate" type="text" id="searchInputField"

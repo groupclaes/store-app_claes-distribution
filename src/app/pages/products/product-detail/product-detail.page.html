@@ -17,6 +17,7 @@
 
 <ion-content [fullscreen]="true" color="light">
   <ion-loading *ngIf="product != undefined" spinner="lines" translate="preparing" mode="ios"></ion-loading>
+
   <article *ngIf="product !== null && !loading">
     <div class="image-price-container">
       <section class="product-image-wrapper">
@@ -336,9 +337,7 @@
         </ion-item>
         <ion-item *ngFor="let attachment of datasheets" tappable
                   (click)="network.online ? showDocumentActionSheet(attachment) : network.noop()">
-          <ion-thumbnail style="--size: 28px" slot="start">
-            <img alt="pdf icon" height="24" width="24" ngSrc="assets/icon/pdf.svg"/>
-          </ion-thumbnail>
+          <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
@@ -354,9 +353,7 @@
       <ion-list inset="true">
         <ion-item *ngFor="let attachment of usageManuals" tappable
                   (click)="network.online ? showDocumentActionSheet(attachment) : network.noop()">
-          <ion-thumbnail style="--size: 28px" slot="start">
-            <img alt="pdf icon" height="24" width="24" ngSrc="assets/icon/pdf.svg"/>
-          </ion-thumbnail>
+          <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
@@ -371,9 +368,7 @@
       <ion-list inset="true">
         <ion-item *ngFor="let attachment of recipes | slice:0:recipeCount" tappable
                   (click)="network.online ? showRecipeActionSheet(attachment) : network.noop()">
-          <ion-thumbnail style="--size: 28px" slot="start">
-            <img alt="pdf icon" height="24" width="24" ngSrc="assets/icon/pdf.svg"/>
-          </ion-thumbnail>
+          <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
@@ -390,8 +385,12 @@
       </ion-text>
 
       <ion-list inset="true">
-        <ion-item *ngFor="let recipe of recipesModule" button tappable (click)="openRecipe(recipe)">
+        <ion-item *ngFor="let recipe of recipesModule | slice:0:recipeModuleCount" button tappable
+                  [routerLink]="['/web-recipes', recipe.id, recipe.name.replace('/ /g', '-')]">
           {{ recipe.name }}
+        </ion-item>
+        <ion-item *ngIf="recipesModule.length > recipeModuleCount" tappable (click)="showAllRecipesModule()">
+          {{ 'displayAllRecipes' | translate }}
         </ion-item>
       </ion-list>
     </ng-container>
@@ -399,6 +398,7 @@
     <ion-action-sheet *ngIf="product" [trigger]="'open-action-sheet-' + product.id"
                       [header]="'actions.title' | translate" [buttons]="actionSheetButtons"></ion-action-sheet>
   </article>
+
   <ion-modal [isOpen]="pictureOpen" class="fullscreen" style="--width:100%; --height:calc(100vw + 40px);"
              (didDismiss)="pictureOpen = false">
     <!-- <ion-backdrop [visible]="true"></ion-backdrop> -->
@@ -423,6 +423,7 @@
       </ion-content>
     </ng-template>
   </ion-modal>
+
   <ion-modal [isOpen]="departmentAddOpen" (didDismiss)="departmentAddOpen = false">
     <ng-template>
       <ion-header>
@@ -430,31 +431,33 @@
           <ion-title>
             {{ 'selectaDepartment' | translate }}
           </ion-title>
-          <ion-buttons start>
+          <ion-buttons slot="start">
             <ion-button tappable (click)="modalCtrl.dismiss()">
-              <span color="primary" showWhen="ios">
-                {{ 'cancelButtonText' | translate }}
-              </span>
-              <ion-icon name="md-close"></ion-icon>
+              {{ 'cancelButtonText' | translate }}
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content class="ion-padding">
-        <ion-list-header>
-          {{ 'department' | translate }}
-        </ion-list-header>
-        <ion-list>
+      <ion-content>
+        <ion-text class="list-header">
+          <ion-note translate>department</ion-note>
+        </ion-text>
+
+        <ion-list inset="true">
           <ion-item>
-            <ion-select [(ngModel)]="selectedDepartment" interface="popover">
-              <ion-select-option value="" checked="true">{{ 'selectaDepartment' | translate }}</ion-select-option>
+            <ion-select label="" [(ngModel)]="selectedDepartment" interface="popover"
+                        [placeholder]="'selectaDepartment' | translate">
               <ion-select-option [value]="department.id" *ngFor="let department of departments">{{ department.alias }}
               </ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-button color="primary" tappable (click)="completeAddProductToDepartment()"
-                      [disabled]="!selectedDepartment">{{ 'confirm' | translate }}
-          </ion-button>
+        </ion-list>
+
+        <ion-list inset="true">
+          <ion-item detail="false" button tappable [disabled]="!selectedDepartment"
+                    (click)="network.online ? completeAddProductToDepartment() : network.noop()">
+            <ion-label color="primary" style="text-align:center">{{ 'confirm' | translate }}</ion-label>
+          </ion-item>
         </ion-list>
       </ion-content>
     </ng-template>

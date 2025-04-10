@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Directory, FileInfo, Filesystem, ReaddirResult } from '@capacitor/filesystem'
 import { AlertController, LoadingController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
@@ -12,6 +12,8 @@ import {
 import { Store, SyncService } from 'src/app/core/sync.service'
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 
+const TASK_COUNT = 5
+
 @Component({
   selector: 'app-sync',
   templateUrl: './sync.page.html',
@@ -20,11 +22,15 @@ import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 export class SyncPage implements OnInit {
   loader: HTMLIonLoadingElement
   loading: boolean = true
+  isLoading: boolean = true
   lastSync: Date
   integrityChecksums: Array<Store> = []
 
-  productcount: number = 0
-  imagecount: number = 0
+  leafletCount: number = undefined
+  productCount: number = undefined
+  imageCount: number = undefined
+  cacheSize: number = undefined
+  reportCount: number = undefined
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -125,8 +131,15 @@ export class SyncPage implements OnInit {
   }
 
   private async load(): Promise<void> {
+    let tasks: number = 0
     try {
+      this.leafletCount = undefined
+      this.productCount = undefined
+      this.imageCount = undefined
+      this.cacheSize = undefined
+      this.reportCount = undefined
       this.loading = true
+      this.isLoading = true
       this.ref.markForCheck()
 
       const dataIntegrity: Store[] = await this.repo.get<Store>()
@@ -136,25 +149,114 @@ export class SyncPage implements OnInit {
       await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<void> => {
         const result: DBSQLiteValues = await db.query('select count(*) as c from ' + (this.agent ? 'products' : 'currentExceptions'))
         if (result.values)
-          this.productcount = result.values[0]['c']
+          this.productCount = result.values[0]['c']
         this.ref.markForCheck()
       })
 
       Filesystem.readdir({
         path: 'thumbnails',
         directory: Directory.Cache
-      }).then(result => {
-        this.imagecount = result.files.length
-        this.ref.markForCheck()
-      }).catch(err => {
-        this.imagecount = 0
-        this.ref.markForCheck()
       })
+        .then((result: ReaddirResult): void => {
+          this.imageCount = result.files.length
+          this.ref.markForCheck()
+        })
+        .catch((): void => {
+          this.imageCount = 0
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
+
+      Filesystem.readdir({
+        path: '',
+        directory: Directory.Documents
+      })
+        .then((result: ReaddirResult): void => {
+          console.log(result.files)
+          this.leafletCount = result.files.filter(x => /^([0-9]{6})_(nl|fr).pdf$/g.test(x.name)).length
+          this.ref.markForCheck()
+        })
+        .catch((): void => {
+          this.leafletCount = 0
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
+
+      this.getCount('reports')
+        .then((result: number): void => {
+          this.reportCount = result
+          this.ref.markForCheck()
+        })
+        .catch((err): void => {
+          this.reportCount = 0
+          console.log(err, this.reportCount = 0, this.reportCount)
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
+
+      this.getSize()
+        .then((result: number): void => {
+          this.cacheSize = result
+          this.ref.markForCheck()
+        })
+        .catch((): void => {
+          this.cacheSize = 0
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
     } catch (err) {
       this.logger.error('SyncPage.load() error', err)
     } finally {
+      tasks++
+      this.isLoading = !(tasks >= TASK_COUNT)
       this.loading = false
       this.ref.markForCheck()
+    }
+  }
+
+  private async getCount(path: string = '', directory: Directory = Directory.Documents): Promise<number> {
+    try {
+      const result: ReaddirResult = await Filesystem.readdir({ path, directory })
+      const files: FileInfo[] = result.files.filter((e: FileInfo): boolean => e.type === 'file')
+      const dirs: FileInfo[] = result.files.filter((e: FileInfo): boolean => e.type === 'directory')
+      let dirSize: number = 0
+      for (const dir of dirs) {
+        dirSize += await this.getCount(path + '/' + dir.name, directory)
+      }
+      return files.length + dirSize
+    } catch {
+      return 0
+    }
+  }
+
+  private async getSize(path: string = '', directory: Directory = Directory.Cache): Promise<number> {
+    try {
+      const result: ReaddirResult = await Filesystem.readdir({ path, directory })
+      const files: FileInfo[] = result.files.filter((e: FileInfo): boolean => e.type === 'file')
+      const dirs: FileInfo[] = result.files.filter((e: FileInfo): boolean => e.type === 'directory')
+      let dirSize: number = 0
+      for (const dir of dirs) {
+        dirSize += await this.getSize(path + '/' + dir.name, directory)
+      }
+      return files.reduce((prev: number, next: FileInfo): number => prev + next.size, 0) + dirSize
+    } catch {
+      return 0
     }
   }
 }

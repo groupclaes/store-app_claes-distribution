@@ -620,7 +620,7 @@ export class ProductsRepositoryService {
 
       const recipes = await db.query(
         `SELECT guid, name
-         FROM recipes
+         FROM pcmRecipes
          WHERE products LIKE '%${itemnum}%'
            AND languages LIKE '%\"${culture}\":true%'`,
         []

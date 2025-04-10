@@ -1,0 +1,59 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title translate="recipesPage"></ion-title>
+    <ion-buttons slot="end">
+      <ion-button tappable class="icon-only" [routerLink]="cartLink">
+        <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000" [placeholder]="'searchInput' | translate" (ionInput)="filterRecipes($event)">
+    </ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  <ion-header collapse="condense">
+    <ion-toolbar color="light">
+      <ion-title size="large">
+        <span translate>recipesPage</span>
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div *ngIf="loading" class="ion-padding">
+    <div style="text-align:center">
+      <ion-spinner mode="ios"></ion-spinner>
+    </div>
+  </div>
+
+  <!-- <div class="ion-padding" *ngIf="network.online">
+    <gro-recipe-banner></gro-recipe-banner>
+  </div> -->
+
+  <ion-text class="list-footer" *ngIf="network.online">
+    <ion-note>
+      Wist je dat je nog meer overheerlijke recepten terug kan vinden op onze recepten website?
+      <br>
+      <a href="https://www.claes-distribution.be/recepten" target="_system">
+        Bekijk alle recepten.
+      </a>
+    </ion-note>
+  </ion-text>
+
+  <ion-list [inset]="true" *ngIf="!loading">
+    <ion-item button *ngFor="let recipe of recipes" [routerLink]="[recipe.guid]">
+      {{ recipe.name }}
+    </ion-item>
+  </ion-list>
+
+  <ion-infinite-scroll (ionInfinite)="doInfinite($event)" [disabled]="loading || reachedEnd">
+    <ion-infinite-scroll-content></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>
+
+<app-offline-footer></app-offline-footer>

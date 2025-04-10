@@ -5,14 +5,18 @@ import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
-import { IUnsentVisitNote, IVisitNote, NotesRepositoryService } from 'src/app/core/repositories/notes.repository.service'
+import {
+  IUnsentVisitNote,
+  IVisitNote,
+  NotesRepositoryService
+} from 'src/app/core/repositories/notes.repository.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
 
 @Component({
   selector: 'app-notes',
   templateUrl: './notes.page.html',
-  styleUrls: ['./notes.page.scss'],
+  styleUrls: ['./notes.page.scss']
 })
 export class NotesPage {
   showCreate = false
@@ -21,15 +25,16 @@ export class NotesPage {
   newNote: IUnsentVisitNote
 
   constructor(private user: UserService,
-    private translate: TranslateService,
-    private alert: AlertController,
-    private ref: ChangeDetectorRef,
-    private route: ActivatedRoute,
-    private navCtrl: NavController,
-    private api: ApiService,
-    private logger: LoggingProvider,
-    private notesRepository: NotesRepositoryService,
-    private toast: ToastController) { }
+              private translate: TranslateService,
+              private alert: AlertController,
+              private ref: ChangeDetectorRef,
+              private route: ActivatedRoute,
+              private navCtrl: NavController,
+              private api: ApiService,
+              private logger: LoggingProvider,
+              private notesRepository: NotesRepositoryService,
+              private toast: ToastController) {
+  }
 
   get culture(): string {
     return this.translate.currentLang
@@ -75,7 +80,9 @@ export class NotesPage {
               buttons: [
                 {
                   text: this.translate.instant('actions.show'),
-                  handler: () => { this.navCtrl.navigateRoot('/notes') }
+                  handler: () => {
+                    this.navCtrl.navigateRoot('/notes')
+                  }
                 },
                 {
                   text: this.translate.instant('actions.cancel'),
@@ -121,6 +128,7 @@ export class NotesPage {
       buttons: [
         {
           text: this.translate.instant('actions.delete'),
+          role: 'destructive',
           handler: async () => {
             try {
               await this.notesRepository.deleteUnsentNote(note.id)

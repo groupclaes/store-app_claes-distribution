@@ -3,10 +3,14 @@ import { AlertController, NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { BrowserService } from 'src/app/core/browser.service'
-import { CustomersRepositoryService, IAppDeliveryScheduleModel, IContact }
-  from 'src/app/core/repositories/customers.repository.service'
+import {
+  CustomersRepositoryService,
+  IAppDeliveryScheduleModel,
+  IContact
+} from 'src/app/core/repositories/customers.repository.service'
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 import { Md5 } from 'ts-md5'
+import { CartService } from '../../../core/cart.service'
 
 @Component({
   selector: 'app-customer-info',
@@ -26,7 +30,8 @@ export class CustomerInfoPage {
               private alertCtrl: AlertController,
               private ref: ChangeDetectorRef,
               private logger: LoggingProvider,
-              private browser: BrowserService) {
+              private browser: BrowserService,
+              private cart: CartService) {
   }
 
 
@@ -131,5 +136,12 @@ export class CustomerInfoPage {
 
   private openBrowserUrl(url: string): void {
     return this.browser.open(url, '_system', 'hidden=yes,location=yes')
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active)
+      params.push(this.cart.active.id)
+    return params
   }
 }

@@ -28,7 +28,8 @@ export class DepartmentsPage implements OnInit {
     private alertCtrl: AlertController,
     private cart: CartService,
     public network: NetworkService
-  ) { }
+  ) {
+  }
 
   ngOnInit() {
   }

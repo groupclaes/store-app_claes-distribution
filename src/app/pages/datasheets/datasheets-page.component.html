@@ -15,6 +15,7 @@
                    [placeholder]="'searchInput' | translate" (ionInput)="filter($event)">
     </ion-searchbar>
     <ion-progress-bar type="indeterminate" *ngIf="loading"></ion-progress-bar>
+    <ion-progress-bar [value]="progress" *ngIf=" isDownloading"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
 
@@ -48,7 +49,7 @@
     </ion-list>
   </cdk-virtual-scroll-viewport>
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button (click)="downloadAllDatasheets()"><!-- [disabled]="!isAgent && !internalUser" -->
+    <ion-fab-button (click)="downloadAllDatasheets()" [disabled]="isDownloading"><!-- [disabled]="!isAgent && !internalUser" -->
       <i class="fal fa-fw fa-lg fa-download"></i>
     </ion-fab-button>
     <!--    <ion-fab-list side="top">-->

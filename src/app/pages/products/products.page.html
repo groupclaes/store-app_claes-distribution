@@ -51,12 +51,12 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" [scrollY]="false" color="light">
+<ion-content [fullscreen]="true" [scrollY]="false" color="light" (resize)="clampBuilder(320, 750, 0.375, 0.875)">
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" class="ion-content-scroll-host">
     <ion-list>
       <ion-item tabbapble [routerLink]="[product.id]"
-                *cdkVirtualFor="let product of products; templateCacheSize: 0; let i = index; trackBy: productById"
-                [color]="product.availableOn ? 'light' : undefined">
+                *cdkVirtualFor="let product of products; templateCacheSize: 0; let i = index, let isLast = last; trackBy: productById"
+                [color]="product.availableOn ? 'light' : undefined" [lines]="isLast ? 'none': 'normal'">
         <ion-thumbnail *ngIf="displayThumbnail" slot="start">
           <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name"
                loading="lazy" [style]="'background-color:' + product.color" width="48" height="48">
@@ -77,7 +77,8 @@
               <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderToggleButton"></ion-badge>
               <!-- translate="orderItem"  -->
             </div>
-            <span style="font-size:clamp(6px, 3vw, 0.875rem)">{{ product.name }}</span>
+            <!-- style="font-size:clamp(8px, 3vw, 16px)" [style]="clamp" -->
+            <span>{{ product.name }}</span>
             <div *ngIf="product.favLastB" style="font-size:12px;font-style:italic">
               {{ favinfo(product) }}
             </div>

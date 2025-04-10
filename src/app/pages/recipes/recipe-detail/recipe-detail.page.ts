@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { ActivatedRoute } from '@angular/router'
+import { ActivatedRoute, Params } from '@angular/router'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
@@ -9,6 +9,8 @@ import { BrowserService } from 'src/app/core/browser.service'
 import { RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
+import { Directory, DownloadFileResult, Filesystem } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 
 @Component({
   selector: 'app-detail',
@@ -17,7 +19,8 @@ import { UserService } from 'src/app/core/user.service'
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipeDetailPage implements OnInit {
-  loading = true
+  loading: boolean = true
+  isDownloading: boolean = false
   private _recipe: $TSFixMe
   displayThumbnail: boolean
 
@@ -34,19 +37,19 @@ export class RecipeDetailPage implements OnInit {
     private browser: BrowserService,
     public network: NetworkService
   ) {
-    this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
+    this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
       this.displayThumbnail = displayThumbnail
     })
-    route.params.subscribe(params => {
+    route.params.subscribe((params: Params): void => {
       this.load(params['guid'])
     })
-    this.network.connected.subscribe(() => this.ref.markForCheck())
+    this.network.connected.subscribe((): void => this.ref.markForCheck())
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
   }
 
-  async load(guid: string) {
+  async load(guid: string): Promise<void> {
     try {
       this.loading = true
       this.ref.markForCheck()
@@ -60,14 +63,38 @@ export class RecipeDetailPage implements OnInit {
     }
   }
 
-  open() {
+  async share(): Promise<void> {
+    this.isDownloading = true
+    this.ref.markForCheck()
+
+    try {
+      const result: DownloadFileResult = await Filesystem.downloadFile({
+        path: this.recipe.name,
+        directory: Directory.Cache,
+        url: `https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`
+      })
+      this.isDownloading = false
+      this.ref.markForCheck()
+
+      await Share.share({
+        title: this.recipe.name,
+        // text: 'Claes Distribution Recept',
+        url: result.path
+      })
+    } finally {
+      this.isDownloading = false
+      this.ref.markForCheck()
+    }
+  }
+
+  open(): void {
     this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
   }
 
-  async mail() {
+  async mail(): Promise<void> {
     try {
       // create loader in future versions
-      const req = await this.api.post(`app/recipes/mail/${this.recipe.guid}`, this.user.credential, {
+      const req: any = await this.api.post(`app/recipes/mail/${this.recipe.guid}`, this.user.credential, {
         customer: this.user.activeUser.id,
         address: this.user.activeUser.address,
         message: '',

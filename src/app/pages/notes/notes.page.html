@@ -5,104 +5,156 @@
     </ion-buttons>
     <ion-title translate="pages.notes.title"></ion-title>
     <ion-buttons slot="end">
-      <ion-button icon-only *ngIf="!showCreate" tappable (click)="addNote()">
-        <i class="fal fa-sm fa-fw fa-plus"></i>
+      <ion-button class="icon-only" *ngIf="!showCreate" tappable (click)="addNote()">
+        <i class="fal fa-lg fa-fw fa-plus"></i>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-list *ngIf="newNote">
-    <ion-list-header>
-      <span [innerText]="newNote.date | date:'fullDate':null:culture"></span>
-      <span item-end tappable (click)="addNote(newNote)">
-        <ion-icon>
-          <i class="fal fa-fw fa-lg fa-copy"></i>
-        </ion-icon>
-      </span>
-    </ion-list-header>
-    <ion-item>
-      <ion-textarea [label]="'pages.notes.fields.note' | translate" labelPlacement="fixed"
-        type="text" auto-grow="true"
-        rows="4" [(ngModel)]="newNote.text"></ion-textarea>
-    </ion-item>
-    <ion-item>
-      <ion-label slot="start" [innerText]="'pages.notes.fields.next-visit' | translate"></ion-label>
-      <ion-datetime-button slot="end" datetime="dt-nextVisit"></ion-datetime-button>
-    </ion-item>
-    <ion-item>
-      <ion-label slot="start" [innerText]="'pages.notes.fields.closed-from' | translate"></ion-label>
-      <ion-datetime-button slot="end" datetime="dt-customerCloseFrom"></ion-datetime-button>
-    </ion-item>
-    <ion-item>
-      <ion-label slot="start" [innerText]="'pages.notes.fields.open-from' | translate"></ion-label>
-      <ion-datetime-button slot="end" datetime="dt-customerOpenFrom"></ion-datetime-button>
-    </ion-item>
-    <ion-item id="note-buttons">
-      <ion-button size="default" color="primary" tappable (click)="send(newNote)">
-        <i class="fal fa-fw fa-lg fa-paper-plane"></i>
-        <span translate="actions.send"></span>
-      </ion-button>
-      <ion-button size="default" color="primary" tappable (click)="save(newNote)">
-        <i class="fal fa-fw fa-lg fa-save"></i>
-        <span translate="actions.save"></span>
-      </ion-button>
-      <ion-button *ngIf="isUnsentNote(newNote)"
-        size="default" color="danger" tappable (click)="deleteNote(newNote)">
-        <i class="fal fa-fw fa-lg fa-trash"></i>
-        <span translate="actions.delete"></span>
-      </ion-button>
-    </ion-item>
-  </ion-list>
+<ion-content [fullscreen]="true" color="light">
+  <ion-header collapse="condense">
+    <ion-toolbar color="light">
+      <ion-title size="large" translate="pages.notes.title"></ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ng-container *ngIf="newNote">
+    <ion-text class="list-header" style="display:flex;align-items:center;justify-content:space-between">
+      <ion-note>{{ newNote.date | date : 'fullDate' : null : culture }}</ion-note>
+      <div>
+        <ion-button fill="clear" size="small" tappable (click)="send(newNote)" style="margin:0">
+          <span translate="actions.send"></span>&nbsp;<i class="fal fa-paper-plane"></i>
+        </ion-button>
+        <ion-button color="tertiary" fill="clear" size="small" tappable (click)="save(newNote)" style="margin:0">
+          <span translate="actions.save"></span>&nbsp;<i class="fal fa-save"></i>
+        </ion-button>
+        <ion-button color="danger" *ngIf="isUnsentNote(newNote)" fill="clear" size="small" tappable
+                    (click)="deleteNote(newNote)" style="margin:0">
+          <span translate="actions.delete"></span>&nbsp;<i class="fal fa-trash"></i>
+        </ion-button>
+      </div>
+    </ion-text>
+
+    <ion-list inset="true">
+      <ion-item>
+        <ion-textarea [label]="'pages.notes.fields.note' | translate" labelPlacement="fixed"
+                      type="text" auto-grow="true" rows="4" [(ngModel)]="newNote.text"></ion-textarea>
+      </ion-item>
+      <ion-item>
+        <ion-label [innerText]="'pages.notes.fields.next-visit' | translate"></ion-label>
+        <ion-datetime-button datetime="dt-nextVisit"></ion-datetime-button>
+      </ion-item>
+      <ion-item>
+        <ion-label [innerText]="'pages.notes.fields.closed-from' | translate"></ion-label>
+        <ion-datetime-button datetime="dt-customerCloseFrom"></ion-datetime-button>
+      </ion-item>
+      <ion-item>
+        <ion-label [innerText]="'pages.notes.fields.open-from' | translate"></ion-label>
+        <ion-datetime-button datetime="dt-customerOpenFrom"></ion-datetime-button>
+      </ion-item>
+      <ion-item *ngIf="debugging">
+        <ion-label>Debug</ion-label>
+        <ion-label>{{ newNote | json }}</ion-label>
+      </ion-item>
+      <!--      <ion-item id="note-buttons">-->
+      <!--        <ion-button size="default" color="primary" tappable (click)="send(newNote)">-->
+      <!--          <i class="fal fa-fw fa-lg fa-paper-plane"></i>-->
+      <!--          <span translate="actions.send"></span>-->
+      <!--        </ion-button>-->
+      <!--        <ion-button size="default" color="primary" tappable (click)="save(newNote)">-->
+      <!--          <i class="fal fa-fw fa-lg fa-save"></i>-->
+      <!--          <span translate="actions.save"></span>-->
+      <!--        </ion-button>-->
+      <!--        <ion-button *ngIf="isUnsentNote(newNote)"-->
+      <!--                    size="default" color="danger" tappable (click)="deleteNote(newNote)">-->
+      <!--          <i class="fal fa-fw fa-lg fa-trash"></i>-->
+      <!--          <span translate="actions.delete"></span>-->
+      <!--        </ion-button>-->
+      <!--      </ion-item>-->
+    </ion-list>
+  </ng-container>
   <!-- Datetime modals -->
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime *ngIf="newNote" id="dt-nextVisit"
-        displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.nextVisit"
-        presentation="date"></ion-datetime>
+                    displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.nextVisit"
+                    presentation="date"></ion-datetime>
     </ng-template>
   </ion-modal>
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime *ngIf="newNote" id="dt-customerCloseFrom"
-        displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerCloseFrom"
-        presentation="date"></ion-datetime>
+                    displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerCloseFrom"
+                    presentation="date"></ion-datetime>
     </ng-template>
   </ion-modal>
   <ion-modal [keepContentsMounted]="true">
     <ng-template>
       <ion-datetime *ngIf="newNote" id="dt-customerOpenFrom"
-        displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerOpenFrom"
-        presentation="date"></ion-datetime>
+                    displayFormat="DDDD DD MMMM YYYY" [(ngModel)]="newNote.customerOpenFrom"
+                    presentation="date"></ion-datetime>
     </ng-template>
   </ion-modal>
   <!-- /Datetime modals -->
-  <ion-list *ngFor="let note of notes">
-    <ion-list-header class="ion-padding">
-      <ion-label [innerText]="note.date | date : 'fullDate' : null : culture"></ion-label>
-      <ion-button (click)="addNote(note)">
-        <i class="fal fa-fw fa-lg fa-pencil" *ngIf="isUnsentNote(note);else copybutton"></i>
-        <ng-template #copybutton>
-          <i class="fal fa-fw fa-lg fa-copy" ></i>
-        </ng-template>
+  <ng-container *ngFor="let note of notes">
+    <ion-text class="list-header" style="display:flex;align-items:center;justify-content:space-between">
+      <ion-note>{{ note.date | date : 'fullDate' : null : culture }}</ion-note>
+      <ion-button fill="clear" size="small" tappable (click)="addNote(note)" style="margin:0">
+        <ng-container [ngSwitch]="isUnsentNote(note)">
+          <ng-template [ngSwitchCase]="true">
+            <span translate="actions.modify"></span>&nbsp;<i class="fal fa-pencil"></i>
+          </ng-template>
+          <ng-template [ngSwitchCase]="false">
+            <span translate="actions.copy"></span>&nbsp;<i class="fal fa-copy"></i>
+          </ng-template>
+        </ng-container>
       </ion-button>
-    </ion-list-header>
-    <ion-item *ngIf="isUnsentNote(note)">
-      <span translate="pages.notes.saved"></span>
-    </ion-item>
-    <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend">
-      <span translate="pages.notes.to-be-sent"></span>
-    </ion-item>
-    <ion-item>
-      <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"
-        item-content [innerText]="note.text"></div>
-    </ion-item>
-    <ion-item *ngIf="debugging">
-      <ion-label>Debug</ion-label>
-      <ion-label>{{ note | json }}</ion-label>
-    </ion-item>
-  </ion-list>
+    </ion-text>
+
+    <ion-list inset="true">
+      <ion-item *ngIf="isUnsentNote(note)">
+        <ion-text color="danger" translate="pages.notes.saved"></ion-text>
+      </ion-item>
+      <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend">
+        <span translate="pages.notes.to-be-sent"></span>
+      </ion-item>
+      <ion-item>
+        <ion-label style="white-space:pre-wrap">
+          {{ note.text }}
+        </ion-label>
+      </ion-item>
+      <ion-item *ngIf="debugging">
+        <ion-label>Debug</ion-label>
+        <ion-label>{{ note | json }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </ng-container>
+  <!--  <ion-list *ngFor="let note of notes">-->
+  <!--    <ion-list-header class="ion-padding">-->
+  <!--      <ion-label [innerText]="note.date | date : 'fullDate' : null : culture"></ion-label>-->
+  <!--      <ion-button (click)="addNote(note)">-->
+  <!--        <i class="fal fa-fw fa-lg fa-pencil" *ngIf="isUnsentNote(note);else copybutton"></i>-->
+  <!--        <ng-template #copybutton>-->
+  <!--          <i class="fal fa-fw fa-lg fa-copy"></i>-->
+  <!--        </ng-template>-->
+  <!--      </ion-button>-->
+  <!--    </ion-list-header>-->
+  <!--    <ion-item *ngIf="isUnsentNote(note)">-->
+  <!--      <span translate="pages.notes.saved"></span>-->
+  <!--    </ion-item>-->
+  <!--    <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend">-->
+  <!--      <span translate="pages.notes.to-be-sent"></span>-->
+  <!--    </ion-item>-->
+  <!--    <ion-item>-->
+  <!--      <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"-->
+  <!--           item-content [innerText]="note.text"></div>-->
+  <!--    </ion-item>-->
+  <!--    <ion-item *ngIf="debugging">-->
+  <!--      <ion-label>Debug</ion-label>-->
+  <!--      <ion-label>{{ note | json }}</ion-label>-->
+  <!--    </ion-item>-->
+  <!--  </ion-list>-->
 </ion-content>
 
 <app-offline-footer></app-offline-footer>

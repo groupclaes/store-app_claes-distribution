@@ -1,0 +1,145 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button [text]="backButtonText"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ recipe?.title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable (click)="share()">
+        {{ 'actions.share' | translate }}&nbsp;
+        <i color="primary" class="fal fa-fw fa-share-square"></i>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" color="light">
+  <ng-container *ngIf="recipe">
+    <ion-header collapse="condense">
+      <ion-toolbar color="light">
+        <ion-title size="large">{{ recipe.title }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <div style="position: relative">
+      <ion-img class="banner" [src]="recipe.image" [alt]="recipe.description"></ion-img>
+      <ion-thumbnail style="position:absolute;bottom: 16px;right: 16px">
+        <img [src]="recipe.logo" alt="brand logo">
+      </ion-thumbnail>
+    </div>
+
+    <ion-text color="medium" style="text-align: center">
+      <h3>{{ recipe.description }}</h3>
+    </ion-text>
+
+    <div class="side-by-side">
+      <div class="block">
+        <ion-text class="list-header">
+          <ion-note translate>pages.web-recipe-detail.ingredients</ion-note>
+        </ion-text>
+
+        <ion-list inset="true">
+          <ion-item *ngFor="let ingredient of recipe.ingredients"
+                    [routerLink]="ingredient.product ? ['/products', ingredient.product] : undefined">
+            <ion-label>
+              <ng-container *ngIf="ingredient.text.startsWith('*')">
+                <strong>{{ ingredient.text.substring(1) }}</strong>
+              </ng-container>
+              <ng-container *ngIf="!ingredient.text.startsWith('*')">
+                {{ ingredient.text }}
+              </ng-container>
+            </ion-label>
+            <ion-note slot="end" *ngIf="ingredient.amount > 0">
+              {{ ingredient.amount }} {{ ingredient.unit }}
+            </ion-note>
+          </ion-item>
+        </ion-list>
+      </div>
+
+      <div class="block">
+        <ion-text class="list-header">
+          <ion-note translate>pages.web-recipe-detail.preparationSteps</ion-note>
+        </ion-text>
+
+        <ion-list inset="true">
+          <ng-container *ngIf="!hasGroupings">
+            <ion-item *ngFor="let preparationStep of recipe.preparationSteps">
+              <strong slot="start">
+                {{ preparationStep.position }}
+              </strong>
+              <ion-label>
+                {{ preparationStep.text }}
+              </ion-label>
+            </ion-item>
+          </ng-container>
+          <ng-container *ngIf="hasGroupings">
+            <ng-container *ngFor="let group of groupings">
+              <ion-item *ngIf="group.title">
+                <ion-label>
+                  <strong>{{ group.title }}</strong>
+                </ion-label>
+              </ion-item>
+              <ion-item *ngFor="let preparationStep of group.steps">
+                <strong slot="start">
+                  {{ preparationStep.position }}
+                </strong>
+                <ion-label>
+                  {{ preparationStep.text }}
+                </ion-label>
+              </ion-item>
+            </ng-container>
+          </ng-container>
+        </ion-list>
+      </div>
+    </div>
+
+    <ng-container *ngIf="recipe.relatedItems">
+      <ion-text class="list-header">
+        <ion-note translate>pages.web-recipe-detail.relatedItems</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
+        <ion-item *ngFor="let relatedItem of recipe.relatedItems" [href]="relatedItem.url">
+          <ion-label>
+            {{ relatedItem.text }}
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </ng-container>
+
+    <ng-container *ngIf="recipe.tip">
+      <ion-text class="list-header">
+        <ion-note translate>pages.web-recipe-detail.tip</ion-note>
+      </ion-text>
+
+      <ion-list inset="true">
+        <ion-item>
+          <ion-text color="medium">
+            <div [innerHTML]="recipe.tip"></div>
+          </ion-text>
+        </ion-item>
+      </ion-list>
+    </ng-container>
+
+    <ion-text class="list-header">
+      <ion-note translate>pages.web-recipe-detail.other</ion-note>
+    </ion-text>
+
+    <div class="recommended-flex">
+      <ion-card *ngFor="let recommended of recipe.recommended"
+                [routerLink]="['/web-recipes', recommended.id, recommended.title.replace('/ /g', '-')]">
+        <img [alt]="recommended.description" [src]="recommended.image" style="width:100%"/>
+        <ion-card-header>
+          <!--          <ion-card-title>{{ recommended.title }}</ion-card-title>-->
+          <ion-card-subtitle>{{ recommended.title }}</ion-card-subtitle>
+        </ion-card-header>
+
+        <!--        <ion-card-content>-->
+        <!--          {{ recommended.description }}-->
+        <!--        </ion-card-content>-->
+      </ion-card>
+    </div>
+  </ng-container>
+</ion-content>
+
+<app-offline-footer></app-offline-footer>

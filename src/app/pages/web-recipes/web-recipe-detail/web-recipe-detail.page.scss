@@ -1,0 +1,66 @@
+:host {
+  ion-card {
+    --ion-background-color: white;
+
+    @media (prefers-color-scheme: dark) {
+      --ion-background-color: black;
+    }
+  }
+
+  .banner {
+    height: 180px;
+    object-fit: cover;
+
+    @media screen and (min-width: 650px) {
+      height: 290px;
+    }
+
+    @media screen and (min-width: 1140px) {
+      height: 400px;
+    }
+  }
+
+  div.side-by-side {
+    display: flex;
+    flex-direction: column;
+
+    @media screen and (min-width: 650px) {
+      flex-wrap: wrap;
+      flex-direction: row;
+
+      div.block {
+        width: 50%;
+      }
+    }
+  }
+
+  div.recommended-flex {
+    display: flex;
+    flex-direction: column;
+
+    //ion-card {
+    //  width: calc(100% - 32px);
+    //}
+
+    @media screen and (min-width: 350px) {
+      flex-direction: row;
+      flex-wrap: wrap;
+
+      ion-card {
+        width: calc(50% - 32px);
+      }
+    }
+
+    @media screen and (min-width: 650px) {
+      ion-card {
+        width: calc(33% - 32px);
+      }
+    }
+
+    @media screen and (min-width: 1140px) {
+      ion-card {
+        width: calc(16.66666% - 32px);
+      }
+    }
+  }
+}

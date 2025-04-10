@@ -10,6 +10,8 @@ const config: CapacitorElectronConfig = {
   bundledWebRuntime: false,
   plugins: {
     CapacitorSQLite: {
+      iosDatabaseLocation: 'Library/Database',
+      iosIsEncryption: false,
       electronWindowsLocation: 'CapacitorDatabases',
       electronMacLocation: 'CapacitorDatabases',
       electronLinuxLocation: 'CapacitorDatabases'
@@ -29,8 +31,8 @@ const config: CapacitorElectronConfig = {
     // Switch on/off whether or not to use deeplinking in your app.
     deepLinkingEnabled: false,
     // Custom protocol to be used with deeplinking for your app.
-    deepLinkingCustomProtocol: 'claes-storeapp',
-  },
+    deepLinkingCustomProtocol: 'claes-storeapp'
+  }
 }
 
 export default config

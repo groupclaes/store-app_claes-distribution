@@ -2,11 +2,10 @@ import { NgModule } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { IonicModule } from '@ionic/angular'
-import { SyncPage } from './sync.page'
-import { RouterModule } from '@angular/router'
+import { WebRecipeDetailPage } from './web-recipe-detail.page'
 import { TranslateModule } from '@ngx-translate/core'
+import { RouterModule } from '@angular/router'
 import { CoreModule } from 'src/app/core/core.module'
-import { PipesModule } from '../../core/pipes/pipes.module'
 
 @NgModule({
   imports: [
@@ -14,13 +13,11 @@ import { PipesModule } from '../../core/pipes/pipes.module'
     FormsModule,
     IonicModule,
     CoreModule,
-    PipesModule,
     TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
-      path: '', component: SyncPage
+      path: '', component: WebRecipeDetailPage
     }])
   ],
-  declarations: [SyncPage]
+  declarations: [WebRecipeDetailPage]
 })
-export class SyncPageModule {
-}
+export class WebRecipeDetailPageModule {}

@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { ActivatedRoute, Params } from '@angular/router'
-import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
+import { ActionSheetController, AlertController, ModalController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
 import { LoggingProvider } from 'src/app/@shared/logging/log.service'
@@ -24,7 +24,7 @@ import {
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
-import { Share, ShareOptions } from '@capacitor/share'
+import { Share, ShareOptions, ShareResult } from '@capacitor/share'
 
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
 
@@ -34,15 +34,15 @@ const UNAVAILABLE_AFTER = new Date('2050-12-31')
   styleUrls: ['./product-detail.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductDetailPage implements OnInit {
-  loading = true
-  recipeCount = 5
-  showContentUnit = false
+export class ProductDetailPage {
+  loading: boolean = true
+  recipeCount: number = 5
+  recipeModuleCount: number = 5
+  showContentUnit: boolean = false
   displayThumbnail: boolean
-  pictureOpen = false
+  pictureOpen: boolean = false
 
-  departmentAddOpen = false
-  optionalTextModalOpen = false
+  departmentAddOpen: boolean = false
   selectedDepartment: number = null
   departments: IDepartmentT[]
 
@@ -65,7 +65,6 @@ export class ProductDetailPage implements OnInit {
     public user: UserService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
-    private navCtrl: NavController,
     public modalCtrl: ModalController,
     settings: SettingsService,
     route: ActivatedRoute,
@@ -150,11 +149,13 @@ export class ProductDetailPage implements OnInit {
 
   get cartLink(): any[] {
     const params: any[] = ['/carts']
-    if (this.cart.active) { params.push(this.cart.active.id) }
+    if (this.cart.active) {
+      params.push(this.cart.active.id)
+    }
     return params
   }
 
-  get actionSheetButtons() {
+  get actionSheetButtons(): any[] {
     let buttons: Array<any> = [
       {
         text: this.translate.instant('messages.changeCustomerDescription'),
@@ -169,7 +170,8 @@ export class ProductDetailPage implements OnInit {
       {
         text: this.translate.instant('cancelButtonText'),
         role: 'cancel',
-        handler: () => { }
+        handler: () => {
+        }
       }
     ]
 
@@ -193,10 +195,7 @@ export class ProductDetailPage implements OnInit {
     return undefined
   }
 
-  ngOnInit() {
-  }
-
-  async load(id: number) {
+  async load(id: number): Promise<void> {
     try {
       this.loading = true
       this.ref.markForCheck()
@@ -225,10 +224,10 @@ export class ProductDetailPage implements OnInit {
     }
 
     if (!this.user.isGuest)
-      this.getAttachments()
+      await this.getAttachments()
   }
 
-  async getAttachments() {
+  async getAttachments(): Promise<void> {
     try {
       const res = await this.repo.getAttachments(this._product.id, this._product.itemnum, this.culture)
       if (res) {
@@ -244,7 +243,7 @@ export class ProductDetailPage implements OnInit {
     }
   }
 
-  setAmount(amount: number) {
+  setAmount(amount: number): void {
     if (!this._product.availableOn) {
       this._product.amount = amount
       this.changeProductAmount()
@@ -254,7 +253,7 @@ export class ProductDetailPage implements OnInit {
     }
   }
 
-  async copyMessage(val: string) {
+  async copyMessage(val: string): Promise<void> {
     navigator.clipboard.writeText(val)
 
     const toast = await this.toastCtrl.create({
@@ -271,17 +270,23 @@ export class ProductDetailPage implements OnInit {
     for (const selectedPrice of this._product.prices) {
       ladderfound = (selectedPrice.quantity <= this._product.amount)
       ladder = selectedPrice
-      if (ladderfound === true) { break }
+      if (ladderfound === true) {
+        break
+      }
     }
 
     return (ladderfound && ladder.quantity === price.quantity) ? 'selected-price' : ''
   }
 
-  showAllRecipes() {
+  showAllRecipes(): void {
     this.recipeCount = 99
   }
 
-  showDocumentActionSheet(doc: any) {
+  showAllRecipesModule(): void {
+    this.recipeModuleCount = 999
+  }
+
+  showDocumentActionSheet(doc: any): void {
     this.actionSheetCtrl.create({
       buttons: [
         {
@@ -303,33 +308,35 @@ export class ProductDetailPage implements OnInit {
         {
           text: this.translate.instant('cancelButtonText'),
           role: 'cancel',
-          handler: () => { }
+          handler: () => {
+          }
         }
       ]
     }).then(sheet => sheet.present())
   }
 
-  showRecipeActionSheet(recipe: any) {
+  showRecipeActionSheet(recipe: any): void {
     this.actionSheetCtrl.create({
       buttons: [
         {
           text: this.translate.instant('actions.open'),
-          handler: () => {
+          handler: (): void => {
             this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
           }
         },
         {
           text: this.translate.instant('actions.mail'),
-          handler: () => this.showMailTextInput(recipe.guid, 1)
+          handler: (): Promise<void> => this.showMailTextInput(recipe.guid, 1)
         },
-        {
-          text: this.translate.instant('actions.show'),
-          handler: () => this.navCtrl.navigateForward('/recipe/recipe-detail', { queryParams: { guid: recipe.guid } })
-        },
+        // {
+        //   text: this.translate.instant('actions.show'),
+        //   handler: () => this.navCtrl.navigateForward('/recipe/recipe-detail', { queryParams: { guid: recipe.guid } })
+        // },
         {
           text: this.translate.instant('cancelButtonText'),
           role: 'cancel',
-          handler: () => { }
+          handler: (): void => {
+          }
         }
       ]
     }).then(sheet => sheet.present())
@@ -352,11 +359,11 @@ export class ProductDetailPage implements OnInit {
     }
   }
 
-  safe(html: string) {
+  safe(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html.trim())
   }
 
-  async changeProductAmount() {
+  async changeProductAmount(): Promise<void> {
     const productId = this._product.id
     let productAmount = this._product.amount || -1
     let showAlert = false
@@ -400,16 +407,15 @@ export class ProductDetailPage implements OnInit {
     this.ref.markForCheck()
   }
 
-  openPicturePreview() {
+  openPicturePreview(): void {
     this.pictureOpen = true
-    console.log('Opened image preview')
   }
 
-  async share(options: ShareOptions) {
-    await Share.share(options)
+  share(options: ShareOptions): Promise<ShareResult> {
+    return Share.share(options)
   }
 
-  async shareLargeImage() {
+  async shareLargeImage(): Promise<void> {
     await this.share({
       title: 'Product foto ' + this._product.name,
       // text: 'Orig',
@@ -417,7 +423,7 @@ export class ProductDetailPage implements OnInit {
     })
   }
 
-  async removeFromDepartment(departmentId: number) {
+  async removeFromDepartment(departmentId: number): Promise<void> {
     if (departmentId != null) {
       const departmentAlias = this.product.departments.find(x => x.id === departmentId).alias
       const message: string = (this.translate.instant('pages.product-detail.modals.remove-department.title') as string)
@@ -464,56 +470,54 @@ export class ProductDetailPage implements OnInit {
     }
   }
 
-  openAddProductToDepartment() {
+  openAddProductToDepartment(): void {
     this.departmentAddOpen = true
     this.ref.markForCheck()
   }
 
-  async completeAddProductToDepartment() {
+  async completeAddProductToDepartment(): Promise<void> {
     if (this.selectedDepartment) {
       await this.products.addToDepartment(this._product.id, this.selectedDepartment)
 
       this.selectedDepartment = null
       this.departmentAddOpen = false
 
-      const toast = await this.toastCtrl.create({
+      const toast: HTMLIonToastElement = await this.toastCtrl.create({
         message: 'Het product werd toegevoegd aan de afdeling.', /* | translate */
         duration: 3000,
         position: 'top'
       })
 
-      toast.present()
+      await toast.present()
 
       await this.load(this.product.id)
     } else {
-      const toast = await this.toastCtrl.create({
+      const toast: HTMLIonToastElement = await this.toastCtrl.create({
         message: 'Er is geen Geen afdeling geselecteerd.', /* | translate */
         duration: 3000,
         position: 'top'
       })
 
-      toast.present()
+      await toast.present()
     }
   }
 
-  async addToFavourites() {
+  async addToFavourites(): Promise<void> {
     await this.products.addToFavourites(this._product.id)
     this._product.isFavorite = true
 
-
-    const toast = await this.toastCtrl.create({
+    const toast: HTMLIonToastElement = await this.toastCtrl.create({
       message: 'Het product is toegevoegd aan uw favorieten.', /* | translate */
       duration: 3000,
       position: 'top'
     })
-
-    toast.present()
+    await toast.present()
 
     this.ref.markForCheck()
   }
 
-  async removeFromFavourites() {
-    const alert = await this.alertCtrl.create({
+  async removeFromFavourites(): Promise<void> {
+    const alert: HTMLIonAlertElement = await this.alertCtrl.create({
       message: (this.translate.instant('pages.product-detail.modals.remove-favourite.title') as string)
         .replace('{{PRODUCT}}', this.product.name),
       buttons: [
@@ -523,36 +527,36 @@ export class ProductDetailPage implements OnInit {
         },
         {
           text: this.translate.instant('pages.product-detail.modals.remove-favourite.confirm'),
-          handler: async () => {
+          handler: async (): Promise<void> => {
             await this.products.removeFromFavourites(this._product.id)
             this._product.isFavorite = false
 
-            const toast = await this.toastCtrl.create({
+            const toast: HTMLIonToastElement = await this.toastCtrl.create({
               message: (this.translate.instant('pages.product-detail.modals.remove-favourite.removed') as string)
                 .replace('{{PRODUCT}}', this.product.name), /* | translate */
               duration: 3000,
               position: 'top'
             })
 
-            toast.present()
+            await toast.present()
             this.ref.markForCheck()
           }
         }
       ]
     })
 
-    alert.present()
+    await alert.present()
   }
 
-  async changeCustomerDescription() {
-    const prompt = await this.alertCtrl.create({
+  async changeCustomerDescription(): Promise<void> {
+    const prompt: HTMLIonAlertElement = await this.alertCtrl.create({
       header: 'Customer description',
       message: 'Enter the desired description',
       inputs: [
         {
           name: 'description',
           placeholder: 'Persoonlijke omschrijving'
-        },
+        }
       ],
       buttons: [
         {
@@ -561,29 +565,28 @@ export class ProductDetailPage implements OnInit {
         },
         {
           text: 'Save',
-          handler: (data: { description: string }) => {
+          handler: (data: { description: string }): void => {
             this.products.changeCustomerDescription(this._product.id, data.description)
-              .then(async () => {
-                const toast = await this.toastCtrl.create({
+              .then(async (): Promise<void> => {
+                const toast: HTMLIonToastElement = await this.toastCtrl.create({
                   message: 'De beschrijvving is gewijzigd.', /* | translate */
                   duration: 1500,
                   position: 'top'
                 })
 
-                toast.present()
+                await toast.present()
               })
           }
         }
       ]
     })
 
-    prompt.present()
+    await prompt.present()
   }
 
-
-  async mailRecipe(guid: string, text: string) {
+  async mailRecipe(guid: string, text: string): Promise<void> {
     try {
-      const apiResult = await firstValueFrom(
+      const apiResult: any = await firstValueFrom(
         this.api.post(`app/recipes/mail/${guid}`, this.user.credential, {
           customer: this.user.activeUser.id,
           address: this.user.activeUser.address,
@@ -595,20 +598,21 @@ export class ProductDetailPage implements OnInit {
         this.alertCtrl.create({
           header: this.translate.instant('recipeMailSend'),
           message: this.translate.instant('recipeMailMessageSend')
-        }).then(alert => alert.present())
+        }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
         return
       }
-    } catch (err) { }
+    } catch (err) {
+    }
 
     this.alertCtrl.create({
       header: this.translate.instant('recipeMailError'),
       message: this.translate.instant('recipeMailMessageError')
-    }).then(alert => alert.present())
+    }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
   }
 
-  async mailDatasheet(guid: string, text: string) {
+  async mailDatasheet(guid: string, text: string): Promise<void> {
     try {
-      const apiResult = await firstValueFrom(
+      const apiResult: any = await firstValueFrom(
         this.api.post(`app/datasheets/mail/${guid}`, this.user.credential, {
           customer: this.user.activeUser.id,
           address: this.user.activeUser.address,
@@ -619,19 +623,20 @@ export class ProductDetailPage implements OnInit {
         this.alertCtrl.create({
           header: this.translate.instant('datasheetMailSend'),
           message: this.translate.instant('datasheetMailMessageSend')
-        }).then(alert => alert.present())
+        }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
         return
       }
-    } catch (err) { }
+    } catch (err) {
+    }
 
     this.alertCtrl.create({
       header: this.translate.instant('datasheetMailError'),
       message: this.translate.instant('datasheetMailMessageError')
-    }).then(alert => alert.present())
+    }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
   }
 
-  private async showMailTextInput(guid: string, type: number) {
-    const textModal = await this.modalCtrl.create({
+  private async showMailTextInput(guid: string, type: number): Promise<void> {
+    const textModal: HTMLIonModalElement = await this.modalCtrl.create({
       component: OptionalInputModalComponent,
       componentProps: {
         title: this.translate.instant('pages.product-detail.modals.mail.title'),
@@ -642,19 +647,17 @@ export class ProductDetailPage implements OnInit {
       }
     })
 
-    textModal.present()
+    await textModal.present()
 
     const { data, role } = await textModal.onWillDismiss()
 
     if (role === 'confirm') {
       switch (type) {
         case 0:
-          this.mailDatasheet(guid, data)
-          break
+          return await this.mailDatasheet(guid, data)
 
         case 1:
-          this.mailRecipe(guid, data)
-          break
+          return await this.mailRecipe(guid, data)
       }
     }
   }

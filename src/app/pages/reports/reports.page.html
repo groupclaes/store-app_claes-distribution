@@ -19,20 +19,63 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-text class="list-header" *ngIf="!loading && myreports.length > 0">
-    <ion-note translate>pages.reports.requestedReports</ion-note>
-  </ion-text>
+  <ion-refresher slot="fixed" (ionRefresh)="network.online ? loadReportList($event) : network.noop($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
-  <ion-list inset="true" *ngIf="!loading && myreports.length > 0">
-    <ion-item button *ngFor="let report of myreports" tappable (click)="network.online ? showActionMenu(report) : network.noop()">
-      <ion-label>
-        {{ report.Filename }}
-      </ion-label>
-      <div slot="end" *ngIf="report.CompletionTime" style="font-style:italic;color:#999;font-size:14px;line-height: 18px">
-        <span translate="pages.reports.reportExecutedAt"></span> {{ report.CompletionTime | date:'dd/MM/yyyy HH:mm' }}
-      </div>
-    </ion-item>
-  </ion-list>
+  <ng-container [ngSwitch]="network.offline || offline_reports.length > myreports.length">
+    <ng-container *ngSwitchDefault>
+      <ion-text class="list-header" *ngIf="!loading && myreports.length > 0">
+        <ion-note translate>pages.reports.requestedReports</ion-note>
+      </ion-text>
+
+      <ion-list inset="true" *ngIf="!loading && myreports.length > 0">
+        <ion-item-sliding *ngFor="let report of myreports">
+          <ion-item button tappable (click)="network.online || report.offline ? downloadReportFinal(report) : network.noop()">
+            <ion-spinner slot="start" *ngIf="report.downloading"></ion-spinner>
+            <i slot="start" class="fal fa-fw fa-check" *ngIf="report.offline"></i>
+            <i slot="start" class="fal fa-fw fa-times" *ngIf="!report.downloading && !report.offline"></i>
+            <ion-label>
+              {{ report.Filename }}<br>
+              <div *ngIf="report.CompletionTime"
+                   style="font-style:italic;color:#999;font-size:14px;line-height: 18px">
+              <span
+                translate="pages.reports.reportExecutedAt"></span> {{ report.CompletionTime | date:'dd/MM/yyyy HH:mm' }}
+              </div>
+            </ion-label>
+          </ion-item>
+
+          <ion-item-options (ionSwipe)="network.online ? deleteTask(report) : network.noop()">
+            <ion-item-option expandable color="danger" (click)="network.online ? deleteTask(report) : network.noop()">
+              <i class="fal fa-lg fa-fw fa-trash"></i>{{ 'actions.delete' | translate }}
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+    </ng-container>
+    <ng-container *ngSwitchCase="true">
+      <ion-text class="list-header" *ngIf="!loading && offline_reports.length > 0">
+        <ion-note translate>pages.reports.offlineReports</ion-note>
+      </ion-text>
+
+      <ion-list inset="true" *ngIf="!loading && offline_reports.length > 0">
+        <ion-item-sliding *ngFor="let report of offline_reports">
+          <ion-item button tappable (click)="openReport(report.uri)">
+            <ion-label>
+              {{ report.name }}<br>
+            </ion-label>
+          </ion-item>
+
+          <ion-item-options (ionSwipe)="network.online ? deleteReport(report.name) : network.noop()">
+            <ion-item-option expandable color="danger"
+                             (click)="network.online ? deleteReport(report.name) : network.noop()">
+              <i class="fal fa-lg fa-fw fa-trash"></i>{{ 'actions.delete' | translate }}
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ion-list>
+    </ng-container>
+  </ng-container>
 
   <ion-text class="list-header">
     <ion-note translate>pages.reports.availableReports</ion-note>
@@ -44,7 +87,8 @@
         <ion-spinner mode="ios"></ion-spinner>
       </div>
     </div>
-    <ion-item button *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable (click)="network.online ? confirmRunReport(report) : network.noop()">
+    <ion-item button *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable
+              (click)="network.online ? confirmRunReport(report) : network.noop()">
       <ion-label>{{ report.name }}</ion-label>
     </ion-item>
   </ion-list>
@@ -54,13 +98,4 @@
   </ion-text>
 </ion-content>
 
-<ion-footer *ngIf="network.offline">
-  <ion-toolbar color="light">
-    <ion-note style="display:flex;justify-content:center;flex-direction:column">
-      <div style="text-align: center;">
-        <i class="far fa-fw fa-wifi-slash"></i>&nbsp;
-        Je bent momenteel offline, sommige functies zijn niet beschikbaar.
-      </div>
-    </ion-note>
-  </ion-toolbar>
-</ion-footer>
+<app-offline-footer></app-offline-footer>

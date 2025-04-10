@@ -336,9 +336,10 @@
     "delete": "Verwijderen",
     "download": "Downloaden",
     "share": "Delen",
-    "send": "Verzend",
+    "send": "Verzenden",
     "save": "Opslaan",
-    "okButton": "Ok"
+    "okButton": "Ok",
+    "copy": "Kopiëren"
   },
   "pages": {
     "login": {
@@ -387,7 +388,8 @@
       "requestedReports": "Mijn opgevraagde rapporten",
       "reportExecutedAt": "rapport uitgevoerd om",
       "noActiveReportsLast2Weeks": "Je hebt geen actieve opgevraagde rapporten van de afgelopen 14 dagen.",
-      "availableReports": "Beschikbare rapporten"
+      "availableReports": "Beschikbare rapporten",
+      "offlineReports": "Offline opgeslagen rapporten"
     },
     "notes": {
       "title": "Notities",
@@ -415,6 +417,7 @@
         "customer-address": "Klantadres",
         "customer-id": "Klantnummer",
         "customer-name": "Naam",
+        "address-id": "Adresnummer",
         "address-name": "Adres naam",
         "delivery-address": "Leveradres",
         "promo": "Promorechtig",
@@ -434,6 +437,13 @@
       "lastsync": "Gegevens laatst bijgewerkt op",
       "neversynced": "Gegevens nog nooit bijgewerkt",
       "sync_details": "Overzicht van Gegevens en Laatste Bijwerkingsdata",
+      "documents": {
+        "title": "Locale documenten",
+        "leaflets": "Folders",
+        "reports": "Rapporten",
+        "thumbnails": "Thumbnails",
+        "cache": "Cache"
+      },
       "data_source": {
         "service_orders": "Service Orders",
         "actions": "Andere Taken en Acties",
@@ -443,6 +453,14 @@
         "technicians": "Accountgegevens",
         "warehouses": "Magazijnen"
       }
+    },
+    "web-recipe-detail": {
+      "ingredients": "Ingrediënten",
+      "preparationSteps": "Bereiding",
+      "relatedItems": "Hulpmiddel",
+      "tip": "Tip",
+      "tags": "Tags",
+      "other": "Andere recepten om te ontdekken"
     }
   },
   "languages": {
@@ -497,6 +515,7 @@
     "deliverySchedules": "Leverschema's",
     "notes": "Notities",
     "recipes": "Recepten",
+    "pcmRecipes": "Recepten",
     "usageManuals": "Gebruikershandleidingen",
     "datasheets": "Datasheets",
     "recipesModule": "Recepten Module",

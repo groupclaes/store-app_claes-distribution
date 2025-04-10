@@ -19,7 +19,7 @@ import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
 })
 export class CustomersPage {
   @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
-  _query = ''
+  _query: string = ''
 
   private _customers: AppCustomerModel[] = []
   private _loading: HTMLIonLoadingElement
@@ -36,7 +36,8 @@ export class CustomersPage {
               private translate: TranslateService,
               private sync: SyncService,
               private route: ActivatedRoute,
-              private logger: LoggingProvider) {
+              private logger: LoggingProvider,
+              private cart: CartService) {
   }
 
   get createCustomerAllowed(): boolean {
@@ -51,22 +52,21 @@ export class CustomersPage {
     return this._query || ''
   }
 
-  async ionViewWillEnter() {
+  async ionViewWillEnter(): Promise<void> {
     if (!this.user.userinfo) {
-      this.navCtrl.navigateRoot('/account/login')
+      await this.navCtrl.navigateRoot('/account/login')
     } else if (this.route.snapshot.queryParams.selectedCust != null) {
-      console.log('Selected customer provided, following up ', this.route.snapshot.queryParams.selectedCust.id)
       await this.followUp(this.route.snapshot.queryParams.selectedCust)
     } else {
-      this.loadCustomers().then(x => this.ref.markForCheck())
+      this.loadCustomers().then((): void => this.ref.markForCheck())
     }
   }
 
-  async ionViewDidEnter() {
+  ionViewDidEnter(): void {
     this.ref.markForCheck()
   }
 
-  async loadCustomers(overrideQuery?: string) {
+  async loadCustomers(overrideQuery?: string): Promise<void> {
     this._customers = []
     this.ref.markForCheck()
 
@@ -87,7 +87,7 @@ export class CustomersPage {
     this.virtualScroll.scrollToIndex(0)
   }
 
-  setActiveCustomer(customer: AppCustomerModel) {
+  setActiveCustomer(customer: AppCustomerModel): void {
     if (this.user.hasAgentAccess && this.user.activeUser
       && (this.user.activeUser.id !== customer.id || this.user.activeUser.address !== customer.addressId)) {
       this.alertCtrl.create({
@@ -124,7 +124,7 @@ export class CustomersPage {
     }
   }
 
-  filterCustomers(event: any) {
+  filterCustomers(event: any): void {
     try {
       window.clearTimeout(this._filterTimeout)
     } finally {
@@ -190,5 +190,12 @@ export class CustomersPage {
 
   get isAgent(): boolean {
     return this.user.hasAgentAccess
+  }
+
+  get cartLink(): any[] {
+    const params: any[] = ['/carts']
+    if (this.cart.active)
+      params.push(this.cart.active.id)
+    return params
   }
 }

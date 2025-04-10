@@ -1,4 +1,4 @@
-import { environment } from './../../environments/environment'
+import { environment } from '../../environments/environment'
 import { ApiService, trimParameters } from './api.service'
 import { Injectable } from '@angular/core'
 import { LoggingProvider } from '../@shared/logging/log.service'
@@ -41,7 +41,7 @@ export class SyncService {
         'products',
 
         'prices', 'packingUnits', 'favorites', 'attributes',
-        'reports', 'recipes', 'datasheets', 'usageManuals',
+        'reports', 'recipes', 'pcmRecipes', 'datasheets', 'usageManuals',
 
         'departments', 'departmentProducts',
         'categoryAttributes', 'categories',
@@ -124,7 +124,8 @@ export class SyncService {
    *
    * @param credential user credentials to determine data-access
    * @param culture cultures thet will be synced to db
-   * @param force if true syncronisation and rebuld of table will be forced
+   * @param forceSync if true syncronisation and rebuld of table will be forced
+   * @param activeUser
    * @memberof SyncService
    */
   public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean, activeUser?: Customer, user_id?: number) {
@@ -177,7 +178,7 @@ export class SyncService {
 
         const step3 = await Promise.all([
           this.syncReports(user_id, culture, forceSync),
-          this.syncRecipes(user_id, culture, forceSync),
+          this.syncPcmRecipes(user_id, culture, forceSync),
           this.syncDatasheets(user_id, culture, forceSync),
           this.syncUsageManuals(user_id, culture, forceSync),
           this.syncRecipesModule(user_id, culture, forceSync)
@@ -651,7 +652,8 @@ export class SyncService {
 
       return true
     } catch (err) {
-      localStorage.removeItem('active-user')
+      if (err.status != 204)
+        localStorage.removeItem('active-user')
     }
   }
 
@@ -871,14 +873,14 @@ export class SyncService {
     }
   }
 
-  async syncRecipes(user_id: number, culture?: string, force?: boolean) {
+  async syncPcmRecipes(user_id: number, culture?: string, force?: boolean) {
     try {
-      this.logger.log(`SyncProvider.syncRecipes()`)
+      this.logger.log(`SyncProvider.syncPcmRecipes()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
         culture,
-        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'recipes')?.checksum ?? '',
+        checksum: force ? '' : this.checksum.find(e => e.dataTable === 'pcmRecipes')?.checksum ?? '',
         uid: user_id
       })
 
@@ -889,17 +891,17 @@ export class SyncService {
 
       if (response && response.data.recipes) {
         await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-          await db.execute('DROP TABLE IF EXISTS recipes')
+          await db.execute('DROP TABLE IF EXISTS pcmRecipes')
 
-          await db.execute('CREATE TABLE IF NOT EXISTS recipes (guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
+          await db.execute('CREATE TABLE IF NOT EXISTS pcmRecipes (guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
 
-          this.logger.log('dropped recipes')
+          this.logger.log('dropped pcmRecipes')
 
           const sqlStatements: capSQLiteSet[] = []
 
           response.data.recipes.forEach((recipe: $TSFixMe) => {
             sqlStatements.push({
-              statement: 'INSERT INTO recipes VALUES (?, ?, ?, ?)',
+              statement: 'INSERT INTO pcmRecipes VALUES (?, ?, ?, ?)',
               values: [
                 recipe.guid,
                 recipe.name,
@@ -911,11 +913,11 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted recipes', response.data.checksum)
-          await this.updateDataIntegrityChecksum(db, 'recipes', response.data.checksum)
+          this.logger.log('inserted pcmRecipes', response.data.checksum)
+          await this.updateDataIntegrityChecksum(db, 'pcmRecipes', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncRecipes() -- no changes`)
+        this.logger.log(`SyncProvider.syncPcmRecipes() -- no changes`)
       }
 
       return true

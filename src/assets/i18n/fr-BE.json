@@ -337,7 +337,8 @@
     "share": "Partager",
     "send": "Envoyer",
     "save": "Sauvegarder",
-    "okButton": "Ok"
+    "okButton": "Ok",
+    "copy": "COPY"
   },
   "pages": {
     "login": {
@@ -415,6 +416,7 @@
         "customer-id": "Numéro client",
         "customer-name": "Nom",
         "delivery-address": "Adresse livraison",
+        "address-id": "Numéro d'adresse livraison",
         "address-name": "Nom d'adresse livraison",
         "promo": "Droit à promo",
         "fostplus": "FostPlus",
@@ -479,6 +481,7 @@
     "deliverySchedules": "Calendrier de livraison",
     "notes": "Notes",
     "recipes": "Recettes",
+    "pcmRecipes": "Recettes",
     "usageManuals": "Fiche d'utilisation",
     "datasheets": "Fiche technique",
     "recipesModule": "Module Recettes",

@@ -1,20 +1,22 @@
 import { Injectable } from '@angular/core'
 import { DatabaseService } from '../database.service'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotesRepositoryService {
   constructor(
-    private db: DatabaseService,
-    private logger: LoggingProvider) {}
+    private db: DatabaseService) {
+  }
 
   getAllNotes(limit: number = undefined) {
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT customer, address, date, text FROM notes
-        ORDER BY date DESC${(limit != null ? ` LIMIT ${limit}` : '')}`)
+      const result: DBSQLiteValues = await db.query(
+        'SELECT customer, address, date, text ' +
+        'FROM notes ' +
+        'ORDER BY date DESC ' +
+        limit != null ? ` LIMIT ${limit}` : '')
 
       return result.values as IVisitNote[]
     })
@@ -29,16 +31,19 @@ export class NotesRepositoryService {
    * @returns A list of notes bound to the user
    */
   getCustomerNotes(customerId: number, addressId: number,
-    limit: number = undefined): Promise<IVisitNote[]> {
+                   limit: number = undefined): Promise<IVisitNote[]> {
     if (customerId === null || addressId === null) {
       return Promise.resolve([])
     }
 
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT customer, address, date, text
-        FROM notes WHERE customer = ? AND address = ?
-        ORDER BY date DESC${(limit != null ? ` LIMIT ${limit}` : '')}`,
-        [ customerId, addressId ])
+      const result: DBSQLiteValues = await db.query(
+        'SELECT customer, address, date, text ' +
+        'FROM notes ' +
+        'WHERE customer = ? AND address = ? ' +
+        'ORDER BY date DESC` + ' +
+        limit != null ? ` LIMIT ${limit}` : '',
+        [customerId, addressId])
 
       return result.values as IVisitNote[]
     })
@@ -57,11 +62,13 @@ export class NotesRepositoryService {
     }
 
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT id, customer, address, date, text,
-            nextVisit, customerCloseFrom, customerOpenFrom, toSend
-          FROM unsentNotes WHERE customer = ? AND address = ?
-          ORDER BY date DESC LIMIT 1`,
-        [ customerId, addressId ])
+      const result: DBSQLiteValues = await db.query(
+        'SELECT id, customer, address, date, text, nextVisit, customerCloseFrom, customerOpenFrom, toSend ' +
+        'FROM unsentNotes ' +
+        'WHERE customer = ? AND address = ? ' +
+        'ORDER BY date DESC ' +
+        'LIMIT 1',
+        [customerId, addressId])
 
       if (result.values?.length === 0) {
         return null
@@ -72,12 +79,13 @@ export class NotesRepositoryService {
         return null
       }
 
-      unsentNote.toSend = (unsentNote.toSend as unknown) === 1 ? true : false
+      unsentNote.toSend = (unsentNote.toSend as unknown) === 1
       unsentNote.date = new Date(unsentNote.date as unknown as string)
 
       return result.values[0]
     })
   }
+
   /**
    * Get all unsent/saved notes for a specific customer
    *
@@ -87,21 +95,23 @@ export class NotesRepositoryService {
    * @returns A list of all unsent visit notes
    */
   getUnsentNotes(customerId: number, addressId: number,
-    limit: number = undefined): Promise<IUnsentVisitNote[]> {
+                 limit: number = undefined): Promise<IUnsentVisitNote[]> {
     if (customerId === null || addressId === null) {
       return Promise.resolve([])
     }
 
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT id, customer, address, date, text,
-            nextVisit, customerCloseFrom, customerOpenFrom, toSend
-          FROM unsentNotes WHERE customer = ? AND address = ?
-          ORDER BY date DESC${(limit != null ? ` LIMIT ${limit}` : '')}`,
-        [ customerId, addressId ])
+      const result = await db.query(
+        'SELECT id, customer, address, date, text, nextVisit, customerCloseFrom, customerOpenFrom, toSend ' +
+        'FROM unsentNotes ' +
+        'WHERE customer = ? AND address = ? ' +
+        'ORDER BY date DESC ' +
+        limit != null ? ` LIMIT ${limit}` : '',
+        [customerId, addressId])
 
       const resultList = result.values as IUnsentVisitNote[]
-      for(const note of resultList) {
-        note.toSend = (note.toSend as unknown) === 1 ? true : false
+      for (const note of resultList) {
+        note.toSend = (note.toSend as unknown) === 1
         note.date = new Date(note.date as unknown as string)
       }
 
@@ -117,10 +127,12 @@ export class NotesRepositoryService {
    * @returns Whether or not any unsent notes are found
    */
   hasUnsentNotes(customerId: number, addressId: number): Promise<boolean> {
-    return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(`SELECT 1 FROM unsentNotes WHERE customer = ? AND address = ?`,
-        [ customerId, addressId ])
-
+    return this.db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<boolean> => {
+      const result: DBSQLiteValues = await db.query(
+        'SELECT 1 ' +
+        'FROM unsentNotes ' +
+        'WHERE customer = ? AND address = ?',
+        [customerId, addressId])
       return result.values.length > 0
     })
   }
@@ -135,8 +147,10 @@ export class NotesRepositoryService {
   saveNote(note: IUnsentVisitNote, send = false) {
     if (note.id != null && note.id > 0) {
       return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        const result = await db.run(`UPDATE unsentNotes SET date=?, text=?,
-            nextVisit=?, customerCloseFrom=?, customerOpenFrom=?, toSend=? WHERE id=?`,
+        const result = await db.run(
+          'UPDATE unsentNotes ' +
+          'SET date=?, text=?, nextVisit=?, customerCloseFrom=?, customerOpenFrom=?, toSend=? ' +
+          'WHERE id = ?',
           [
             note.date.toISOString(), // 1
             note.text, // 2
@@ -152,10 +166,14 @@ export class NotesRepositoryService {
         return result.changes?.changes > 0
       })
     } else {
+      if (!note.date.toISOString)
+        note.date = new Date(note.date)
+
       return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        const result = await db.run(`INSERT INTO unsentNotes (customer, address, date, text,
-            nextVisit, customerCloseFrom, customerOpenFrom, toSend)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        const result = await db.run(
+          'INSERT ' +
+          'INTO unsentNotes (customer, address, date, text, nextVisit, customerCloseFrom, customerOpenFrom, toSend) ' +
+          'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [
             note.customer, // 1
             note.address, // 2
@@ -187,8 +205,11 @@ export class NotesRepositoryService {
    */
   deleteUnsentNote(noteId: number) {
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.run(`DELETE FROM unsentNotes WHERE id=?`,
-        [ noteId ])
+      const result = await db.run(
+        'DELETE ' +
+        'FROM unsentNotes ' +
+        'WHERE id = ?',
+        [noteId])
 
       return result.changes?.changes > 0
     })

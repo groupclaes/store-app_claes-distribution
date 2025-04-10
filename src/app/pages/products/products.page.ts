@@ -28,7 +28,7 @@ const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
   selector: 'app-products',
   templateUrl: './products.page.html',
   styleUrls: ['./products.page.scss'],
-  encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.Emulated,
   changeDetection: ChangeDetectionStrategy.OnPush // comment this if there are still un-updated input fields
 })
 export class ProductsPage implements OnDestroy {
@@ -39,6 +39,12 @@ export class ProductsPage implements OnDestroy {
   @ViewChild(IonContent) content: IonContent
   @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
 
+  // @HostListener('window:resize', ['$event'])
+  // onresize($event: Event): void {
+  //   this.clampBuilder()
+  // }
+
+  clamp: string = ''
   loading: boolean = true
   loadingAdditional: boolean = false
   noMoreProducts: boolean = false
@@ -112,6 +118,8 @@ export class ProductsPage implements OnDestroy {
     this.network.connected.subscribe((): void => {
       this.ref.markForCheck()
     })
+
+    this.clampBuilder()
   }
 
   ngOnDestroy(): void {
@@ -428,6 +436,19 @@ export class ProductsPage implements OnDestroy {
 
   productById(index: number, product: IProductT): number {
     return product.id
+  }
+
+  // 320, 750, 0.375, 0.875
+  clampBuilder(minWidthPx: number = 320, maxWidthPx: number = 750, minFontSize: number = 0.5, maxFontSize: number = 0.875): void {
+    const root: HTMLHtmlElement = document.querySelector('html')
+    const pixelsPerRem: number = Number(getComputedStyle(root).fontSize.slice(0, -2))
+
+    const minWidth: number = minWidthPx / pixelsPerRem
+    const maxWidth: number = maxWidthPx / pixelsPerRem
+
+    const slope: number = (maxFontSize - minFontSize) / (maxWidth - minWidth)
+    const yAxisIntersection: number = -minWidth * slope + minFontSize
+    this.clamp = `font-size: clamp(${minFontSize}rem, ${yAxisIntersection.toPrecision(5)}rem + ${(slope * 100).toPrecision(5)}vw, ${maxFontSize}rem);`
   }
 
   get isAgent(): boolean {

@@ -9,6 +9,7 @@
         <i class='fal fa-fw fa-sync'></i>
       </ion-button>
     </ion-buttons>
+    <ion-progress-bar type="indeterminate" *ngIf="isLoading"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
 
@@ -24,15 +25,36 @@
   </ion-refresher>
 
   <ion-text class="list-header">
-    <ion-note translate>Documenten</ion-note>
+    <ion-note translate>pages.sync.documents.title</ion-note>
   </ion-text>
 
   <ion-list inset="true">
+    <ion-item>
+      <ion-label translate>pages.sync.documents.leaflets</ion-label>
+      <ion-spinner slot="end" *ngIf="leafletCount === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="leafletCount !== undefined">
+        {{ leafletCount }}
+      </ion-note>
+    </ion-item>
+    <ion-item>
+      <ion-label translate>pages.sync.documents.reports</ion-label>
+      <ion-spinner slot="end" *ngIf="reportCount === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="reportCount !== undefined">
+        {{ reportCount }}
+      </ion-note>
+    </ion-item>
     <ion-item (click)="purgeThumbnails()">
-      <i class="fal fa-lg fa-fw fa-image" slot="start"></i>
-      <ion-label>Thumbnails</ion-label>
-      <ion-note slot="end">
-        {{ imagecount }} / {{ productcount }}
+      <ion-label translate>pages.sync.documents.thumbnails</ion-label>
+      <ion-spinner slot="end" *ngIf="imageCount === undefined || productCount === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="imageCount !== undefined && productCount !== undefined">
+        {{ imageCount }} / {{ productCount }}
+      </ion-note>
+    </ion-item>
+    <ion-item (click)="purgeThumbnails()">
+      <ion-label translate>pages.sync.documents.cache</ion-label>
+      <ion-spinner slot="end" *ngIf="cacheSize === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="cacheSize !== undefined">
+        {{ cacheSize | bytes:2 }}
       </ion-note>
     </ion-item>
   </ion-list>
@@ -57,9 +79,11 @@
         <ion-label>
           <strong>{{ 'checksum.' + checksum.dataTable | translate }}</strong><br>
           {{ checksum.dateChanged | date:'EEEE d MMMM yy HH:mm':undefined:culture }}<br>
-          <ion-text color="medium" style="font-family:'Courier New',Courier,monospace;font-size:12px">{{ checksum.checksum }}</ion-text>
+          <ion-text color="medium"
+                    style="font-family:'Courier New',Courier,monospace;font-size:12px">{{ checksum.checksum }}
+          </ion-text>
         </ion-label>
-<!--        <ion-note slot="end" style="font-family:'Courier New',Courier,monospace;font-size:12px">-->
+        <!--        <ion-note slot="end" style="font-family:'Courier New',Courier,monospace;font-size:12px">-->
         <!--          {{ checksum.checksum }}-->
         <!--        </ion-note>-->
         <!--        <ion-note slot="end">-->

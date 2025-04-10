@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener } from '@angular/core'
 import { TranslateService } from '@ngx-translate/core'
-import { Directory, Filesystem, GetUriResult, ReadFileResult } from '@capacitor/filesystem'
+import { Directory, Filesystem, ReadFileResult } from '@capacitor/filesystem'
 import { NavController } from '@ionic/angular'
 import { UserService } from '../../core/user.service'
 import { Share } from '@capacitor/share'
@@ -20,25 +20,37 @@ export class LeafletPage {
     const element: HTMLAnchorElement = event.target || event.srcElement
     // check for links with target '_blank'
     if ('A' === element.tagName && '_blank' === element.target) {
-      const isShopUrl: boolean = element.href.indexOf('shop.claes-distribution.be') !== -1
-      if (isShopUrl) {
-        let url: string = element.href
-          .replace('http://', '')
-          .replace('https://', '')
-          .replace('shop.claes-distribution.be', '')
-        console.log(url)
+      const url = new URL(element.href)
 
-        const supportedRoutes: string[] = [
-          '/news'
-        ]
+      switch (url.hostname) {
+        case 'shop.claes-distribution.be':
+          const supportedRoutes: string[] = [
+            '/news'
+          ]
 
-        if (supportedRoutes.includes(url)) {
-          this.navCtrl.navigateRoot(url)
-          // prevent default action and stop event propagation
-          event.stopPropagation()
-          event.preventDefault()
-          return false
-        }
+          if (supportedRoutes.includes(url.pathname)) {
+            this.navCtrl.navigateRoot(url.pathname)
+            // prevent default action and stop event propagation
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          } else if (url.pathname.startsWith('/products')) {
+            this.navCtrl.navigateForward(['/products', url.searchParams.get('productId')])
+            // prevent default action and stop event propagation
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          }
+          break
+        case 'www.claes-distribution.be':
+          if (url.pathname.startsWith('/recepten') || url.pathname.startsWith('/recettes')) {
+            const id = url.pathname.split('/')[2]
+            this.navCtrl.navigateForward(['/web-recipes', id, 'preview'])
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          }
+          break
       }
     }
     return true
@@ -102,22 +114,19 @@ export class LeafletPage {
     const date: string = new Date().toISOString()
     const current_id: string = `${date.substring(0, 4)}${(date.substring(5, 7))}`
 
-    await Filesystem.copy({
+    const result = await Filesystem.copy({
       from: `${current_id}_${this.culture}.pdf`,
       directory: Directory.Documents,
-      to: `leaflets/${current_id}_${this.culture}.pdf`,
+      to: `${current_id}_${this.culture}.pdf`,
       toDirectory: Directory.Cache
     })
 
-    const uri: GetUriResult = await Filesystem.getUri({
-      path: `leaflets/${current_id}_${this.culture}.pdf`,
-      directory: Directory.Cache
-    })
+    result.uri
 
     await Share.share({
       title: 'Promofolder.pdf',
       text: 'Claes Distribution Promofolder',
-      url: uri.uri
+      url: result.uri
     })
 
     return

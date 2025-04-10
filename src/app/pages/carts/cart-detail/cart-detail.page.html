@@ -16,26 +16,26 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" color="light">
-  <ion-header collapse="condense">
-    <ion-toolbar color="light">
-      <ion-title size="large" translate="cartDetailPage"></ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <!--  <ion-header collapse="condense">-->
+  <!--    <ion-toolbar color="light">-->
+  <!--      <ion-title size="large" translate="cartDetailPage"></ion-title>-->
+  <!--    </ion-toolbar>-->
+  <!--  </ion-header>-->
 
   <div class="cart-progress px-8 py-4">
     <div class="step-1" [ngClass]="step1Class" tappable (click)="setView('productsView')">
       <span class="title">1</span>
-      <span class="label"><span translate="products"></span></span>
+      <span class="label" style="font-size:.8rem" translate="products"></span>
     </div>
     <div class="connector" [ngClass]="step2Class"></div>
     <div class="step-2" [ngClass]="step2Class" tappable (click)="setView('invoiceView')">
       <span class="title">2</span>
-      <span class="label"><span translate="billing"></span></span>
+      <span class="label" style="font-size:.8rem" translate="billing"></span>
     </div>
     <div class="connector" [ngClass]="step3Class"></div>
     <div class="step-3" [ngClass]="step3Class" tappable (click)="setView('summaryView')">
       <span class="title">3</span>
-      <span class="label"><span translate="summary"></span></span>
+      <span class="label" style="font-size:.8rem" translate="summary"></span>
     </div>
   </div>
 
@@ -51,28 +51,33 @@
     </ion-text>
 
     <ion-list inset="true">
-      <ion-item *ngFor="let product of currentCart.products">
-        <ion-avatar *ngIf="displayThumbnail" slot="start">
-          <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name"
-               loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
-        </ion-avatar>
-        <ion-label class="ion-text-wrap w-full item-details-grid">
-          <div class="product-name">
-            {{ product.name }}
-          </div>
-          <div class="product-unit">
-            {{ product.unit | capitalize }}
-          </div>
-          <div class="add-to-cart" tappable (click)="$event.stopPropagation();$event.preventDefault()">
+      <ion-item-sliding *ngFor="let product of currentCart.products">
+        <ion-item>
+          <ion-avatar *ngIf="displayThumbnail" slot="start">
+            <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name"
+                 loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
+          </ion-avatar>
+          <ion-label class="ion-text-wrap">
+            <div class="product-name">
+              <span>{{ product.name }}</span>
+            </div>
+            <ion-note>
+              {{ product.unit | capitalize }}
+            </ion-note>
+          </ion-label>
+          <div slot="end" class="add-to-cart" tappable (click)="$event.stopPropagation();$event.preventDefault()">
             <!-- *ngIf="!product.availableOn" -->
             <input [ngModel]="product.amount" placeholder="0" class="control-color" type="tel"
                    (input)="changeProductAmount($event, product)"/>
           </div>
-        </ion-label>
-        <ion-button slot="end" color="danger" fill="clear" tappable (click)="removeProduct(product)">
-          <i class="fal fa-lg fa-fw fa-times"></i>
-        </ion-button>
-      </ion-item>
+        </ion-item>
+
+        <ion-item-options (ionSwipe)="removeProduct(product)">
+          <ion-item-option expandable color="danger" (click)="removeProduct(product)">
+            <i class="fal fa-lg fa-fw fa-times"></i>{{ 'actions.delete' | translate }}
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
     </ion-list>
   </ng-container>
 

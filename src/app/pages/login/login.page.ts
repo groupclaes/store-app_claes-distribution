@@ -1,10 +1,9 @@
-import { AppCredential, Customer, ServerCustomer, UserService } from '../../core/user.service'
-import { environment } from './../../../environments/environment'
+import { AppCredential, Customer, UserService } from '../../core/user.service'
+import { environment } from '../../../environments/environment'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser'
 import { LoadingController, NavController, Platform, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { HttpErrorResponse } from '@angular/common/http'
 import { SyncService } from 'src/app/core/sync.service'
 import {
   DataIntegrityChecksumsRepositoryService
@@ -12,7 +11,7 @@ import {
 import { StorageProvider } from 'src/app/core/storage-provider.service'
 import { CartsRepositoryService } from 'src/app/core/repositories/carts.repository.service'
 import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/current-exceptions.repository.service'
-import { FormGroup, FormBuilder, Validators } from '@angular/forms'
+import { FormBuilder, FormGroup, Validators } from '@angular/forms'
 import { SettingsService } from 'src/app/core/settings.service'
 import { take } from 'rxjs/operators'
 import { CartService } from 'src/app/core/cart.service'
@@ -173,64 +172,35 @@ export class LoginPage implements OnInit {
           }
 
           if (this.user.userinfo.type === 1) {
-            this._loading.message = this.translate.instant('preparing')
-            this.ref.markForCheck()
-
-            const prepare = await this.sync.prepareCurrentExceptions({
-              id: this.user.userinfo.id,
-              addressId: this.user.userinfo.address,
-              addressGroupId: this.user.userinfo.addressGroup
-            })
-            try {
-              this._loading.dismiss()
-            } catch {
-            }
-            this.ref.markForCheck()
-
-            if (prepare) {
-              this.navCtrl.navigateRoot(await this.defaultPage)
-            } else {
-              this.toast(this.translate.instant('unknownError'))
-            }
+            await this.prepareFlow()
           } else {
             this._loading.message = this.translate.instant('preparing')
-            try {
-              await this.cartsRepository.deleteOld(90)
-            } catch {
+            this.ref.markForCheck()
 
-            }
-            await this.exceptionsRepository.delete()
+            const page: string = await this.defaultPage
+            await this.cartsRepository.deleteOld(90).catch((): undefined => undefined)
+
+            if (!this.user.activeUser)
+              await this.exceptionsRepository.delete()
+
             this._loading.dismiss()
             this.ref.markForCheck()
-            this.navCtrl.navigateRoot(await this.defaultPage)
+            this.navCtrl.navigateRoot(page).then((): void => {
+            })
           }
         } else {
           // this.toast(this.translate.instant('localData'))
+          this._loading = await this.loadingCtrl.create({
+            spinner: 'lines',
+            message: this.translate.instant('preparing')
+          })
+          this._loading.present()
+          this.ref.markForCheck()
 
-          if (this.user.userinfo.type === 1) {
-            try {
-              this._loading.message = this.translate.instant('preparing')
-            } catch {
-            }
-            const prepare = await this.sync.prepareCurrentExceptions({
-              id: this.user.userinfo.id,
-              addressId: this.user.userinfo.address,
-              addressGroupId: this.user.userinfo.addressGroup
-            })
-            try {
-              this._loading.dismiss()
-            } catch {
-            }
-            this.ref.markForCheck()
-
-            if (prepare) {
-              this.navCtrl.navigateRoot(await this.defaultPage)
-            } else {
-              this.toast(this.translate.instant('unknownError'))
-            }
-          } else {
+          if (this.user.userinfo.type === 1)
+            await this.prepareFlow()
+          else
             this.navCtrl.navigateRoot(await this.defaultPage)
-          }
         }
       } else {
         this.toast(this.translate.instant('loginError'))
@@ -251,6 +221,25 @@ export class LoginPage implements OnInit {
       } catch {
       }
     }
+  }
+
+  async prepareFlow(): Promise<void> {
+    this._loading.message = this.translate.instant('preparing')
+    this.ref.markForCheck()
+
+    const prepare: boolean = await this.sync.prepareCurrentExceptions({
+      id: this.user.userinfo.id,
+      addressId: this.user.userinfo.address,
+      addressGroupId: this.user.userinfo.addressGroup
+    })
+
+    this._loading.dismiss().catch()
+    this.ref.markForCheck()
+
+    if (prepare)
+      await this.navCtrl.navigateRoot(await this.defaultPage)
+    else
+      await this.toast(this.translate.instant('unknownError'))
   }
 
   async loginGuest() {
@@ -369,7 +358,6 @@ export class LoginPage implements OnInit {
     // check if sync is needed
     const syncInterval: number = this.storage.get(`app-syncinterval`)
     const result = await this.checksumRepository.get<any>('lastSync')
-    const res = await this.checksumRepository.get<any>()
 
     if (!result) {
       return 'FORCE'
