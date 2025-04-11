@@ -19,28 +19,29 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-refresher slot="fixed" (ionRefresh)="network.online ? loadReportList($event) : network.noop($event)">
+  <ion-refresher slot="fixed" (ionRefresh)="network.online ? loadRequestedReports($event) : network.noop($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <ng-container [ngSwitch]="network.offline || offline_reports.length > myreports.length">
+  <ng-container [ngSwitch]="network.offline || offline_reports.length > my_reports.length">
     <ng-container *ngSwitchDefault>
-      <ion-text class="list-header" *ngIf="!loading && myreports.length > 0">
+      <ion-text class="list-header" *ngIf="!loading && my_reports.length > 0">
         <ion-note translate>pages.reports.requestedReports</ion-note>
       </ion-text>
 
-      <ion-list inset="true" *ngIf="!loading && myreports.length > 0">
-        <ion-item-sliding *ngFor="let report of myreports">
-          <ion-item button tappable (click)="network.online || report.offline ? downloadReportFinal(report) : network.noop()">
+      <ion-list inset="true" *ngIf="!loading && my_reports.length > 0">
+        <ion-item-sliding *ngFor="let report of my_reports">
+          <ion-item button tappable
+                    (click)="network.online || report.offline ? downloadReportFinal(report) : network.noop()">
             <ion-spinner slot="start" *ngIf="report.downloading"></ion-spinner>
             <i slot="start" class="fal fa-fw fa-check" *ngIf="report.offline"></i>
             <i slot="start" class="fal fa-fw fa-times" *ngIf="!report.downloading && !report.offline"></i>
             <ion-label>
-              {{ report.Filename }}<br>
-              <div *ngIf="report.CompletionTime"
+              {{ report.name }}<br>
+              <div *ngIf="report.completionTime"
                    style="font-style:italic;color:#999;font-size:14px;line-height: 18px">
               <span
-                translate="pages.reports.reportExecutedAt"></span> {{ report.CompletionTime | date:'dd/MM/yyyy HH:mm' }}
+                translate="pages.reports.reportExecutedAt"></span> {{ report.completionTime | date:'dd/MM/yyyy HH:mm' }}
               </div>
             </ion-label>
           </ion-item>
@@ -93,7 +94,7 @@
     </ion-item>
   </ion-list>
 
-  <ion-text class="list-footer" *ngIf="!loading && myreports.length <= 0">
+  <ion-text class="list-footer" *ngIf="!loading && my_reports.length <= 0">
     <ion-note translate>pages.reports.noActiveReportsLast2Weeks</ion-note>
   </ion-text>
 </ion-content>

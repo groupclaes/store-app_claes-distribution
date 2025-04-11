@@ -7,6 +7,7 @@ export const environment = {
     'fr-BE'
   ],
   store_url: 'https://shop.claes-distribution.be/api/v1/store-app',
+  shop_api: 'https://shop.claes-distribution.be/api/v1/ecommerce',
   api_url: 'https://api.groupclaes.be/distribution',
   pcm_url: 'https://pcm.groupclaes.be/v4',
   database_name: 'distribution',

@@ -42,6 +42,18 @@ export class ApiService {
   sync<T>(endpoint: string, params?: any): Observable<T> {
     return this.http.get<T>(environment.store_url + '/sync/' + endpoint, { params })
   }
+
+  getShop<T>(endpoint: string, params?: any): Observable<T> {
+    return this.http.get<T>(environment.shop_api + '/' + endpoint, { params })
+  }
+
+  postShop<T>(endpoint: string, body: any, params?: any): Observable<T> {
+    return this.http.post<T>(environment.shop_api + '/' + endpoint, body, { params })
+  }
+
+  deleteShop<T>(endpoint: string, params?: any): Observable<T> {
+    return this.http.delete<T>(environment.shop_api + '/' + endpoint, { params })
+  }
 }
 
 export const trimParameters = (params: any): any => {
