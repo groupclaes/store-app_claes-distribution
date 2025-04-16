@@ -91,7 +91,7 @@ export class LeafletPage {
 
     const result: ReadFileResult = await Filesystem.readFile({
       path: `${current_id}_${this.culture}.pdf`,
-      directory: Directory.Documents
+      directory: Directory.Data
     })
 
     if (typeof result.data === 'string') {
@@ -116,7 +116,7 @@ export class LeafletPage {
 
     const result = await Filesystem.copy({
       from: `${current_id}_${this.culture}.pdf`,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       to: `${current_id}_${this.culture}.pdf`,
       toDirectory: Directory.Cache
     })

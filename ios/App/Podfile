@@ -20,7 +20,9 @@ def capacitor_pods
   pod 'CapacitorNetwork', :path => '../../node_modules/@capacitor/network'
   pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
   pod 'CapacitorStatusBar', :path => '../../node_modules/@capacitor/status-bar'
+  pod 'TransistorsoftCapacitorBackgroundFetch', :path => '../../node_modules/@transistorsoft/capacitor-background-fetch'
   pod 'CapacitorEmailComposer', :path => '../../node_modules/capacitor-email-composer'
+  pod 'CapacitorReadNativeSetting', :path => '../../node_modules/capacitor-read-native-setting'
 end
 
 target 'App' do

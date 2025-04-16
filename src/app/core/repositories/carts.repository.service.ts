@@ -1,11 +1,18 @@
 import { Injectable } from '@angular/core'
-import { SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from '../database.service'
 import { Customer } from '../user.service'
 import { CustomersRepositoryService } from './customers.repository.service'
-import { IProductInfoT, IProductOrderInfo, IProductPricesOverview, ProductsRepositoryService } from './products.repository.service'
+import {
+  IProductInfoT,
+  IProductOrderInfo,
+  IProductPricesOverview,
+  ProductsRepositoryService
+} from './products.repository.service'
 import { environment } from 'src/environments/environment'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('CartsRepositoryService')
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +20,6 @@ import { environment } from 'src/environments/environment'
 export class CartsRepositoryService {
   constructor(
     private _db: DatabaseService,
-    private logger: LoggingProvider,
     private productsRepo: ProductsRepositoryService,
     private customersRepo: CustomersRepositoryService
   ) { }
@@ -37,7 +43,7 @@ export class CartsRepositoryService {
           statement: 'UPDATE carts SET active = 1 WHERE id = ?',
           values: [id]
         }, {
-          statement: 'UPDATE carts SET active = 0 WHERE id != ?',
+          statement: 'UPDATE carts SET active = 0 WHERE id <> ?',
           values: [id]
         }
       ])
@@ -46,9 +52,9 @@ export class CartsRepositoryService {
     })
   }
 
-  removeAllActive() {
-    return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query('UPDATE carts SET active = 0')
+  removeAllActive(): Promise<boolean> {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<boolean> => {
+      const result: DBSQLiteValues = await db.query('UPDATE carts SET active = 0')
 
       return result.values?.length > 0
     })
@@ -59,7 +65,7 @@ export class CartsRepositoryService {
       const date = new Date()
       const ninetyDaysAgo = new Date(date.getTime() - (days * 24 * 60 * 60 * 1000))
         .toISOString()
-      this.logger.log(`deleting carts older than ${days} days`)
+      logger.debug(`deleting carts older than ${days} days`)
 
       // How about you just eat a dick and work, alright?!
       const result = await db.run(
@@ -159,9 +165,9 @@ export class CartsRepositoryService {
 
         // loop through all records to get products in cart
         cart.products = []
-        cart.active = (cart.active as any) === 1 ? true : false
-        cart.send = (cart.send as any) === 1 ? true : false
-        cart.sendOk = (cart.sendOk as any) === 1 ? true : false
+        cart.active = (cart.active as any) === 1
+        cart.send = (cart.send as any) === 1
+        cart.sendOk = (cart.sendOk as any) === 1
 
         const productsResult = await db.query(`
         SELECT cp.amount,
@@ -300,9 +306,9 @@ export class CartsRepositoryService {
         // loop through all records to get products in cart
         for (const cart of result.values) {
           cart.products = []
-          cart.send = cart.send === 1 ? true : false
-          cart.sendOk = cart.sendOk === 1 ? true : false
-          cart.active = cart.active === 1 ? true : false
+          cart.send = cart.send === 1
+          cart.sendOk = cart.sendOk === 1
+          cart.active = cart.active === 1
 
           const productsResult = await db.query(`
           SELECT cp.amount,
@@ -339,7 +345,7 @@ export class CartsRepositoryService {
   }
 
   addProduct(id: number, productId: number, amount: number): Promise<boolean> {
-    this.logger.debug('CartsRepositoryService.addProduct(id, productId, amount):', id, productId, amount)
+    logger.debug('addProduct(id, productId, amount):', id, productId, amount)
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result = await db.run(`INSERT OR REPLACE INTO cartProducts (cart, product, amount) VALUES (?, ?, ?)`, [
         id,
@@ -348,7 +354,7 @@ export class CartsRepositoryService {
       ])
 
       if (result.changes?.changes > 0) {
-        this.logger.debug(`CartsRepositoryService.addProduct() -- successfully added product`)
+        logger.debug(`addProduct() -- successfully added product`)
       }
 
       return result.changes?.changes > 0

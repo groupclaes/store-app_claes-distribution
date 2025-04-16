@@ -83,7 +83,7 @@
         </ng-container>
       </ion-list>
       <br>
-      <ion-list lines="none" *ngIf="isAgent">
+      <ion-list lines="none" *ngIf="!isAndroid && isAgent">
         <ion-item tappable button (click)="open('/notes')">
           <i slot="start" class='fal fa-fw fa-sticky-note'></i>
           <ion-label translate>notesPage</ion-label>
@@ -94,10 +94,10 @@
       </ion-list>
       <br *ngIf="isAgent">
       <ion-list lines="none">
-        <ion-item *ngIf="!isGuest" tappable button (click)="open('/settings')" lines="normal">
-          <i slot="start" class='fal fa-fw fa-cogs'></i>
-          <ion-label translate>settingsPage</ion-label>
-        </ion-item>
+        <!--        <ion-item *ngIf="!isGuest && isAndroid" tappable button (click)="open('/settings')" lines="normal">-->
+        <!--          <i slot="start" class='fal fa-fw fa-cogs'></i>-->
+        <!--          <ion-label translate>settingsPage</ion-label>-->
+        <!--        </ion-item>-->
         <ion-item tappable button (click)="open('/sync')">
           <i slot="start" class='fal fa-fw fa-sync'></i>
           <ion-label translate>syncPage</ion-label>

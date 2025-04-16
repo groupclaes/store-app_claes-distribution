@@ -35,7 +35,7 @@
       <ion-item *ngFor="let category of assortmentGroup.categories" [attr.disabled]="category.products <= 0" button
                 tappable (click)="navigatePage(category)">
         <ion-label>
-          <span>{{ category.name | capitalize }}</span>
+          {{ category.name | capitalize }}
         </ion-label>
         <ion-note slot="end">
           {{ category.products }}
@@ -50,9 +50,9 @@
     </ion-item>
   </ion-list>
 
-  <div *ngIf="loading" padding>
+  <div *ngIf="loading">
     <div style="text-align:center">
-      <ion-spinner mode="ios"></ion-spinner>
+      <ion-spinner></ion-spinner>
     </div>
   </div>
 </ion-content>

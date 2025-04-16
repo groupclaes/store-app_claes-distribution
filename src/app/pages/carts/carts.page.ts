@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { LoadingController, NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { CartsRepositoryService, ICartDetail } from 'src/app/core/repositories/carts.repository.service'
 import { UserService } from 'src/app/core/user.service'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('CartsPage')
 
 @Component({
   selector: 'app-carts',
@@ -19,7 +21,6 @@ export class CartsPage implements OnInit {
   showSelects = false
 
   private _carts: ICartDetailCustom[] = []
-  private _cartsNotSend: ICartDetailCustom[] = []
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -27,10 +28,10 @@ export class CartsPage implements OnInit {
     private user: UserService,
     private repo: CartsRepositoryService,
     private cart: CartService,
-    private logger: LoggingProvider,
     private loadingCtrl: LoadingController,
     private navCtrl: NavController
-  ) { }
+  ) {
+  }
 
   get unsentText() {
     return (this.translate.instant('pages.cart.unsentCarts') as string).replace('{{UNSENT}}', this.unsendCount + '')
@@ -66,7 +67,7 @@ export class CartsPage implements OnInit {
       this.ref.markForCheck()
 
       this._carts = []
-      this._cartsNotSend = []
+      // this._cartsNotSend = []
       this.unsendCount = await this.repo.failedCount()
 
       const carts = (await this.repo.loadUnsent(this.culture)) as ICartDetailCustom[]
@@ -79,7 +80,7 @@ export class CartsPage implements OnInit {
       this._carts = carts
       // this._cartsNotSend = carts.filter(e => e.sendOk == false)
     } catch (err) {
-      this.logger.error('CartsPage.load() -- error', err)
+      logger.error('CartsPage.load() -- error', err)
     } finally {
       this.loading = false
       this.ref.markForCheck()
@@ -101,7 +102,7 @@ export class CartsPage implements OnInit {
       await this.load()
     } catch (err) {
       console.error(err)
-      this.logger.error('CartsPage.create() -- error', err)
+      logger.error('CartsPage.create() -- error', err)
     } finally {
       if (this.loading) {
         this.loading = false
@@ -110,20 +111,20 @@ export class CartsPage implements OnInit {
     }
   }
 
-  async delete(cart: ICartDetail): Promise<boolean> {
-    try {
-      this.loading = true
-      this.ref.markForCheck()
-
-      return true
-    } catch (err) {
-      this.logger.error('CartsPage.create() -- error', err)
-    } finally {
-      if (this.loading) {
-        this.loading = false
-        this.ref.markForCheck()
-      }
-    }
+  async delete() { // (cart: ICartDetail) : Promise<boolean>
+    // try {
+    //   this.loading = true
+    //   this.ref.markForCheck()
+    //
+    //   return true
+    // } catch (err) {
+    //   logger.error('CartsPage.create() -- error', err)
+    // } finally {
+    //   if (this.loading) {
+    //     this.loading = false
+    //     this.ref.markForCheck()
+    //   }
+    // }
   }
 
   async send(cart: ICartDetail, reload: boolean = false): Promise<void> {
@@ -142,7 +143,7 @@ export class CartsPage implements OnInit {
 
 
     } catch (err) {
-      this.logger.error('CartsPage.create() -- error', err)
+      logger.error('CartsPage.create() -- error', err)
     } finally {
       if (setLoader) {
         this.loading = false
@@ -171,7 +172,7 @@ export class CartsPage implements OnInit {
       }
       this.load()
     } catch (err) {
-      this.logger.error('CartsPage.create() -- error', err)
+      logger.error('CartsPage.create() -- error', err)
     } finally {
       if (this.loader) {
         this.loading = false
@@ -186,13 +187,6 @@ export class CartsPage implements OnInit {
       cart.active = true
     }
     this.ref.markForCheck()
-  }
-
-  toggleMode() {
-    setTimeout(() => {
-      this.showSelects = !this.showSelects
-      this.ref.markForCheck()
-    }, 18)
   }
 
   ionViewWillEnter() {

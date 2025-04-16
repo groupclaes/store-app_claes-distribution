@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core'
-import { LoggingProvider } from '../@shared/logging/log.service'
+import { LoggerService } from '../@shared/logging/log.service'
+
+const logger = new LoggerService('StorageProvider')
 
 @Injectable({
   providedIn: 'root'
 })
 export class StorageProvider {
-  constructor(private logger: LoggingProvider) {
-    this.logger.log('StorageProvider -- constructor()')
+  constructor() {
+    logger.debug('constructor()')
   }
 
   get<T>(key: string): T {
@@ -14,7 +16,7 @@ export class StorageProvider {
       const myValue = localStorage.getItem(key)
       return (myValue) ? JSON.parse(myValue) : myValue
     } catch (err) {
-      this.logger.error('StorageProvider -- ', err)
+      logger.error('get() -- ', err)
       return null
     }
   }
@@ -24,7 +26,7 @@ export class StorageProvider {
       localStorage.setItem(key, JSON.stringify(value))
       return true
     } catch (err) {
-      this.logger.error('StorageProvider -- ', err)
+      logger.error('set() -- ', err)
       return false
     }
   }
@@ -34,7 +36,7 @@ export class StorageProvider {
       localStorage.clear()
       return localStorage.length === 1
     } catch (err) {
-      this.logger.error('StorageProvider -- ', err)
+      logger.error('clear() -- ', err)
       return false
     }
   }
@@ -44,7 +46,7 @@ export class StorageProvider {
       localStorage.removeItem(key)
       return true
     } catch (err) {
-      this.logger.error('StorageProvider -- ', err)
+      logger.error('remove() -- ', err)
       return false
     }
   }

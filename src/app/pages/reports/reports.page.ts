@@ -4,7 +4,6 @@ import { TranslateService } from '@ngx-translate/core'
 import { ApiService } from 'src/app/core/api.service'
 import { UserService } from 'src/app/core/user.service'
 import { ReportsRepositoryService } from 'src/app/core/repositories/reports.repository.service'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { Directory, DownloadFileResult, Filesystem, ReaddirResult, StatResult } from '@capacitor/filesystem'
@@ -33,7 +32,6 @@ export class ReportsPage implements OnInit {
     private api: ApiService,
     private user: UserService,
     private ref: ChangeDetectorRef,
-    private logger: LoggingProvider,
     private reportsRepository: ReportsRepositoryService,
     private cart: CartService,
     public network: NetworkService
@@ -52,8 +50,8 @@ export class ReportsPage implements OnInit {
 
     if (this.network.online)
       await this.loadRequestedReports()
-    else
-      await this.loadOfflineReports()
+
+    await this.loadOfflineReports()
   }
 
   async loadAvailableReports(): Promise<void> {
@@ -74,7 +72,7 @@ export class ReportsPage implements OnInit {
   async loadOfflineReports(): Promise<void> {
     try {
       const result: ReaddirResult = await Filesystem.readdir({
-        directory: Directory.Documents,
+        directory: Directory.Data,
         path: this.getReportPath('')
       })
       const reports: any[] = []
@@ -97,8 +95,8 @@ export class ReportsPage implements OnInit {
 
     try {
       const resp: IBaseApiResponse<IRequestedReport[]> = await firstValueFrom(this.api.getShop<IBaseApiResponse<IRequestedReport[]>>('reports/list', {
-        uid: this.user.userinfo.userId,
-        usercode: this.user.activeUser.userCode
+        // uid: this.user.userinfo.userId,
+        usercode: this.user.userinfo.userCode // change to activeuser when uid is implemented
       }))
       const my_reports: IRequestedReportDisplay[] = resp?.data || []
 
@@ -123,7 +121,7 @@ export class ReportsPage implements OnInit {
       return
 
     Filesystem.stat({
-      directory: Directory.Documents,
+      directory: Directory.Data,
       path: this.getReportPath(report.name)
     }).then((): void => {
       report.offline = true
@@ -149,10 +147,10 @@ export class ReportsPage implements OnInit {
 
     return Filesystem.downloadFile({
       url: `${environment.shop_api}/reports/queue/${task_id}?usercode=${this.user.userinfo.userCode}`,
-      directory: Directory.Documents,
+      directory: Directory.Data,
       path: this.getReportPath(filename),
       recursive: true
-    }).then((res: DownloadFileResult): void => {
+    }).then((): void => {
       if (report)
         report.offline = true
       this.ref.markForCheck()
@@ -164,9 +162,7 @@ export class ReportsPage implements OnInit {
   }
 
   get menuItemActive(): boolean {
-    if (!this.user.activeUser && this.user.userinfo && [2, 3, 4].includes(this.user.userinfo.type))
-      return false
-    return true
+    return this.user.activeUser !== undefined
   }
 
   get culture(): string {
@@ -195,23 +191,27 @@ export class ReportsPage implements OnInit {
   }
 
   async deleteTask(report: IRequestedReport): Promise<void> {
+    // instantly remove it form local data
+    this.offline_reports = this.offline_reports.filter(e => e.name !== report.name)
+    this.my_reports = this.my_reports.filter(e => e.name !== report.name)
+    this.ref.markForCheck()
+
     try {
       await this.deleteReport(report.name)
     } finally {
       await firstValueFrom(this.api.deleteShop(`reports/queue/${report.id}`, { usercode: this.user.userinfo.userCode }))
       await this.loadRequestedReports()
+      this.ref.markForCheck()
     }
   }
 
   async deleteReport(name: string): Promise<void> {
     try {
       await Filesystem.deleteFile({
-        directory: Directory.Documents,
+        directory: Directory.Data,
         path: this.getReportPath(name)
       })
     } finally {
-      this.offline_reports = this.offline_reports.filter(e => e.name !== name)
-      this.ref.markForCheck()
       await this.loadOfflineReports()
     }
   }
@@ -321,7 +321,7 @@ export class ReportsPage implements OnInit {
 
     try {
       const stat: StatResult = await Filesystem.stat({
-        directory: Directory.Documents,
+        directory: Directory.Data,
         path: this.getReportPath(report.name)
       })
       report.offline = true
@@ -335,7 +335,7 @@ export class ReportsPage implements OnInit {
 
       const result: DownloadFileResult = await Filesystem.downloadFile({
         url: `${environment.shop_api}/reports/queue/${report.id}?usercode=${this.user.userinfo.userCode}`,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         path: this.getReportPath(report.name),
         recursive: true
       })
@@ -347,22 +347,12 @@ export class ReportsPage implements OnInit {
   }
 
   getReportPath(filename: string): string {
-    let path: string = 'reports/'
-
-    if (this.currentCustomer)
-      path += this.currentCustomer + '/'
-    path += filename
-
+    // let path: string = 'reports/'
+    //
+    // if (this.currentCustomer)
+    //   path += this.currentCustomer + '/'
+    // path += filename
     return 'reports/' + filename
-  }
-
-  get currentCustomer(): string {
-    if (this.user.hasAgentAccess)
-      return this.user.activeUser.addressName != null ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`
-    else if (this.user.multiUser)
-      return this.user.activeUser.addressName != null ? this.user.activeUser.addressName : this.user.activeUser.name
-
-    return undefined
   }
 
   private handleReport(report: $TSFixMe, type: number, mode: number): void {

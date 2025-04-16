@@ -1,4 +1,4 @@
-import { firstValueFrom, Subscription } from 'rxjs'
+import { Subscription } from 'rxjs'
 import { DatePipe } from '@angular/common'
 import {
   ChangeDetectionStrategy,
@@ -11,8 +11,7 @@ import {
 import { ActivatedRoute, NavigationEnd, Params, Router } from '@angular/router'
 import { AlertController, IonContent } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { filter, take } from 'rxjs/operators'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { filter } from 'rxjs/operators'
 import { CartService } from 'src/app/core/cart.service'
 import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositories/categories.repository.service'
 import { IProductT, ISortOrder, ProductsRepositoryService } from 'src/app/core/repositories/products.repository.service'
@@ -21,8 +20,11 @@ import { UserService } from 'src/app/core/user.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
 import { ICartDetail, ICartDetailProductT } from '../../core/repositories/carts.repository.service'
+import { LoggerService } from '../../@shared/logging/log.service'
 
 const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
+
+const logger = new LoggerService('ProductsPage')
 
 @Component({
   selector: 'app-products',
@@ -69,7 +71,6 @@ export class ProductsPage implements OnDestroy {
     private user: UserService,
     private translate: TranslateService,
     private cart: CartService,
-    private logger: LoggingProvider,
     private alertCtrl: AlertController,
     private datePipe: DatePipe,
     categoriesRepository: CategoriesRepositoryService,
@@ -81,17 +82,17 @@ export class ProductsPage implements OnDestroy {
   ) {
     let fallback: number
 
-    this._subs.push(settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
-      this.displayThumbnail = displayThumbnail
+    this.settings.showThumbnail.then((value: boolean): void => {
+      this.displayThumbnail = value
       this.ref.markForCheck()
-    }))
-    firstValueFrom(settings.DisplayDefaultFilters).then((filters: $TSFixMe): void => {
-      this._filters.newState = (filters.new === true) ? 'active' : 'default'
-      this._filters.promoState = (filters.promo === true) ? 'active' : 'default'
-      this._filters.orderState = (filters.order === true) ? 'default' : 'inactive'
+    })
+    this.settings.defaultFilters().then((filters: any): void => {
+      this._filters.newState = (filters.filter_new === true) ? 'active' : 'default'
+      this._filters.promoState = (filters.filter_promo === true) ? 'active' : 'default'
+      this._filters.orderState = (filters.filter_order === true) ? 'default' : 'inactive'
 
-      this._filters.favoriteState = (filters.favorite === true) ? 'active' : (
-        (filters.favorite === false) ? 'default' : 'inactive'
+      this._filters.favoriteState = (filters.filter_favorite === true) ? 'active' : (
+        (filters.filter_favorite === false) ? 'default' : 'inactive'
       )
 
       if (this.user.activeUser) {
@@ -105,21 +106,24 @@ export class ProductsPage implements OnDestroy {
       .subscribe(async (): Promise<void> => {
         window.clearTimeout(fallback)
         this._filters.category = undefined
-        await this.load(true)
+        fallback = window.setTimeout(async (): Promise<void> => {
+          await this.load(true)
+        }, 180)
       })
+
     this._subs.push(route.queryParams.subscribe(async (params: Params): Promise<void> => {
       if (params.category) {
         this._filters.category = await categoriesRepository.find(+params.category, this.culture)
         window.clearTimeout(fallback)
-        await this.load(true)
+        fallback = window.setTimeout(async (): Promise<void> => {
+          await this.load(true)
+        }, 180)
       }
     }))
 
     this.network.connected.subscribe((): void => {
       this.ref.markForCheck()
     })
-
-    this.clampBuilder()
   }
 
   ngOnDestroy(): void {
@@ -195,7 +199,7 @@ export class ProductsPage implements OnDestroy {
 
   async ionViewDidEnter(): Promise<void> {
     try {
-      this.logger.log('ProductsPage.ionViewDidEnter() -- start')
+      logger.debug('ProductsPage.ionViewDidEnter() -- start')
       await this.cart.loadCarts()
       await this.cart.updateActive(this.user.activeUser.id, this.user.activeUser.address)
       if (this._products && this._products.length > 0) {
@@ -214,9 +218,9 @@ export class ProductsPage implements OnDestroy {
         this.ref.markForCheck()
       }
     } catch (err) {
-      this.logger.error('ProductsPage.ionViewDidEnter() -- error', err)
+      logger.error('ProductsPage.ionViewDidEnter() -- error', err)
     } finally {
-      this.logger.log('ProductsPage.ionViewDidEnter() -- end')
+      logger.debug('ProductsPage.ionViewDidEnter() -- end')
       this.ref.detectChanges()
     }
   }
@@ -346,13 +350,13 @@ export class ProductsPage implements OnDestroy {
       let productAmount: number = $event.target.value ? Math.abs($event.target.value) : -1
       let showAlert: boolean = false
       this.ref.markForCheck()
-      this.logger.debug('changeProductAmount() -- start ', productId, productAmount,
+      logger.debug('changeProductAmount() -- start ', productId, productAmount,
         this.user.activeUser.id, this.user.activeUser.address,
         this.user.credential)
 
       // check if item had minOrderQuantity
       if (product.minOrder > 1) {
-        this.logger.info('this product has a minOrderQuantity')
+        logger.info('this product has a minOrderQuantity')
         if (productAmount > 0 && productAmount < product.minOrder) {
           productAmount = product.minOrder
           product.amount = productAmount
@@ -384,7 +388,7 @@ export class ProductsPage implements OnDestroy {
         })
         alert.present()
       }
-      this.logger.debug('changeProductAmount() -- end ', productId, productAmount)
+      logger.debug('changeProductAmount() -- end ', productId, productAmount)
     }, 200)
   }
 
@@ -397,22 +401,18 @@ export class ProductsPage implements OnDestroy {
   orderState: (product: $TSFixMe) => 'active' | 'inactive' = (product: $TSFixMe): 'active' | 'inactive' => product.type === 'B' ? 'active' : 'inactive'
 
   resetFilters(): void {
-    firstValueFrom(this.settings.DisplayDefaultFilters.pipe(take(1)))
-      .then(async (filters: $TSFixMe): Promise<void> => {
-        this._filters.newState = (filters.new === true) ? 'active' : 'default'
-        this._filters.promoState = (filters.promo === true) ? 'active' : 'default'
-        this._filters.orderState = (filters.order === true) ? 'default' : 'inactive'
+    this.settings.defaultFilters().then(async (filters: any): Promise<void> => {
+      this._filters.newState = (filters.filter_new === true) ? 'active' : 'default'
+      this._filters.promoState = (filters.filter_promo === true) ? 'active' : 'default'
+      this._filters.orderState = (filters.filter_order === true) ? 'default' : 'inactive'
 
-        this._filters.favoriteState = (filters.favorite === true) ? 'active' : (
-          (filters.favorite === false) ? 'default' : 'inactive'
-        )
+      this._filters.favoriteState = (filters.filter_favorite === true) ? 'active' : (
+        (filters.filter_favorite === false) ? 'default' : 'inactive'
+      )
 
-        this._filters.attributes = []
-        this._filters.query = ''
-
-        if (this.user.activeUser)
-          await this.load()
-      })
+      if (this.user.activeUser)
+        await this.load()
+    })
   }
 
   favinfo(product: IProductT): string {

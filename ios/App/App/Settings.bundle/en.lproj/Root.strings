@@ -1,0 +1,33 @@
+/* A single strings file, whose title is specified in your preferences schema. The strings files provide the localized content to display to the user for each of your preferences. */
+
+"SyncInterval" = "Synchronise";
+"DefaultPage" = "Default page";
+"always" = "Always";
+"hourly" = "Hourly";
+"4hours" = "Each 4 uur";
+"12hours" = "Twice a day";
+"daily" = "Daily";
+"weekly" = "Weekly";
+"monthly" = "Monthly";
+"ShowThumbnail" = "Show product thumbnails";
+"ShowOnlyNew" = "Show only new";
+"ShowOnlyPromo" = "Show only promo";
+"ShowOnlyFavorites" = "Show only favorites";
+"ShowOrderItems" = "Show orderitems";
+"Version" = "Version";
+"ProductsPage" = "Products";
+"CategoriesPage" = "Categories";
+"NewsPage" = "News";
+"RecipesPage" = "Recipes";
+"DepartmentsPage" = "Departments";
+"AutomaticDownloads" = "Automatic downloads";
+"SyncLeaflets" = "Leaflets";
+"SyncDatasheets" = "Datasheets";
+"Advanced" = "Geavanceerd";
+"DEFAULT FILTERS" = "DEFAULT FILTERS";
+"AUTOMATION" = "AUTOMATION";
+"ABOUT" = "ABOUT";
+"MOBILE DATA" = "MOBILE DATA";
+"SYNCHRONISATION" = "SYNCHRONISATION";
+"MobileDataText" = "Bepaal of nieuwe gegevens automatisch kunnen worden gedownload via een mobiel netwerk";
+"SynchronisationText" = "Bepaal welke documenten automatisch worden gedownload om een betere offline-ervaring te kunnen garanderen.";

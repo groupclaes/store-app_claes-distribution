@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core'
 import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { environment } from 'src/environments/environment'
 import { DatabaseService } from '../database.service'
 import { Customer } from '../user.service'
 import { IDepartmentT } from './departments.repository.service'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('ProductsRepositoryService')
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +14,7 @@ import { IDepartmentT } from './departments.repository.service'
 export class ProductsRepositoryService {
 
   constructor(
-    private _db: DatabaseService,
-    private logger: LoggingProvider
+    private _db: DatabaseService
   ) {
   }
 
@@ -263,8 +264,7 @@ export class ProductsRepositoryService {
         }
         // prices
         try {
-          const result: IProductPricesOverview = await this.getPrices(product.id, customer, db, product.minOrder)
-          prices = result
+          prices = await this.getPrices(product.id, customer, db, product.minOrder)
         } catch (err) {
           console.log('error while retrieving prices', err)
         }
@@ -282,7 +282,7 @@ export class ProductsRepositoryService {
       product.isPromo = product.isPromo == 1
       product.isFavorite = product.isFavorite == 1
 
-      if (prices?.basePrice > 0) {
+      if (prices?.basePrice > 0 && prices?.prices) {
         product.prices = prices.prices
         product.basePrice = prices.basePrice
       } else {
@@ -376,7 +376,7 @@ export class ProductsRepositoryService {
           .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
           .replace(/(æ|Æ)/g, 'ae')
           .toLowerCase()
-        const parts = filterQuery.toLowerCase().replace(/\'/g, '\'\'').split(' ')
+        const parts: string[] = filterQuery.toLowerCase().replace(/'/g, '\'\'').split(' ')
         for (const part of parts) {
           if (culture === 'nl-BE') {
             query += ` AND (products.searchNameNl LIKE '%${part}%'`
@@ -411,7 +411,7 @@ export class ProductsRepositoryService {
         query += ` ORDER BY sortOrder, SUBSTR(products.itemnum || '0000000000', 1, 10) ASC LIMIT ${page * items}, ${items}`
       }
 
-      this.logger.debug('ProductsRepositoryService.query() -- running statement')
+      logger.debug('ProductsRepositoryService.query() -- running statement')
       const result = await db.query(
         query,
         queryParams
@@ -512,7 +512,7 @@ export class ProductsRepositoryService {
           .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
           .replace(/(æ|Æ)/g, 'ae')
           .toLowerCase()
-        const parts = filterQuery.toLowerCase().replace(/\'/g, '\'\'').split(' ')
+        const parts: string[] = filterQuery.toLowerCase().replace(/'/g, '\'\'').split(' ')
         for (const part of parts) {
           if (culture === 'nl-BE') {
             query += ` AND (products.searchNameNl LIKE '%${part}%'`
@@ -545,7 +545,7 @@ export class ProductsRepositoryService {
       else
         query += ` ORDER BY sortOrder, SUBSTR(products.itemnum || '0000000000', 1, 10) ASC`
 
-      this.logger.debug('ProductsRepositoryService.query() -- running statement')
+      logger.debug('ProductsRepositoryService.query() -- running statement')
       const result = await db.query(
         query,
         queryParams
@@ -556,7 +556,7 @@ export class ProductsRepositoryService {
   }
 
   async getPrices(id: number, customer: any, db: SQLiteDBConnection, minQ?: number) {
-    this.logger.debug('ProductsRepositoryService.getPrices(' + id + ')')
+    logger.debug('ProductsRepositoryService.getPrices(' + id + ')')
 
     let minQuantity = 1
     if (minQ)
@@ -602,7 +602,7 @@ export class ProductsRepositoryService {
       return this.calculatePricesOverview(minQuantity, customer, base.values, [])
 
     } catch (err) {
-      this.logger.error('ProductsRepositoryService.getPrices() -- error', err)
+      logger.error('ProductsRepositoryService.getPrices() -- error', err)
     }
   }
 
@@ -653,10 +653,14 @@ export class ProductsRepositoryService {
   addToDepartment(id: number, department: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       try {
-        const result = await db.query('INSERT INTO departmentProducts (department,product)'
-          + 'SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM departmentProducts WHERE department = ? AND product = ?)', [department, id, department, id])
+        await db.query(
+          'INSERT INTO departmentProducts (department,product) ' +
+          'SELECT ?, ? ' +
+          'WHERE NOT EXISTS (SELECT * FROM departmentProducts WHERE department = ? AND product = ?)',
+          [department, id, department, id]
+        )
       } catch (err) {
-        this.logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
+        logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
       }
     })
   }
@@ -664,9 +668,9 @@ export class ProductsRepositoryService {
   removeFromDepartment(id: number, department: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       try {
-        const result = await db.query('DELETE FROM departmentProducts WHERE department = ? AND product = ?', [department, id])
+        await db.query('DELETE FROM departmentProducts WHERE department = ? AND product = ?', [department, id])
       } catch (err) {
-        this.logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
+        logger.error('Couldn\'t add department to local departmentProducts', err, department, id)
       }
     })
   }
@@ -674,7 +678,7 @@ export class ProductsRepositoryService {
   addToFavourites(productId: number, userId: number, addressId: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       await db.query(`INSERT
-      OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, 0);`, [productId, userId, addressId])
+      OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, 0)`, [productId, userId, addressId])
     })
   }
 
@@ -690,17 +694,17 @@ export class ProductsRepositoryService {
 
   changeCustomerDescription(productId: number, description: string) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      await db.query('INSERT OR REPLACE INTO productDescriptionCustomers (id, description) VALUES (?, ?);', [productId, description])
+      await db.query('INSERT OR REPLACE INTO productDescriptionCustomers (id, description) VALUES (?, ?)', [productId, description])
     })
   }
 
   private calculatePricesOverview(minQuantity: number, customer: Customer,
                                   basePrices: IPrice[], extraPrices: IPrice[]): IProductPricesOverview {
-    this.logger.debug('ProductsRepositoryService.calculatePricesOverview()', minQuantity, customer, basePrices, extraPrices)
-    let basePrice = 0
+    logger.debug('ProductsRepositoryService.calculatePricesOverview()', minQuantity, customer, basePrices, extraPrices)
+    let basePrice: number = 0
     let prices = []
-    let isPromo = false
-    let bonus = customer.bonusPercentage ?? customer.bonus ?? 0
+    let isPromo: boolean = false
+    let bonus: number = customer.bonusPercentage ?? customer.bonus ?? 0
 
     if (basePrices.length > 0) {
       isPromo = basePrices.some(e => e.promo) && customer.promo == true
@@ -720,7 +724,7 @@ export class ProductsRepositoryService {
       }
     } else {
       for (let price of basePrices) {
-        let amount = isPromo ? price.pricepromo : price.price
+        let amount: number = isPromo ? price.pricepromo : price.price
         amount = Math.round((amount - ((amount * bonus) / 100)) * 100) / 100
         prices.push({
           amount,
@@ -730,7 +734,7 @@ export class ProductsRepositoryService {
         })
       }
     }
-    this.logger.debug('ProductsRepositoryService.calculatePricesOverview() -- complete', { basePrice, prices })
+    logger.debug('ProductsRepositoryService.calculatePricesOverview() -- complete', { basePrice, prices })
 
     return {
       basePrice,

@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute, Params } from '@angular/router'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { LoggerService } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { Share } from '@capacitor/share'
 import { firstValueFrom } from 'rxjs'
+
+const logger = new LoggerService('WebRecipeDetailPage')
 
 @Component({
   selector: 'app-web-recipe-detail',
@@ -21,7 +23,6 @@ export class WebRecipeDetailPage implements OnInit {
   constructor(
     private translate: TranslateService,
     private ref: ChangeDetectorRef,
-    private logger: LoggingProvider,
     private api: ApiService,
     route: ActivatedRoute,
     public network: NetworkService
@@ -46,7 +47,7 @@ export class WebRecipeDetailPage implements OnInit {
 
       this._recipe = recipe
     } catch (err) {
-      this.logger.error('Error loading recipe!', err)
+      logger.error('Error loading recipe!', err)
     } finally {
       this.loading = false
       this.ref.markForCheck()

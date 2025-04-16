@@ -12,6 +12,16 @@
 				<string>C617.1</string>
 			</array>
 		</dict>
+    <!-- [1] background_fetch: UserDefaults -->
+    <dict>
+        <key>NSPrivacyAccessedAPIType</key>
+        <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+
+        <key>NSPrivacyAccessedAPITypeReasons</key>
+        <array>
+            <string>CA92.1</string>
+        </array>
+    </dict> 
 	</array>
 </dict>
 </plist>

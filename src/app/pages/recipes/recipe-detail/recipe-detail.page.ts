@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { ActivatedRoute, Params } from '@angular/router'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { BrowserService } from 'src/app/core/browser.service'
@@ -11,11 +10,13 @@ import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { Directory, DownloadFileResult, Filesystem } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
+import { LoggerService } from '../../../@shared/logging/log.service'
+
+const logger = new LoggerService('RecipeDetailPage')
 
 @Component({
   selector: 'app-detail',
   templateUrl: './recipe-detail.page.html',
-  // styleUrls: ['./recipe-detail.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipeDetailPage implements OnInit {
@@ -30,15 +31,15 @@ export class RecipeDetailPage implements OnInit {
     private user: UserService,
     private settings: SettingsService,
     private recipesRepository: RecipesRepositoryService,
-    private logger: LoggingProvider,
     private alertCtrl: AlertController,
     private api: ApiService,
     route: ActivatedRoute,
     private browser: BrowserService,
     public network: NetworkService
   ) {
-    this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
-      this.displayThumbnail = displayThumbnail
+    this.settings.showThumbnail.then((value: boolean): void => {
+      this.displayThumbnail = value
+      this.ref.markForCheck()
     })
     route.params.subscribe((params: Params): void => {
       this.load(params['guid'])
@@ -56,7 +57,7 @@ export class RecipeDetailPage implements OnInit {
 
       this._recipe = await this.recipesRepository.getDetail(guid, this.culture)
     } catch (err) {
-      this.logger.error('Error loading recipe!', err)
+      logger.error('Error loading recipe!', err)
     } finally {
       this.loading = false
       this.ref.markForCheck()

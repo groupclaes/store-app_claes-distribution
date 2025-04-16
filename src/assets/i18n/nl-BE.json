@@ -440,6 +440,7 @@
       "documents": {
         "title": "Locale documenten",
         "leaflets": "Folders",
+        "datasheets": "Datasheets",
         "reports": "Rapporten",
         "thumbnails": "Thumbnails",
         "cache": "Cache"

@@ -4,16 +4,22 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { ActivatedRoute } from '@angular/router'
 import { AlertController, LoadingController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
-import { CartsRepositoryService, ICartDetailS, ICartDetailProductA, ICartDetailSettings }
-  from 'src/app/core/repositories/carts.repository.service'
+import {
+  CartsRepositoryService,
+  ICartDetailProductA,
+  ICartDetailS,
+  ICartDetailSettings
+} from 'src/app/core/repositories/carts.repository.service'
 import { ShippingCostsRepositoryService } from 'src/app/core/repositories/shipping-costs.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
 import { NetworkService } from 'src/app/@shared/network.service'
+import { LoggerService } from '../../../@shared/logging/log.service'
+
+const logger = new LoggerService('CartDetailPage')
 
 @Component({
   selector: 'app-cart-detail',
@@ -39,7 +45,6 @@ export class CartDetailPage implements OnInit {
     private ref: ChangeDetectorRef,
     private translate: TranslateService,
     private user: UserService,
-    private logger: LoggingProvider,
     private api: ApiService,
     private repo: CartsRepositoryService,
     private shippingCostRepository: ShippingCostsRepositoryService,
@@ -52,8 +57,8 @@ export class CartDetailPage implements OnInit {
     private route: ActivatedRoute,
     public network: NetworkService
   ) {
-    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
-      this.displayThumbnail = displayThumbnail
+    settings.showThumbnail.then((value: boolean): void => {
+      this.displayThumbnail = value
       this.ref.markForCheck()
     })
     route.params.subscribe(params => {
@@ -133,7 +138,7 @@ export class CartDetailPage implements OnInit {
   }
 
   async load(id: number) {
-    this.logger.debug('CartDetailPage.load(' + id + ') -- start')
+    logger.debug('CartDetailPage.load(' + id + ') -- start')
     try {
       this.loading = true
       this.ref.markForCheck()
@@ -141,7 +146,7 @@ export class CartDetailPage implements OnInit {
       const cart = await this.repo.load(id, this.culture)
 
       if (cart.settings) {
-        this.logger.debug('CartDetailPage.load(' + id + ') -- has settings')
+        logger.debug('CartDetailPage.load(' + id + ') -- has settings')
         this.invoiceForm = {
           commentsMachines: '',
           ...cart.settings
@@ -168,11 +173,11 @@ export class CartDetailPage implements OnInit {
         this.delvDates = dates
       }
     } catch (err) {
-      this.logger.error('CartDetailPage.load(' + id + ') -- error', err)
+      logger.error('CartDetailPage.load(' + id + ') -- error', err)
     } finally {
       this.loading = false
       this.ref.markForCheck()
-      this.logger.debug('CartDetailPage.load(' + id + ') -- end')
+      logger.debug('CartDetailPage.load(' + id + ') -- end')
     }
   }
 
@@ -215,7 +220,7 @@ export class CartDetailPage implements OnInit {
 
     // check if item had minorderQuantity
     if (product.minOrder > 1) {
-      this.logger.info('this product has a minOrderQuantity')
+      logger.info('this product has a minOrderQuantity')
       if (productAmount > 0 && productAmount < product.minOrder) {
         productAmount = product.minOrder
         product.amount = productAmount
@@ -307,7 +312,7 @@ export class CartDetailPage implements OnInit {
         }
       }
     } catch (err) {
-      this.logger.error('CartDetailPage.calculatePricesOverview() -- error', err)
+      logger.error('CartDetailPage.calculatePricesOverview() -- error', err)
     } finally {
       this.ref.markForCheck()
     }
@@ -323,7 +328,7 @@ export class CartDetailPage implements OnInit {
 
   async onChange() {
     if (!this._cart || this.loading) return
-    this.logger.debug('CartDetailPage.onChange() called')
+    logger.debug('CartDetailPage.onChange() called')
 
     await this.repo.updateSettings(this._cart.id, this.invoiceForm)
   }
@@ -346,7 +351,7 @@ export class CartDetailPage implements OnInit {
       })
       await alert.present()
     } catch (err) {
-      this.logger.error('CartDetailPage.showDeleteConfirmation() error', err)
+      logger.error('CartDetailPage.showDeleteConfirmation() error', err)
     }
   }
 }

@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router'
 import { AlertController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
 import {
   IUnsentVisitNote,
@@ -12,6 +11,9 @@ import {
 } from 'src/app/core/repositories/notes.repository.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('NotesPage')
 
 @Component({
   selector: 'app-notes',
@@ -31,7 +33,6 @@ export class NotesPage {
               private route: ActivatedRoute,
               private navCtrl: NavController,
               private api: ApiService,
-              private logger: LoggingProvider,
               private notesRepository: NotesRepositoryService,
               private toast: ToastController) {
   }
@@ -138,7 +139,7 @@ export class NotesPage {
               this.showCreate = false
               this.ref.markForCheck()
             } catch (err) {
-              this.logger.error('Couldn\'t delete unsent note', JSON.stringify(err))
+              logger.error('Couldn\'t delete unsent note', JSON.stringify(err))
             }
           }
         },
@@ -172,7 +173,7 @@ export class NotesPage {
       this.notes = result
       this.ref.markForCheck()
     } catch (err) {
-      this.logger.error('Couldn\'t fetch notes for customer', JSON.stringify(err))
+      logger.error('Couldn\'t fetch notes for customer', JSON.stringify(err))
     }
   }
 
@@ -210,12 +211,12 @@ export class NotesPage {
               await this.notesRepository.deleteUnsentNote(unsentNote.id)
               counterSent++
             } else {
-              this.logger.error('Couldn\'t send backlog note ', result)
+              logger.error('Couldn\'t send backlog note ', result)
               counterFailed++
             }
           } catch (err) {
             counterFailed++
-            this.logger.debug('Something wen\'t wrong when sending note', JSON.stringify(err))
+            logger.debug('Something wen\'t wrong when sending note', JSON.stringify(err))
           }
         }
       }
@@ -231,7 +232,7 @@ export class NotesPage {
         await this.loadNotes()
       }
     } catch (err) {
-      this.logger.debug('Something wen\'t wrong when posting new note', JSON.stringify(err))
+      logger.debug('Something wen\'t wrong when posting new note', JSON.stringify(err))
     }
   }
 

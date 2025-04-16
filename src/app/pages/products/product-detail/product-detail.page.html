@@ -16,7 +16,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" color="light">
-  <ion-loading *ngIf="product != undefined" spinner="lines" translate="preparing" mode="ios"></ion-loading>
+  <ion-loading *ngIf="product != undefined" spinner="lines" translate="preparing"></ion-loading>
 
   <article *ngIf="product !== null && !loading">
     <div class="image-price-container">
@@ -336,11 +336,17 @@
           <ion-label class="ion-text-wrap" translate="noDatasheets"></ion-label>
         </ion-item>
         <ion-item *ngFor="let attachment of datasheets" tappable
-                  (click)="network.online ? showDocumentActionSheet(attachment) : network.noop()">
+                  (click)="openDatasheet(attachment)">
           <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
+          <ion-text color="danger" slot="end" *ngIf="attachment['available'] === false">
+            <i class="fal fa-fw fa-cloud-download"></i>
+          </ion-text>
+          <ion-spinner slot="end" *ngIf="attachment['available'] === undefined">
+            <i class="fal fa-fw fa-cloud-download"></i>
+          </ion-spinner>
         </ion-item>
       </ion-list>
     </ng-container>

@@ -1,8 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectorRef, Component } from '@angular/core'
 import { FormBuilder, FormGroup } from '@angular/forms'
 import { NavController } from '@ionic/angular'
 import { firstValueFrom } from 'rxjs'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { ApiService } from 'src/app/core/api.service'
 import { UserService } from 'src/app/core/user.service'
 
@@ -39,7 +38,7 @@ const _deliveryHours = [
 @Component({
   selector: 'app-customer-create',
   templateUrl: './customer-create.page.html',
-  styleUrls: ['./customer-create.page.scss'],
+  styleUrls: ['./customer-create.page.scss']
 })
 export class CustomerCreatePage {
   newCustomerForm: FormGroup
@@ -49,14 +48,15 @@ export class CustomerCreatePage {
     private navCtrl: NavController,
     private formBuilder: FormBuilder,
     private api: ApiService,
-    private logger: LoggingProvider,
     private ref: ChangeDetectorRef
-  ) { }
+  ) {
+  }
 
   get deliveryHours(): string[] {
     // Use a static delivery hours array to improve ref update performance
     return _deliveryHours
   }
+
   ionViewWillEnter() {
     if (!this.user.userinfo) {
       this.navCtrl.navigateRoot('/account/login')
@@ -152,22 +152,18 @@ export class CustomerCreatePage {
    */
   async doCreateCustomer() {
     const form: $TSFixMe = this.newCustomerForm.value
-    try {
-      const result = await firstValueFrom(
-        this.api.post('app/customers', form, {
-          usercode: this.user.userinfo.userCode,
-          username: this.user.credential.username
-        }))
+    const result = await firstValueFrom(
+      this.api.post('app/customers', form, {
+        usercode: this.user.userinfo.userCode,
+        username: this.user.credential.username
+      }))
 
-      if (result != null) {
-        this.ref.markForCheck()
-        this.navCtrl.pop()
-        return
-      } else {
-        // this.logger.error(result)
-      }
-    } catch(err) {
-      this.logger.error(err)
+    if (result != null) {
+      this.ref.markForCheck()
+      this.navCtrl.pop()
+      return
+    } else {
+      // logger.error(result)
     }
   }
 }

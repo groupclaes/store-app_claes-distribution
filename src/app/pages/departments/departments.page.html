@@ -20,18 +20,18 @@
     </ion-toolbar>
   </ion-header>
 
-  <div *ngIf="loading" padding>
+  <div *ngIf="loading">
     <div style="text-align:center">
-      <ion-spinner mode="ios"></ion-spinner>
+      <ion-spinner></ion-spinner>
     </div>
   </div>
 
   <ion-list [inset]="true" *ngIf="!loading">
     <ion-item button *ngFor="let department of departments" [routerLink]="[department.id]">
       <ion-label>{{ department.alias | capitalize }}</ion-label>
-      <div slot="end">
+      <ion-note slot="end">
         {{ department.products }}
-      </div>
+      </ion-note>
     </ion-item>
   </ion-list>
 

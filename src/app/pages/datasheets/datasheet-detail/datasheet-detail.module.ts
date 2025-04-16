@@ -6,6 +6,7 @@ import { DatasheetDetailPage } from './datasheet-detail.page'
 import { TranslateModule } from '@ngx-translate/core'
 import { RouterModule } from '@angular/router'
 import { CoreModule } from 'src/app/core/core.module'
+import { PdfViewerModule } from 'ng2-pdf-viewer'
 
 @NgModule({
   imports: [
@@ -16,7 +17,8 @@ import { CoreModule } from 'src/app/core/core.module'
     TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
       path: '', component: DatasheetDetailPage
-    }])
+    }]),
+    PdfViewerModule
   ],
   declarations: [DatasheetDetailPage]
 })

@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
 import { AlertController, NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { BrowserService } from 'src/app/core/browser.service'
 import {
   CustomersRepositoryService,
@@ -11,6 +10,9 @@ import {
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 import { Md5 } from 'ts-md5'
 import { CartService } from '../../../core/cart.service'
+import { LoggerService } from '../../../@shared/logging/log.service'
+
+const logger = new LoggerService('CustomerInfoPage')
 
 @Component({
   selector: 'app-customer-info',
@@ -29,7 +31,6 @@ export class CustomerInfoPage {
               private navCtrl: NavController,
               private alertCtrl: AlertController,
               private ref: ChangeDetectorRef,
-              private logger: LoggingProvider,
               private browser: BrowserService,
               private cart: CartService) {
   }
@@ -76,7 +77,7 @@ export class CustomerInfoPage {
           this.loadDeliverySchedules(),
           this.loadContacts()
         ])
-        this.logger.debug('Fetched notes, deliveryschedules and contacts')
+        logger.debug('Fetched notes, deliveryschedules and contacts')
         this.ref.markForCheck()
       } else {
         const alert: HTMLIonAlertElement = await this.alertCtrl.create({
@@ -96,17 +97,17 @@ export class CustomerInfoPage {
   }
 
   async loadDeliverySchedules(): Promise<void> {
-    this.logger.debug('Fetching delivery schedules')
+    logger.debug('Fetching delivery schedules')
     const deliverySchedules: IAppDeliveryScheduleModel[] = await this.customerService.getDeliverySchedule(
       this.user.activeUser.id,
       this.user.activeUser.address)
 
     this.deliverySchedules = deliverySchedules
-    this.logger.debug('Received delivery schedules', deliverySchedules)
+    logger.debug('Received delivery schedules', deliverySchedules)
   }
 
   async loadContacts(): Promise<void> {
-    this.logger.debug('loading contacts')
+    logger.debug('loading contacts')
 
     const contacts: IContact[] = await this.customerService.getContacts(
       this.user.activeUser.id,

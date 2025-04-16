@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { ActivatedRoute, Params } from '@angular/router'
-import { ActionSheetController, AlertController, ModalController, ToastController } from '@ionic/angular'
+import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { firstValueFrom } from 'rxjs'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { LoggerService } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { BrowserService } from 'src/app/core/browser.service'
@@ -25,8 +25,11 @@ import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
 import { Share, ShareOptions, ShareResult } from '@capacitor/share'
+import { Directory, DownloadFileResult, Filesystem, GetUriResult } from '@capacitor/filesystem'
+import { FileOpener } from '@capacitor-community/file-opener'
 
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
+const logger = new LoggerService('ProductDetailPage')
 
 @Component({
   selector: 'app-product-detail',
@@ -59,22 +62,23 @@ export class ProductDetailPage {
     private repo: ProductsRepositoryService,
     private products: ProductsService,
     private cart: CartService,
-    private logger: LoggingProvider,
     private departmentsRepo: DepartmentsRepositoryService,
     private sanitizer: DomSanitizer,
     public user: UserService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     public modalCtrl: ModalController,
+    private navCtrl: NavController,
     settings: SettingsService,
     route: ActivatedRoute,
     private actionSheetCtrl: ActionSheetController,
     private browser: BrowserService,
     public network: NetworkService
   ) {
-    logger.log('ProductDetailPage -- constructor()')
-    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
-      this.displayThumbnail = displayThumbnail
+    logger.debug('ProductDetailPage -- constructor()')
+    settings.showThumbnail.then((value: boolean): void => {
+      this.displayThumbnail = value
+      this.ref.markForCheck()
     })
     route.params.subscribe(async (params: Params): Promise<void> => {
       if (+params.id) {
@@ -217,7 +221,7 @@ export class ProductDetailPage {
         this._product.amount = (pr !== undefined) ? pr.amount : null
       }
     } catch (err) {
-      this.logger.error(err)
+      logger.error(err)
     } finally {
       this.loading = false
       this.ref.markForCheck()
@@ -235,9 +239,23 @@ export class ProductDetailPage {
         this.recipes = res.recipes
         this.recipesModule = res.recipesModule
         this.usageManuals = res.usageManuals
+
+        for (let datasheet of this.datasheets) {
+          try {
+            await Filesystem.stat({
+              path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+              directory: Directory.Cache
+            })
+            datasheet['available'] = true
+          } catch {
+            datasheet['available'] = false
+          } finally {
+            this.ref.markForCheck()
+          }
+        }
       }
     } catch (err) {
-      this.logger.error(err)
+      logger.error(err)
     } finally {
       this.ref.markForCheck()
     }
@@ -284,6 +302,48 @@ export class ProductDetailPage {
 
   showAllRecipesModule(): void {
     this.recipeModuleCount = 999
+  }
+
+  async openDatasheet(datasheet: IPCMAttachmentEntry): Promise<void> {
+    // check if file is available in cache
+    let uri: string
+    try {
+      this.ref.markForCheck()
+
+      const res: GetUriResult = await Filesystem.stat({
+        path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+        directory: Directory.Cache
+      })
+      uri = res.uri
+    } catch {
+      if (!this.network.online)
+        return this.network.noop()
+      datasheet['available'] = undefined
+      this.ref.markForCheck()
+      await Filesystem.downloadFile({
+        url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+        directory: Directory.Cache,
+        path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+        recursive: true
+      }).then((res: DownloadFileResult): string => uri = res.path)
+      this.ref.markForCheck()
+    } finally {
+      if (uri) {
+        datasheet['available'] = true
+        this.ref.markForCheck()
+        FileOpener.open({
+          filePath: uri,
+          openWithDefault: true,
+          contentType: 'application/pdf'
+        })
+        // this.navCtrl.navigateForward(['datasheets', datasheet.guid], {
+        //   animated: true
+        // })
+      } else {
+        datasheet['available'] = false
+        this.ref.markForCheck()
+      }
+    }
   }
 
   showDocumentActionSheet(doc: any): void {
@@ -342,23 +402,6 @@ export class ProductDetailPage {
     }).then(sheet => sheet.present())
   }
 
-  openRecipe(recipe: IRecipeModuleEntry): void {
-    // https://www.claes-distribution.be/recepten/955/kippenbouten-hawai
-    // https://www.claes-distribution.be/recettes/955/cuisses-de-poulet-hawai
-    switch (this.culture) {
-      case 'fr-BE':
-        this.browser.open(`https://www.claes-distribution.be/recettes/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
-          '_system', 'location=yes')
-        break
-
-      case 'nl-BE':
-      default:
-        this.browser.open(`https://www.claes-distribution.be/recepten/${recipe.id}/${recipe.name.replace('/ /g', '-')}`,
-          '_system', 'location=yes')
-        break
-    }
-  }
-
   safe(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html.trim())
   }
@@ -375,7 +418,7 @@ export class ProductDetailPage {
 
     // check if item had minorderQuantity
     if (this._product.minOrder > 1) {
-      this.logger.info('this product has a minOrderquantity')
+      logger.info('this product has a minOrderquantity')
       if (productAmount > 0 && productAmount < this._product.minOrder) {
         productAmount = this._product.minOrder
         this._product.amount = productAmount

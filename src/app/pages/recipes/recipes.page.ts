@@ -1,6 +1,5 @@
 import { TranslateService } from '@ngx-translate/core'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { UserService } from 'src/app/core/user.service'
 import { IRecipe, RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
 import { NavController } from '@ionic/angular'
 import { CartService } from 'src/app/core/cart.service'
@@ -54,7 +53,7 @@ export class RecipesPage implements OnInit {
       )
 
       // if (result.length === 0) {
-      //   this.logger.error('no rows!')
+      //   logger.error('no rows!')
       // }
 
       if (result.length <= 49) {

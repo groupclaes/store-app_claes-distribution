@@ -3,13 +3,18 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { ActivatedRoute } from '@angular/router'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { ErrorAlertsService } from 'src/app/core/error-alerts.service'
-import { DepartmentsRepositoryService, IDepartmentDetailT } from 'src/app/core/repositories/departments.repository.service'
+import {
+  DepartmentsRepositoryService,
+  IDepartmentDetailT
+} from 'src/app/core/repositories/departments.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
+import { LoggerService } from '../../../@shared/logging/log.service'
+
+const logger = new LoggerService('DepartmentDetailPage')
 
 @Component({
   selector: 'app-department-detail',
@@ -31,13 +36,12 @@ export class DepartmentDetailPage implements OnInit {
     private user: UserService,
     private departmentsRepository: DepartmentsRepositoryService,
     private alertCtrl: AlertController,
-    private logger: LoggingProvider,
     private error: ErrorAlertsService,
     private location: Location,
     public network: NetworkService
   ) {
-    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
-      this.displayThumbnail = displayThumbnail
+    settings.showThumbnail.then((value: boolean): void => {
+      this.displayThumbnail = value
       this.ref.markForCheck()
     })
     route.params.subscribe(params => {
@@ -55,7 +59,7 @@ export class DepartmentDetailPage implements OnInit {
     try {
       this._department = await this.departmentsRepository.getDetail(id, this.culture)
     } catch (err) {
-      this.logger.error('DepartmentDetailPage.load() error!', err, err.message, err.stack)
+      logger.error('DepartmentDetailPage.load() error!', err, err.message, err.stack)
     } finally {
       this.loading = false
       this.ref.markForCheck()
@@ -66,7 +70,7 @@ export class DepartmentDetailPage implements OnInit {
     try {
 
     } catch (err) {
-      this.logger.error('DepartmentDetailPage.modify() error', err)
+      logger.error('DepartmentDetailPage.modify() error', err)
     } finally {
 
     }
@@ -86,7 +90,7 @@ export class DepartmentDetailPage implements OnInit {
         }
       }
     } catch (err) {
-      this.logger.error('DepartmentDetailPage.delete() error', err)
+      logger.error('DepartmentDetailPage.delete() error', err)
       await this.error.alert(
         this.translate.instant('errors.department-detail.delete.title'),
         this.translate.instant('errors.department-detail.delete.message'),
@@ -108,7 +112,7 @@ export class DepartmentDetailPage implements OnInit {
         this.location.back()
       }
     } catch (err) {
-      this.logger.error('DepartmentDetailPage.delete() error', err)
+      logger.error('DepartmentDetailPage.delete() error', err)
       await this.error.alert(
         this.translate.instant('errors.department-detail.delete.title'),
         this.translate.instant('errors.department-detail.delete.message'),
@@ -162,7 +166,7 @@ export class DepartmentDetailPage implements OnInit {
       })
       await alert.present()
     } catch (err) {
-      this.logger.error('DepartmentDetailPage.showDeleteConfirmation() error', err)
+      logger.error('DepartmentDetailPage.showDeleteConfirmation() error', err)
     }
   }
 

@@ -37,6 +37,13 @@
       </ion-note>
     </ion-item>
     <ion-item>
+      <ion-label translate>pages.sync.documents.datasheets</ion-label>
+      <ion-spinner slot="end" *ngIf="datasheetCount === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="datasheetCount !== undefined">
+        {{ datasheetCount }}
+      </ion-note>
+    </ion-item>
+    <ion-item>
       <ion-label translate>pages.sync.documents.reports</ion-label>
       <ion-spinner slot="end" *ngIf="reportCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="reportCount !== undefined">

@@ -3,12 +3,12 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChil
 import { UserService } from 'src/app/core/user.service'
 import { CartService } from 'src/app/core/cart.service'
 import { NetworkService } from 'src/app/@shared/network.service'
-import { CustomersRepositoryService } from '../../core/repositories/customers.repository.service'
-import { BrowserService } from '../../core/browser.service'
+import { CustomersRepositoryService, IGetDatasheet } from '../../core/repositories/customers.repository.service'
 import { environment } from '../../../environments/environment'
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
 import { FileOpener, FileOpenerOptions } from '@capacitor-community/file-opener'
-import { Directory, Filesystem, GetUriResult, ProgressStatus } from '@capacitor/filesystem'
+import { Directory, DownloadFileResult, Filesystem, GetUriResult, ProgressStatus } from '@capacitor/filesystem'
+import { NavController } from '@ionic/angular'
 
 @Component({
   selector: 'app-datasheets',
@@ -26,13 +26,12 @@ export class DatasheetsPage implements OnInit {
   loading: boolean = true
   isDownloading: boolean = false
   progress: number = 0
-  buffer: number = 0
-  private _datsheets: IPCMObject[]
+  private _datasheets: IGetDatasheet[]
   private _query: string = ''
 
   constructor(
     private translate: TranslateService,
-    private browser: BrowserService,
+    private navCtrl: NavController,
     private ref: ChangeDetectorRef,
     private repo: CustomersRepositoryService,
     private cart: CartService,
@@ -52,17 +51,30 @@ export class DatasheetsPage implements OnInit {
   }
 
   async load(force?: boolean): Promise<void> {
-    if (this._datsheets && !force) {
+    if (this._datasheets && !force) {
       this.ref.markForCheck()
+      for (let datasheet of this._datasheets) {
+        try {
+          await Filesystem.stat({
+            path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+            directory: Directory.Cache
+          })
+          datasheet['available'] = true
+        } catch {
+          datasheet['available'] = false
+        } finally {
+          this.ref.markForCheck()
+        }
+      }
       return
-    } else if (!this._datsheets) {
-      this._datsheets = []
+    } else if (!this._datasheets) {
+      this._datasheets = []
       this.loading = true
       this.ref.markForCheck()
     }
 
     try {
-      this._datsheets = await this.repo.getDatasheets(
+      this._datasheets = await this.repo.getDatasheets(
         this.user.activeUser.id,
         this.user.activeUser.address,
         this.culture.split('-')[0],
@@ -71,10 +83,25 @@ export class DatasheetsPage implements OnInit {
     } catch (err) {
       console.error(err)
     } finally {
+      this.isDownloading = false
       this.loading = false
       if (force)
         this.virtualScroll.scrollToIndex(0)
       this.ref.markForCheck()
+
+      for (let datasheet of this._datasheets) {
+        try {
+          await Filesystem.stat({
+            path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+            directory: Directory.Cache
+          })
+          datasheet['available'] = true
+        } catch {
+          datasheet['available'] = false
+        } finally {
+          this.ref.markForCheck()
+        }
+      }
     }
   }
 
@@ -84,17 +111,56 @@ export class DatasheetsPage implements OnInit {
     })
   }
 
-  openDatasheet(guid: string): void {
-    this.browser.open(`${environment.pcm_url}/content/file/${guid}?show=true`, '_system', 'location=yes')
+  async openDatasheet(datasheet: IGetDatasheet): Promise<void> {
+    // check if file is available in cache
+    let uri: string
+    try {
+      const res: GetUriResult = await Filesystem.stat({
+        path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+        directory: Directory.Cache
+      })
+      uri = res.uri
+    } catch {
+      if (!this.network.online)
+        return this.network.noop()
+
+      datasheet['available'] = undefined
+      this.ref.markForCheck()
+      await Filesystem.downloadFile({
+        url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+        directory: Directory.Cache,
+        path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+        recursive: true
+      }).then((res: DownloadFileResult): string => uri = res.path)
+      this.ref.markForCheck()
+    } finally {
+      if (uri) {
+        datasheet['available'] = true
+        this.ref.markForCheck()
+        setTimeout((): void => {
+          FileOpener.open({
+            filePath: uri,
+            openWithDefault: true,
+            contentType: 'application/pdf'
+          })
+          // this.navCtrl.navigateForward(['datasheets', datasheet.guid], {
+          //   animated: true
+          // })
+        }, 80)
+      } else {
+        datasheet['available'] = false
+        this.ref.markForCheck()
+      }
+    }
   }
 
   async downloadAllDatasheets(): Promise<void> {
-    this.isDownloading = true
+    this.loading = true
     this.ref.markForCheck()
 
     // create key<value> object key is the guid and value is the array of itemnums linked to the datasheet
     let body: { [key: string]: string[] } = {}
-    for (const datasheet of this._datsheets) {
+    for (const datasheet of this._datasheets) {
       if (body[datasheet.guid])
         body[datasheet.guid].push(datasheet.itemnum)
       else
@@ -102,33 +168,35 @@ export class DatasheetsPage implements OnInit {
     }
 
     try {
-      const extra: string = this.user.userinfo.type === 2 ? `_${this.user.activeUser.id}-${this.user.activeUser.address}` : ''
-      const fn: string = `datasheets${extra}_${new Date().toISOString().substring(0, 10)}.zip`
+      const extra: string = this.currentCustomer ? `${this.currentCustomer}/` : ''
+      const extraQ: string = this._query.trim().length > 0 ? `${this._query.trim().toLocaleLowerCase()}_` : ''
+      const fn: string = `datasheets/${extra}${extraQ}${new Date().toISOString().substring(0, 10)}.zip`
 
       this.progress = 0
       this.ref.markForCheck()
 
       await Filesystem.addListener('progress', (progress: ProgressStatus): void => {
+        this.isDownloading = true
+        this.loading = false
         this.progress = progress.bytes / progress.contentLength
-        this.buffer = Math.min(this.progress + .1, 1)
         this.ref.markForCheck()
       })
-      this.buffer = .1
       await Filesystem.downloadFile({
         url: `${environment.pcm_url}/content/download`,
         data: body,
         headers: { 'content-type': 'application/json; charset=UTF-8' },
-        directory: Directory.Documents,
+        directory: Directory.Data,
         path: `${fn}`,
         recursive: true,
         method: 'POST',
         progress: true
       })
       this.progress = 1
+      this.loading = false
       this.ref.markForCheck()
 
       const uri: GetUriResult = await Filesystem.getUri({
-        directory: Directory.Documents,
+        directory: Directory.Data,
         path: `${fn}`
       })
       this.isDownloading = false
@@ -151,8 +219,8 @@ export class DatasheetsPage implements OnInit {
     }
   }
 
-  get datsheets(): IPCMObject[] {
-    return this._datsheets || []
+  get datasheets(): IGetDatasheet[] {
+    return this._datasheets || []
   }
 
   get culture(): string {
@@ -166,19 +234,12 @@ export class DatasheetsPage implements OnInit {
     return params
   }
 
-  get isAgent(): boolean {
-    return this.user.hasAgentAccess
-  }
+  get currentCustomer(): string {
+    if (this.user.hasAgentAccess)
+      return this.user.activeUser.addressName != null ? `${this.user.activeUser.address} ${this.user.activeUser.addressName}` : `${this.user.activeUser.id} ${this.user.activeUser.name}`
+    else if (this.user.multiUser)
+      return this.user.activeUser.addressName != null ? this.user.activeUser.addressName : this.user.activeUser.name
 
-  get internalUser(): boolean {
-    return this.user.userinfo.id > 0 && this.user.userinfo.id < 1000
+    return undefined
   }
-}
-
-export interface IPCMObject {
-  guid: string
-  name: string
-  itemnum: string
-  languages: string[]
-  objects: string[]
 }

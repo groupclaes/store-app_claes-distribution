@@ -3,7 +3,6 @@ import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { Directory, FileInfo, Filesystem, ReaddirResult } from '@capacitor/filesystem'
 import { AlertController, LoadingController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { DatabaseService } from 'src/app/core/database.service'
 import {
@@ -11,8 +10,10 @@ import {
 } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
 import { Store, SyncService } from 'src/app/core/sync.service'
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
+import { LoggerService } from '../../@shared/logging/log.service'
 
-const TASK_COUNT = 5
+const TASK_COUNT = 6
+const logger = new LoggerService('SyncService')
 
 @Component({
   selector: 'app-sync',
@@ -27,6 +28,7 @@ export class SyncPage implements OnInit {
   integrityChecksums: Array<Store> = []
 
   leafletCount: number = undefined
+  datasheetCount: number = undefined
   productCount: number = undefined
   imageCount: number = undefined
   cacheSize: number = undefined
@@ -40,7 +42,6 @@ export class SyncPage implements OnInit {
     private repo: DataIntegrityChecksumsRepositoryService,
     private loadingCtrl: LoadingController,
     private alertCtrl: AlertController,
-    private logger: LoggingProvider,
     private _db: DatabaseService,
     public network: NetworkService
   ) {
@@ -126,7 +127,7 @@ export class SyncPage implements OnInit {
       })
       await alert.present()
     } catch (err) {
-      this.logger.error('SyncPage.purgeThumbnails() error', err)
+      logger.error('SyncPage.purgeThumbnails() error', err)
     }
   }
 
@@ -138,6 +139,7 @@ export class SyncPage implements OnInit {
       this.imageCount = undefined
       this.cacheSize = undefined
       this.reportCount = undefined
+      this.datasheetCount = undefined
       this.loading = true
       this.isLoading = true
       this.ref.markForCheck()
@@ -145,6 +147,7 @@ export class SyncPage implements OnInit {
       const dataIntegrity: Store[] = await this.repo.get<Store>()
       this.lastSync = dataIntegrity.find((e: Store): boolean => e.dataTable === 'lastSync').dateChanged
       this.integrityChecksums = dataIntegrity.filter((e: Store): boolean => e.dataTable !== 'lastSync')
+      this.ref.markForCheck()
 
       await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<void> => {
         const result: DBSQLiteValues = await db.query('select count(*) as c from ' + (this.agent ? 'products' : 'currentExceptions'))
@@ -173,7 +176,7 @@ export class SyncPage implements OnInit {
 
       Filesystem.readdir({
         path: '',
-        directory: Directory.Documents
+        directory: Directory.Data
       })
         .then((result: ReaddirResult): void => {
           console.log(result.files)
@@ -195,9 +198,23 @@ export class SyncPage implements OnInit {
           this.reportCount = result
           this.ref.markForCheck()
         })
-        .catch((err): void => {
+        .catch((): void => {
           this.reportCount = 0
-          console.log(err, this.reportCount = 0, this.reportCount)
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
+
+      this.getCount('datasheets', Directory.Cache)
+        .then((result: number): void => {
+          this.datasheetCount = result
+          this.ref.markForCheck()
+        })
+        .catch((): void => {
+          this.datasheetCount = 0
           this.ref.markForCheck()
         })
         .finally((): void => {
@@ -221,7 +238,7 @@ export class SyncPage implements OnInit {
           this.ref.markForCheck()
         })
     } catch (err) {
-      this.logger.error('SyncPage.load() error', err)
+      logger.error('SyncPage.load() error', err)
     } finally {
       tasks++
       this.isLoading = !(tasks >= TASK_COUNT)
@@ -230,7 +247,7 @@ export class SyncPage implements OnInit {
     }
   }
 
-  private async getCount(path: string = '', directory: Directory = Directory.Documents): Promise<number> {
+  private async getCount(path: string = '', directory: Directory = Directory.Data): Promise<number> {
     try {
       const result: ReaddirResult = await Filesystem.readdir({ path, directory })
       const files: FileInfo[] = result.files.filter((e: FileInfo): boolean => e.type === 'file')

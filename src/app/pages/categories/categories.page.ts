@@ -40,7 +40,9 @@ export class CategoriesPage {
   }
 
   async loadCategories(parent?: number) {
-    if (this._categories || this.assortmentGroups) { return; }
+    if (this._categories || this.assortmentGroups) {
+      return
+    }
     this.loading = true
     this.ref.markForCheck()
 
@@ -48,13 +50,19 @@ export class CategoriesPage {
       this.loading = true
       this.ref.markForCheck()
 
-      if (parent) {
+      if (parent)
         this.currentCategory = await this.categoriesRepository.find(parent, this.culture)
-      } else {
+      else
         this.currentCategory = null
-      }
 
+      console.time('CategoriesPage.loadCategories()')
+      console.time('CategoriesPage.getAssortmentCounts()')
       this.assortmentGroups = await this.categoriesRepository.getAssortment(this.culture, parent)
+      this.categoriesRepository.getAssortmentCounts(this.assortmentGroups).then((): void => {
+        this.ref.markForCheck()
+        console.timeEnd('CategoriesPage.getAssortmentCounts()')
+      })
+      console.timeEnd('CategoriesPage.loadCategories()')
     } catch (err) {
       console.error(err)
     } finally {
@@ -99,6 +107,7 @@ export class CategoriesPage {
   get backButtonText(): string {
     return this.translate.instant('backButtonText')
   }
+
   get cartLink(): any[] {
     const params: any[] = ['/carts']
     if (this.cart.active) params.push(this.cart.active.id)

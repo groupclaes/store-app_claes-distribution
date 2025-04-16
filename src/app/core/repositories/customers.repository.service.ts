@@ -35,10 +35,9 @@ export class CustomersRepositoryService {
     })
   }
 
-  async getDatasheets(id: number, address: number, culture: string, searchQuery: string): Promise<any[]> {
-    // , [d].[name]
-    return this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<any[]> => {
-      let search: string = searchQuery.trim().length > 0 ? 'AND ([p].[itemnum] LIKE ? || \'%\') ' : ''
+  async getDatasheets(id: number, address: number, culture: string, searchQuery: string): Promise<IGetDatasheet[]> {
+    return this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IGetDatasheet[]> => {
+      let search: string = searchQuery.trim().length > 0 ? 'AND (([p].[itemnum] LIKE ? || \'%\') OR (LOWER([d].[name]) LIKE \'%\' || ? || \'%\'))' : ''
       const query: string = 'SELECT [p].[itemnum], [p].[nameNl] AS product_name, [d].[name], [f].[lastB], [d].[guid] ' +
         'FROM currentExceptions [c] ' +
         'INNER JOIN products [p] ON [p].[id] = [c].[productId] ' +
@@ -48,13 +47,15 @@ export class CustomersRepositoryService {
         'ORDER BY [f].[lastB] DESC '
 
       const params: any[] = [id, address, culture]
-      if (search.length > 0)
+      if (search.length > 0) {
         params.push(searchQuery.trim().toLocaleLowerCase())
+        params.push(searchQuery.trim().toLocaleLowerCase())
+      }
 
       console.debug(search, query, params)
       const result: DBSQLiteValues = await db.query(query, params)
 
-      return result.values as any[]
+      return result.values as IGetDatasheet[]
     })
   }
 
@@ -111,6 +112,14 @@ export class CustomersRepositoryService {
       return result.values as IAppDeliveryScheduleModel[]
     })
   }
+}
+
+export interface IGetDatasheet {
+  itemnum: string
+  product_name: string
+  name: string
+  lastB: Date
+  guid: string
 }
 
 export interface IContact {

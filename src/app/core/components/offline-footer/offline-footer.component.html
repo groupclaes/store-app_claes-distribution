@@ -9,3 +9,13 @@
     </ion-text>
   </ion-toolbar>
 </ion-footer>
+<ion-footer *ngIf="network.online && sync.busy" translucent="true">
+  <ion-toolbar color="light">
+    <ion-text style="display:flex;justify-content:center;flex-direction:row">
+      <div style="text-align: center;white-space: pre;">
+        <ion-spinner></ion-spinner>
+      </div>
+      <span>{{ sync.message || '' }}</span>
+    </ion-text>
+  </ion-toolbar>
+</ion-footer>

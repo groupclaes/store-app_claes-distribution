@@ -54,9 +54,9 @@
 <ion-content [fullscreen]="true" [scrollY]="false" color="light" (resize)="clampBuilder(320, 750, 0.375, 0.875)">
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" class="ion-content-scroll-host">
     <ion-list>
-      <ion-item tabbapble [routerLink]="[product.id]"
-                *cdkVirtualFor="let product of products; templateCacheSize: 0; let i = index, let isLast = last; trackBy: productById"
-                [color]="product.availableOn ? 'light' : undefined" [lines]="isLast ? 'none': 'normal'">
+      <ion-item [routerLink]="[product.id]" [color]="product.availableOn ? 'light' : undefined"
+                [lines]="isLast ? 'none': 'normal'"
+                *cdkVirtualFor="let product of products; templateCacheSize: 0; let i = index, let isLast = last; trackBy: productById">
         <ion-thumbnail *ngIf="displayThumbnail" slot="start">
           <img class="product-image" [src]="product.url | secure | async" [title]="product.name" [alt]="product.name"
                loading="lazy" [style]="'background-color:' + product.color" width="48" height="48">
@@ -98,7 +98,7 @@
 
   <div *ngIf="(!products.length && loading) || loading || loadingAdditional">
     <div style="text-align:center">
-      <ion-spinner mode="ios"></ion-spinner>
+      <ion-spinner></ion-spinner>
     </div>
   </div>
 </ion-content>

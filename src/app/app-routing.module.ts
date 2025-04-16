@@ -27,10 +27,10 @@ const routes: Routes = [
     redirectTo: 'home',
     pathMatch: 'full'
   },
-  {
-    path: 'settings',
-    loadChildren: () => import('./pages/settings/settings.module').then(m => m.SettingsPageModule)
-  },
+  // {
+  //   path: 'settings',
+  //   loadChildren: () => import('./pages/settings/settings.module').then(m => m.SettingsPageModule)
+  // },
   {
     path: 'reports',
     loadChildren: () => import('./pages/reports/reports.module').then(m => m.ReportsPageModule)
@@ -56,7 +56,7 @@ const routes: Routes = [
     loadChildren: () => import('./pages/datasheets/datasheets.module').then(m => m.DatashetsPageModule)
   },
   {
-    path: 'datasheets/:guid',
+    path: 'datasheets/:uuid',
     loadChildren: () => import('./pages/datasheets/datasheet-detail/datasheet-detail.module').then(m => m.DatasheetDetailPageModule)
   },
   {

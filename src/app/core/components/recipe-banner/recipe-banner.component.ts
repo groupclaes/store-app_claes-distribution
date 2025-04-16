@@ -1,24 +1,33 @@
-/* eslint-disable guard-for-in */
 import { HttpClient } from '@angular/common/http'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component,
-  ElementRef, HostListener, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  HostListener,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges
+} from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'
-import { IonicSafeString } from '@ionic/angular'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
+import { LoggerService } from 'src/app/@shared/logging/log.service'
+
+const logger = new LoggerService('RecipeBannerComponent')
 
 @Component({
   selector: 'gro-recipe-banner',
   templateUrl: './recipe-banner.component.html',
-  styleUrls: [ './recipe-banner.component.scss' ],
+  styleUrls: ['./recipe-banner.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RecipeBannerComponent implements OnInit, OnChanges {
-  @Input() company = 'gro'
-  @Input() culture = 'nl'
-  @Input() page = 'homepage'
+  @Input() company: string = 'gro'
+  @Input() culture: string = 'nl'
+  @Input() page: string = 'homepage'
 
-  currentIndex = 0
-  timeout = 3000
+  currentIndex: number = 0
+  timeout: number = 3000
   resp: IGetWebContentBannerResponse | null = null
   slides: any[] = []
 
@@ -28,9 +37,9 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
     private ref: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
     private http: HttpClient,
-    private el: ElementRef,
-    private logger: LoggingProvider
-  ) { }
+    private el: ElementRef
+  ) {
+  }
 
 
   get description(): string {
@@ -68,7 +77,7 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
       }
 
       this.ref.markForCheck()
-    }, err => {
+    }, (): void => {
       // this will err 404 if no banners are avail
     })
   }
@@ -88,7 +97,7 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
 
   buildArray() {
     this.slides = []
-    this.logger.log('Build triggered')
+    logger.debug('Build triggered')
     if (this.resp?.banners) {
       for (const bannerEntry in this.resp.banners) {
         const banner = this.resp.banners[bannerEntry]
@@ -124,7 +133,7 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
     this.ref.markForCheck()
 
     this.timeout = window.setTimeout(() => {
-      this.logger.log('Timeout triggered, sliding rotation....')
+      logger.debug('Timeout triggered, sliding rotation....')
       if (this.currentIndex < this.slideCount - 1) {
         this.currentIndex++
       } else {
@@ -138,7 +147,7 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
   @HostListener('window:resize', ['$event'])
   onResize() {
     const current = this.currentSize
-    this.logger.log('Resize triggered, checking size')
+    logger.debug('Resize triggered, checking size')
 
     if (window.innerWidth < 760 && this.currentSize !== 'small') {
       this.currentSize = 'small'
@@ -147,7 +156,7 @@ export class RecipeBannerComponent implements OnInit, OnChanges {
     } else if (window.innerWidth >= 1140 && this.currentSize !== 'large') {
       this.currentSize = 'large'
     }
-    this.logger.log('Current', current, 'new', this.currentSize)
+    logger.debug('Current', current, 'new', this.currentSize)
 
     if (current !== this.currentSize) {
       // build slides array

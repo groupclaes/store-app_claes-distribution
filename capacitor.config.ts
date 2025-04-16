@@ -5,7 +5,7 @@ const config: CapacitorElectronConfig = {
   appName: 'Claes Store',
   webDir: 'www',
   server: {
-    hostname: 'shop.claes-distribution.com'
+    hostname: 'shop.claes-distribution.be'
   },
   bundledWebRuntime: false,
   plugins: {
@@ -33,6 +33,10 @@ const config: CapacitorElectronConfig = {
     // Custom protocol to be used with deeplinking for your app.
     deepLinkingCustomProtocol: 'claes-storeapp'
   }
+}
+
+if (process.argv[3] === 'android') {
+  config['server']['hostname'] = 'shop.claes-distribution.com'
 }
 
 export default config

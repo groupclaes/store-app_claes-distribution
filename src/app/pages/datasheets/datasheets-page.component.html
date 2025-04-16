@@ -15,20 +15,15 @@
                    [placeholder]="'searchInput' | translate" (ionInput)="filter($event)">
     </ion-searchbar>
     <ion-progress-bar type="indeterminate" *ngIf="loading"></ion-progress-bar>
-    <ion-progress-bar [value]="progress" *ngIf=" isDownloading"></ion-progress-bar>
+    <ion-progress-bar [value]="progress" *ngIf="isDownloading"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" color="light">
-  <cdk-virtual-scroll-viewport style="height: 100%; width: 100%" minBufferPx="1350" maxBufferPx="2350" itemSize="75"
-                               class="ion-content-scroll-host">
-    <ion-list inset="true" *ngIf="!loading">
-      <ion-item button *cdkVirtualFor="let datasheet of datsheets" tappable
-                (click)="network.online ? openDatasheet(datasheet.guid) : network.noop()">
-        <!-- [routerLink]="[datasheet.guid]" -->
-        <!--        <ion-note style="font-family: Monaco, 'Lucida Console', monospace" slot="start">-->
-        <!--          {{ datasheet.itemnum }}-->
-        <!--        </ion-note>-->
+  <cdk-virtual-scroll-viewport style="height: 100%; width: 100%" minBufferPx="1050" maxBufferPx="2350" itemSize="75">
+    <ion-list inset="true" *ngIf="!loading || datasheets.length > 0">
+      <ion-item button *cdkVirtualFor="let datasheet of datasheets" tappable
+                (click)="openDatasheet(datasheet)">
         <ion-label>
           <strong>
             {{ datasheet.itemnum }}
@@ -42,27 +37,23 @@
             {{ 'lastPurchase' | translate }}: {{ datasheet.lastB | date:'dd/MM/YYYY' }}
           </ion-note>
         </ion-label>
-        <!--        <ion-note slot="end">-->
-        <!--          {{ datasheet.guid }}-->
-        <!--        </ion-note>-->
+<!--        <ion-text color="success" slot="end" *ngIf="datasheet.available === true">-->
+        <!--          <i class="fal fa-fw fa-check"></i>-->
+        <!--        </ion-text>-->
+        <ion-text color="danger" slot="end" *ngIf="datasheet.available === false">
+          <i class="fal fa-fw fa-cloud-download"></i>
+        </ion-text>
+        <ion-spinner slot="end" *ngIf="datasheet.available === undefined">
+          <i class="fal fa-fw fa-cloud-download"></i>
+        </ion-spinner>
+
       </ion-item>
     </ion-list>
   </cdk-virtual-scroll-viewport>
   <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-    <ion-fab-button (click)="downloadAllDatasheets()" [disabled]="isDownloading"><!-- [disabled]="!isAgent && !internalUser" -->
+    <ion-fab-button (click)="downloadAllDatasheets()" [disabled]="isDownloading || network.offline">
       <i class="fal fa-fw fa-lg fa-download"></i>
     </ion-fab-button>
-    <!--    <ion-fab-list side="top">-->
-    <!--      <ion-fab-button>-->
-    <!--        <ion-icon name="document"></ion-icon>-->
-    <!--      </ion-fab-button>-->
-    <!--      <ion-fab-button>-->
-    <!--        <ion-icon name="color-palette"></ion-icon>-->
-    <!--      </ion-fab-button>-->
-    <!--      <ion-fab-button>-->
-    <!--        <ion-icon name="globe"></ion-icon>-->
-    <!--      </ion-fab-button>-->
-    <!--    </ion-fab-list>-->
   </ion-fab>
 </ion-content>
 

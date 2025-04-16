@@ -1,106 +1,111 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core'
-import { BehaviorSubject, Observable } from 'rxjs'
-import { LoggingProvider } from '../@shared/logging/log.service'
-import { StorageProvider } from './storage-provider.service'
+import { environment } from 'src/environments/environment'
+import { Plugins } from '@capacitor/core'
+import { LoggerService } from '../@shared/logging/log.service'
+import { Platform } from '@ionic/angular'
+
+const { CapacitorReadNativeSetting } = Plugins
+
+const logger = new LoggerService('SettingsService')
+
+const DEFAULT_VALUES = {
+  DEFAULT_PAGE: '/categories',
+  SHOW_THUMBNAIL: true,
+  // Synchronisation
+  DATA_AUTOMATIC_DOWNLOADS: true,
+  SYNC_INTERVAL: '43200000',
+  SYNC_LEAFLETS: true,
+  SYNC_DATASHEETS: false,
+  // DEFAULT FILTERS
+  DEFAULT_FILTER_NEW: false,
+  DEFAULT_FILTER_PROMO: false,
+  DEFAULT_FILTER_FAVORITE: false,
+  DEFAULT_FILTER_ORDER: true
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class SettingsService {
-  private _syncInterval: BehaviorSubject<number>
-  private _displayDefaultPage: BehaviorSubject<string>
-  private _displayDefaultFilters: BehaviorSubject<$TSFixMe>
-  private _displayThumbnail: BehaviorSubject<boolean>
+  // automate_data_refresh: boolean
 
-  constructor(
-    private storage: StorageProvider,
-    private logger: LoggingProvider) {
-    this.logger.log('SettingsService -- constructor()')
+  constructor(platform: Platform) {
+    // get automation values
+    this.refresh().then()
 
-    this._syncInterval = new BehaviorSubject(43200000); // 12hours
-    this._displayDefaultPage = new BehaviorSubject('/categories')
-    this._displayDefaultFilters = new BehaviorSubject({
-      new: false,
-      promo: false,
-      favorite: false,
-      order: true
+    // override settings in test / desktop
+    if (platform.is('desktop') || !environment.production) {
+      // DEFAULT_VALUES.DEFAULT_FILTER_PROMO = true
+      DEFAULT_VALUES.DEFAULT_FILTER_FAVORITE = true
+      DEFAULT_VALUES.DEFAULT_PAGE = '/products'
+    }
+  }
+
+  async refresh(): Promise<void> {
+    // get automation values
+    // let values = await this.automation()
+    // this.automate_data_refresh = values.automate_data_refresh
+  }
+
+  get syncInterval(): Promise<string> {
+    return this.readFromSettings<string>('sync_interval', DEFAULT_VALUES.SYNC_INTERVAL)
+  }
+
+  get showThumbnail(): Promise<boolean> {
+    return this.readFromSettings('show_thumbnail', DEFAULT_VALUES.SHOW_THUMBNAIL)
+  }
+
+  get defaultPage(): Promise<string> {
+    return this.readFromSettings<string>('default_page', DEFAULT_VALUES.DEFAULT_PAGE)
+  }
+
+  async defaultFilters(): Promise<any> {
+    let filter_new: boolean = await this.readFromSettings<boolean>('default_filter_new', DEFAULT_VALUES.DEFAULT_FILTER_NEW)
+    let filter_promo: boolean = await this.readFromSettings<boolean>('default_filter_promo', DEFAULT_VALUES.DEFAULT_FILTER_PROMO)
+    let filter_favorite: boolean = await this.readFromSettings<boolean>('default_filter_favorite', DEFAULT_VALUES.DEFAULT_FILTER_FAVORITE)
+    let filter_order: boolean = await this.readFromSettings<boolean>('default_filter_order', DEFAULT_VALUES.DEFAULT_FILTER_ORDER)
+
+    logger.notice('automate_values()', {
+      filter_new,
+      filter_promo,
+      filter_favorite,
+      filter_order
     })
-    this._displayThumbnail = new BehaviorSubject(true)
 
-    this.init()
-  }
-
-
-
-  get SyncInterval(): Observable<number> {
-    return this._syncInterval.asObservable()
-  }
-
-  get DisplayDefaultPage(): Observable<string> {
-    return this._displayDefaultPage.asObservable()
-  }
-
-  get DisplayDefaultFilters(): Observable<$TSFixMe> {
-    return this._displayDefaultFilters.asObservable()
-  }
-
-  get DisplayThumbnail(): Observable<boolean> {
-    return this._displayThumbnail.asObservable()
-  }
-
-  init() {
-    const interval: number = this.storage.get('app-syncinterval')
-    if (interval !== null) {
-      this._syncInterval.next(interval)
-    } else {
-      this.storage.set('app-syncinterval', 43200000)
-    }
-
-    const displayDefaultPage: string = this.storage.get('app-displaydefaultpage')
-    if (displayDefaultPage) {
-      this._displayDefaultPage.next(displayDefaultPage)
-    } else {
-      this.storage.set('app-displaydefaultpage', '/categories')
-    }
-
-    const displayDefaultFilters: $TSFixMe = this.storage.get('app-displaydefaultfilters')
-    if (displayDefaultFilters) {
-      this._displayDefaultFilters.next(displayDefaultFilters)
-    } else {
-      this.storage.set('app-displaydefaultfilters', {
-        new: false,
-        promo: false,
-        favorite: false,
-        order: true
-      })
-    }
-
-    const displayThumbnail: boolean = this.storage.get('app-displaythumbnail')
-    if (displayThumbnail || displayThumbnail === false) {
-      this._displayThumbnail.next(displayThumbnail)
-    } else {
-      this.storage.set('app-displaythumbnail', true)
+    return {
+      filter_new,
+      filter_promo,
+      filter_favorite,
+      filter_order
     }
   }
 
-  setSyncInterval(val: number) {
-    this._syncInterval.next(val)
-    this.storage.set('app-syncinterval', val)
+  async getSyncValues(): Promise<ISyncSettings> {
+    let interval: string = await this.readFromSettings<string>('sync_interval', DEFAULT_VALUES.SYNC_INTERVAL)
+    let leaflets: boolean = await this.readFromSettings<boolean>('sync_leaflets', DEFAULT_VALUES.SYNC_LEAFLETS)
+    let datasheets: boolean = await this.readFromSettings<boolean>('sync_datasheets', DEFAULT_VALUES.SYNC_DATASHEETS)
+
+    logger.notice('sync_values()', {
+      interval: +interval,
+      leaflets,
+      datasheets
+    })
+
+    return {
+      interval: +interval,
+      leaflets,
+      datasheets
+    }
   }
 
-  setDefaultPage(val: string) {
-    this._displayDefaultPage.next(val)
-    this.storage.set('app-displaydefaultpage', val)
+  async readFromSettings<T>(key: string, default_value: T): Promise<T> {
+    return CapacitorReadNativeSetting?.read({ key })
+      .then((r: { value: T }) => r.value as T) ?? Promise.resolve(default_value)
   }
+}
 
-  setDefaultFilters(val: $TSFixMe) {
-    this._displayDefaultFilters.next(val)
-    this.storage.set('app-displaydefaultfilters', val)
-  }
-
-  setDisplayThumbnail(val: boolean) {
-    this._displayThumbnail.next(val)
-    this.storage.set('app-displaythumbnail', val)
-  }
+export interface ISyncSettings {
+  interval: number
+  leaflets: boolean
+  datasheets: boolean
 }

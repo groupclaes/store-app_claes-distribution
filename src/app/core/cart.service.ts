@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from '../@shared/logging/log.service'
 import { ApiService } from './api.service'
 import { CartsRepositoryService, ICartDetail } from './repositories/carts.repository.service'
 import { AppCredential, Customer } from './user.service'
@@ -8,6 +7,9 @@ import { CustomersRepositoryService } from './repositories/customers.repository.
 import { firstValueFrom } from 'rxjs'
 import { environment } from 'src/environments/environment'
 import { Queue } from './queue'
+import { LoggerService } from '../@shared/logging/log.service'
+
+const logger = new LoggerService('CartService')
 
 @Injectable({
   providedIn: 'root'
@@ -23,23 +25,23 @@ export class CartService {
     public api: ApiService,
     private repo: CartsRepositoryService,
     private customerRepo: CustomersRepositoryService,
-    private logger: LoggingProvider,
     private translate: TranslateService
-  ) { }
+  ) {
+  }
 
   async init(credential: AppCredential, userId: number) {
-    this.logger.debug('CartService.init() -- start', userId)
+    logger.debug('init() -- start', userId)
 
     try {
-      this.logger.debug('CartService.init() -- verifyDb')
+      logger.debug('init() -- verifyDb')
       await this.verifyDb()
-      this.logger.debug('CartService.init() -- loadCarts')
+      logger.debug('init() -- loadCarts')
       await this.loadCarts()
     } catch (err) {
-      this.logger.error('CartService.init() error', err)
+      logger.error('init() error', err)
     } finally {
       this._credential = credential
-      this.logger.debug('CartService.init() -- end')
+      logger.debug('init() -- end')
     }
   }
 
@@ -48,17 +50,17 @@ export class CartService {
   }
 
   async loadCarts() {
-    this.logger.debug('CartService.loadCarts() -- start')
+    logger.debug('loadCarts() -- start')
     this._carts = await this.repo.loadUnsent(this.culture)
-    this.logger.debug(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
-    this.logger.debug('CartService.loadCarts() -- end')
+    logger.debug(`CartService.loadCarts() -- there are ${this._carts.length} rows in carts!`)
+    logger.debug('loadCarts() -- end')
   }
 
   async getHistoryCarts() {
-    this.logger.log('CartService.loadCarts() -- start')
+    logger.debug('loadCarts() -- start')
     const carts = await this.repo.loadCarts(false, this.culture)
-    this.logger.log(`CartService.loadCarts() -- there are ${carts.length} rows in carts!`)
-    this.logger.log('CartService.loadCarts() -- end')
+    logger.debug(`CartService.loadCarts() -- there are ${carts.length} rows in carts!`)
+    logger.debug('loadCarts() -- end')
 
     return carts
   }
@@ -66,14 +68,14 @@ export class CartService {
   async setProduct(product_id: number, amount: number, customer: number, address: number, credential?: AppCredential, cart_id?: number): Promise<void> {
     if (credential)
       this._credential = credential
-    this.logger.log('CartService.setProduct() -- ', product_id, amount, cart_id)
+    logger.debug('setProduct() -- ', product_id, amount, cart_id)
 
     if (cart_id) {
       const cart = this._carts.find(e => e.id === cart_id)
-      this.logger.log('setProduct() -- isValidCart')
+      logger.debug('setProduct() -- isValidCart')
       this.isValidCart(cart)
 
-      this.logger.log('setProduct() -- enqueue')
+      logger.debug('setProduct() -- enqueue')
       this._update_queue.enqueue({
         type: 'update',
         id: cart.id,
@@ -102,18 +104,18 @@ export class CartService {
       })
     }
 
-    this.logger.log('setProduct() -- complete_queue')
+    logger.debug('setProduct() -- complete_queue')
     await this.complete_queue()
   }
 
   async updateActive(customer: number, address: number) {
-    this.logger.log('CartService.updateActive() -- start', customer, address)
+    logger.debug('updateActive() -- start', customer, address)
 
     if (this.active && this.active.customer === customer && this.active.address === address && this.active.send === false) {
-      this.logger.log('CartService.updateActive() -- case 1', 'do nothing')
+      logger.debug('updateActive() -- case 1', 'do nothing')
     } else if (this._carts.some(e => e.customer === customer && e.address === address && e.send === false)) {
       // there is a cart for the user
-      this.logger.log('CartService.updateActive() -- case 2', 'loop trough')
+      logger.debug('updateActive() -- case 2', 'loop trough')
       for (const cart of this._carts) {
         cart.active = false
       }
@@ -122,17 +124,17 @@ export class CartService {
         myCart.active = true
         await this.repo.changeActive(myCart.id)
       } else {
-        this.logger.log('CartService.updateActive() -- case 2', 'huh ?')
+        logger.debug('updateActive() -- case 2', 'huh ?')
       }
     } else if (!this.active && this._carts.length === 0) {
       // do nothing
-      this.logger.log('CartService.updateActive() -- case 3', 'do nothing')
+      logger.debug('updateActive() -- case 3', 'do nothing')
     } else {
-      this.logger.log('CartService.updateActive() -- case 4', 'set all inactive')
+      logger.debug('updateActive() -- case 4', 'set all inactive')
       this._carts.forEach(e => e.active = false)
       await this.repo.changeActive()
     }
-    this.logger.log('CartService.updateActive() -- end')
+    logger.debug('updateActive() -- end')
   }
 
   deleteCart(cart: ICartDetail): Promise<boolean> {
@@ -150,7 +152,7 @@ export class CartService {
           credentials: this._credential,
           order: cart
         }))
-        this.logger.debug('Sent cart to backend')
+        logger.debug('Sent cart to backend')
       } else {
         console.error('\n\nMocking cart send, not actually sending!\n\n')
         response = {
@@ -158,12 +160,12 @@ export class CartService {
         }
       }
     } catch (err) {
-      this.logger.error('CartService.sendCart() catch error', JSON.stringify(err))
+      logger.error('sendCart() catch error', JSON.stringify(err))
     } finally {
       if (response && response.result === true) {
         this.repo.removeAllActive()
           .then(_ => this._carts.forEach(x => x.active = false))
-          .then(_ => this.logger.debug('Set all carts as inactive'))
+          .then(_ => logger.debug('Set all carts as inactive'))
         return await this.repo.updateSendOk(cart)
       } else {
         await this.repo.updateSendOk(cart, false)
@@ -173,7 +175,7 @@ export class CartService {
   }
 
   async create(customer: number, address: number, credential: AppCredential) {
-    this.logger.log('create() -- start')
+    logger.debug('create() -- start')
     await this.complete_queue()
     this._update_queue.enqueue({
       type: 'create',
@@ -181,9 +183,9 @@ export class CartService {
       address,
       credential
     })
-    this.logger.log('create() -- complete_queue')
+    logger.debug('create() -- complete_queue')
     await this.complete_queue()
-    this.logger.log('create() -- end')
+    logger.debug('create() -- end')
   }
 
   cancelSend(cart: ICartDetail): Promise<boolean> {
@@ -270,23 +272,23 @@ export class CartService {
   }
 
   private async complete_queue(): Promise<void> {
-    this.logger.debug('complete_queue() -- running', this._queue_running)
+    logger.debug('complete_queue() -- running', this._queue_running)
     if (this._queue_running)
       return new Promise<void>(r => {
-        const t = setInterval(() => {
-          if (this._queue_running = false) {
+        const t: number = window.setInterval(() => {
+          if (this._queue_running === false) {
             r()
             clearInterval(t)
           }
         }, 18)
       })
 
-    this.logger.debug('complete_queue() -- start', this._update_queue.size)
+    logger.debug('complete_queue() -- start', this._update_queue.size)
 
     try {
       this._queue_running = true
       while (this._update_queue.size > 0) {
-        this.logger.debug('complete_queue() -- while', this._update_queue.size)
+        logger.debug('complete_queue() -- while', this._update_queue.size)
         const task = this._update_queue.dequeue()
         this._credential = task.credential
 
@@ -304,13 +306,13 @@ export class CartService {
         }
 
         if (this._update_queue.size === 0)
-          continue
+          break
       }
     } catch (err) {
 
     } finally {
       this._queue_running = false
-      this.logger.debug('complete_queue() -- end')
+      logger.debug('complete_queue() -- end')
     }
   }
 
@@ -320,8 +322,7 @@ export class CartService {
   }
 
   get newId(): number {
-    const newNum = Math.floor(Math.random() * (2147483647 - 0)) + 0
-    return newNum
+    return Math.floor(Math.random() * 2147483647)
   }
 
   get culture(): string {

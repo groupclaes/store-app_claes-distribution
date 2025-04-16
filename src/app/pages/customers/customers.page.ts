@@ -1,4 +1,3 @@
-import { firstValueFrom } from 'rxjs'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
 import { AlertController, LoadingController, NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
@@ -8,8 +7,10 @@ import { SettingsService } from 'src/app/core/settings.service'
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 import { SyncService } from 'src/app/core/sync.service'
 import { ActivatedRoute } from '@angular/router'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('CustomersPage')
 
 @Component({
   selector: 'app-customers',
@@ -36,7 +37,6 @@ export class CustomersPage {
               private translate: TranslateService,
               private sync: SyncService,
               private route: ActivatedRoute,
-              private logger: LoggingProvider,
               private cart: CartService) {
   }
 
@@ -81,7 +81,7 @@ export class CustomersPage {
         customer.fostplus = customer.fostplus === 1
       }
     }
-    this.logger.debug('Received customers', customers.length)
+    logger.debug('Received customers', customers.length)
 
     this._customers = customers
     this.virtualScroll.scrollToIndex(0)
@@ -175,13 +175,13 @@ export class CustomersPage {
     if (!skip_prepare) {
       await this.sync.prepareCurrentExceptions(customer)
       if (this.user.userinfo.type === 3) { // || this.user.userinfo.type === 2
-        this.logger.debug('Type 3 -- syncing prices and favourites', customer)
+        logger.debug('Type 3 -- syncing prices and favourites', customer)
         await this.sync.syncPrices(this.user.userinfo.userId, 'all', true, customer.id, customer.addressId)
         await this.sync.syncFavorites(this.user.userinfo.userId, 'all', true, customer.id, customer.addressId)
       }
     }
 
-    const newRoot = await firstValueFrom(this.settings.DisplayDefaultPage)
+    const newRoot: string = await this.settings.defaultPage
     await this._loading.dismiss()
     this.ref.markForCheck()
 

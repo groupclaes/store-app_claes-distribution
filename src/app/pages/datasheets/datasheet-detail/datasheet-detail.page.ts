@@ -1,104 +1,97 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
-import { ActivatedRoute } from '@angular/router'
-import { AlertController } from '@ionic/angular'
+import { ActivatedRoute, Params } from '@angular/router'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
-import { ApiService } from 'src/app/core/api.service'
-import { BrowserService } from 'src/app/core/browser.service'
-import { RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
-import { SettingsService } from 'src/app/core/settings.service'
-import { UserService } from 'src/app/core/user.service'
+import { Directory, Filesystem, GetUriResult, ReadFileResult } from '@capacitor/filesystem'
+import { Share, ShareResult } from '@capacitor/share'
+import { IPCMAttachmentEntry } from '../../../core/repositories/products.repository.service'
+import { PcmRepositoryService } from '../../../core/repositories/pcm.repository'
 
 @Component({
   selector: 'app-datasheet-detail',
   templateUrl: './datasheet-detail.page.html',
-  // styleUrls: ['./recipe-detail.page.scss'],
+  styles: ['pdf-viewer {\n' +
+  '    display: block;\n' +
+  '    height: 100%;\n' +
+  '    overflow-y: auto;\n' +
+  '  }'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DatasheetDetailPage implements OnInit {
-  loading = true
-  private _recipe: $TSFixMe
-  displayThumbnail: boolean
+  public fileUrl: string = undefined
+  public loading: boolean = true
+  public culture: string = undefined
+  public uuid?: string
+  public datasheet?: IPCMAttachmentEntry
 
   constructor(
     private translate: TranslateService,
     private ref: ChangeDetectorRef,
-    private user: UserService,
-    private settings: SettingsService,
-    private recipesRepository: RecipesRepositoryService,
-    private logger: LoggingProvider,
-    private alertCtrl: AlertController,
-    private api: ApiService,
+    private repo: PcmRepositoryService,
     route: ActivatedRoute,
-    private browser: BrowserService,
     public network: NetworkService
   ) {
-    this.settings.DisplayThumbnail.subscribe((displayThumbnail: boolean) => {
-      this.displayThumbnail = displayThumbnail
+    route.params.subscribe(async (params: Params): Promise<void> => {
+      this.uuid = params.uuid
+      this.load().then((): void => undefined)
     })
-    route.params.subscribe(params => {
-      this.load(params['guid'])
-    })
-    this.network.connected.subscribe(() => this.ref.markForCheck())
+    this.network.connected.subscribe((): void => this.ref.markForCheck())
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
+    this.culture = this.translate.currentLang.split('-')[0]
   }
 
-  async load(guid: string) {
+  async load(): Promise<void> {
+    if (!this.uuid)
+      return
+
+    this.loading = true
+    this.fileUrl = undefined
+
     try {
-      this.loading = true
-      this.ref.markForCheck()
+      this.datasheet = await this.repo.getDatasheet(this.uuid)
 
-      this._recipe = await this.recipesRepository.getDetail(guid, this.culture)
-    } catch (err) {
-      this.logger.error('Error loading recipe!', err)
-    } finally {
-      this.loading = false
-      this.ref.markForCheck()
-    }
-  }
+      const result: ReadFileResult = await Filesystem.readFile({
+        path: `datasheets/${this.datasheet.guid}/${this.datasheet.name}`,
+        directory: Directory.Cache
+      })
 
-  open() {
-    this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
-  }
-
-  async mail() {
-    try {
-      // create loader in future versions
-      const req = await this.api.post(`app/recipes/mail/${this.recipe.guid}`, this.user.credential, {
-        customer: this.user.activeUser.id,
-        address: this.user.activeUser.address,
-        message: '',
-        culture: this.culture
-      }).toPromise()
-      if (req) {
-        const alert = await this.alertCtrl.create({
-          header: this.translate.instant('recipeMailSend'),
-          message: this.translate.instant('recipeMailMessageSend')
-        })
-        alert.present()
+      if (typeof result.data === 'string') {
+        this.fileUrl = 'data:application/pdf;base64,' + result.data
+      } else {
+        const reader = new FileReader()
+        reader.onload = (): void => {
+          if (typeof reader.result === 'string') {
+            this.fileUrl = reader.result
+            this.ref.markForCheck()
+          }
+        }
+        reader.readAsDataURL(result.data)
       }
     } catch (err) {
-      const alert = await this.alertCtrl.create({
-        header: this.translate.instant('recipeMailError'),
-        message: this.translate.instant('recipeMailMessageError')
-      })
-      alert.present()
+      console.error(err)
     } finally {
-      // dismiss loader in future versions
+      this.ref.markForCheck()
     }
   }
 
-  get recipe() {
-    if (this._recipe)
-      return this._recipe
-    return {}
+  finish(): void {
+    this.loading = false
+    this.ref.markForCheck()
   }
 
-  get culture(): string {
-    return this.translate.currentLang
+  async share(): Promise<ShareResult> {
+    const result: GetUriResult = await Filesystem.getUri({
+      path: `datasheets/${this.datasheet.guid}/${this.datasheet.name}`,
+      directory: Directory.Cache
+    })
+
+    return Share.share({
+      title: this.datasheet.name,
+      text: 'Datasheet: ' + this.datasheet.name,
+      url: result.uri
+    })
   }
 
   get backButtonText(): string {

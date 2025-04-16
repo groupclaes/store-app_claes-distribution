@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core'
 import { TranslateService } from '@ngx-translate/core'
 import { share } from 'rxjs/operators'
-import { LoggingProvider } from '../@shared/logging/log.service'
+import { LoggerService } from '../@shared/logging/log.service'
 import { ApiService } from './api.service'
 import { StorageProvider } from './storage-provider.service'
 import { SyncService } from './sync.service'
+import { Observable } from 'rxjs'
+
+const logger = new LoggerService('StorageProvider')
 
 @Injectable({
   providedIn: 'root'
@@ -17,28 +20,30 @@ export class UserService {
   constructor(
     private translate: TranslateService,
     private storage: StorageProvider,
-    private logger: LoggingProvider,
     private api: ApiService,
     private sync: SyncService
   ) {
-    this.logger.log('User -- constructor()')
+    logger.debug('constructor()')
   }
 
-  login(credential: AppCredential) {
-    let request = this.api.postLogin(credential).pipe(share())
+  login(credential: AppCredential): Observable<ServerCustomer> {
+    let request: Observable<ServerCustomer> = this.api.postLogin(credential).pipe(share())
 
-    request.subscribe((res: ServerCustomer) => {
-      if (res) {
-        // this.statistics.login(res.Id)
-        this._loggedIn(res, credential)
-      }
-    }, err => {
-      this.logger.error('signup ERROR', err)
-      const userResponse = this.storage.get<ServerCustomer>('user')
-      const storedCredential = this.storage.get<AppCredential>('credential')
-      if (storedCredential && userResponse) {
-        if (storedCredential.username == credential.username && storedCredential.password == credential.password) {
-          this._loggedIn(userResponse, credential)
+    request.subscribe({
+      next: (res: ServerCustomer): void => {
+        if (res) {
+          // this.statistics.login(res.Id)
+          this._loggedIn(res, credential)
+        }
+      },
+      error: (err: any): void => {
+        logger.error('signup ERROR', err)
+        const userResponse = this.storage.get<ServerCustomer>('user')
+        const storedCredential = this.storage.get<AppCredential>('credential')
+        if (storedCredential && userResponse) {
+          if (storedCredential.username == credential.username && storedCredential.password == credential.password) {
+            this._loggedIn(userResponse, credential)
+          }
         }
       }
     })
@@ -46,7 +51,7 @@ export class UserService {
     return request
   }
 
-  login_guest() {
+  login_guest(): void {
     this._loggedIn(
       {
         CustomerId: 0,
@@ -70,30 +75,27 @@ export class UserService {
   signup(credential: AppRegistrationCredential) {
     let request = this.api.post('appuser/signOn', credential).pipe(share())
 
-    request.subscribe((res: any) => {
-      if (res) {
-        this._loggedIn(res, credential)
+    request.subscribe({
+      next: (res: ServerCustomer): void => {
+        if (res) this._loggedIn(res, credential)
+      },
+      error: (err: any): void => {
+        logger.error('signup ERROR', err)
       }
-    }, err => {
-      this.logger.error('signup ERROR', err)
     })
 
     return request
   }
 
   resetPassword(credential: AppCredential) {
-    return this.api.post(`appuser/forgot-password/now`, {
-      username: credential.username
-    }, {
-      culture: this.translate.currentLang.split('-')[0]
-    })
+    return this.api.post(`appuser/forgot-password/now`, { username: credential.username }, { culture: this.currentCulture })
   }
 
   loginLocal(userResponse: ServerCustomer, credential: AppCredential) {
     this._loggedIn(userResponse, credential)
   }
 
-  async logout() {
+  async logout(): Promise<void> {
     // this.statistics.logout(this._user.userId)
     this._user = null
     this._credential.password = ''
@@ -103,9 +105,20 @@ export class UserService {
   }
 
   syncData(force: boolean = false): Promise<boolean> {
-    let culture = this.hasAgentAccess ? 'all' : this.translate.currentLang.split('-')[0]
+    let culture: string = this.hasAgentAccess ? 'all' : this.currentCulture
 
     return this.sync.fullSync(this._credential, culture, force, undefined, this._user.userId)
+  }
+
+  async awaitLogin(): Promise<void> {
+    return new Promise<void>(async (r) => {
+      while (true) {
+        if (!this._user)
+          await new Promise(x => setTimeout(x, 10))
+        else
+          return r()
+      }
+    })
   }
 
   get storedCredential(): AppCredential {
@@ -117,11 +130,11 @@ export class UserService {
   }
 
   get credential(): AppCredential {
-    return this._credential || null
+    return this._credential || undefined
   }
 
   get userinfo(): Customer {
-    return this._user || null
+    return this._user || undefined
   }
 
   set activeUser(value: Customer) {
@@ -133,7 +146,7 @@ export class UserService {
       return this._selectedCustomer
     if (this._user && [0, 1].includes(this._user.type))
       return this.userinfo
-    return null
+    return undefined
   }
 
   get isGuest(): boolean {
@@ -153,7 +166,7 @@ export class UserService {
   }
 
   private _loggedIn(userResponse: ServerCustomer, credential: AppCredential) {
-    this.logger.log('UserService -- _loggedIn() called')
+    logger.debug('UserService -- _loggedIn() called')
     this._user = {
       userId: userResponse.Id,
       id: userResponse.CustomerId,
@@ -173,6 +186,10 @@ export class UserService {
 
     this.storage.set('user', userResponse)
     this.storage.set('credential', credential)
+  }
+
+  get currentCulture(): string {
+    return this.translate.currentLang.split('-')[0]
   }
 }
 

@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { AlertController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { CartService } from 'src/app/core/cart.service'
 import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
 import { UserService } from 'src/app/core/user.service'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('DepartmentsPage')
 
 @Component({
   selector: 'app-departments',
@@ -23,7 +25,6 @@ export class DepartmentsPage implements OnInit {
     private translate: TranslateService,
     private user: UserService,
     private api: ApiService,
-    private logger: LoggingProvider,
     private departmentsRepository: DepartmentsRepositoryService,
     private alertCtrl: AlertController,
     private cart: CartService,
@@ -47,7 +48,7 @@ export class DepartmentsPage implements OnInit {
     try {
       this._departments = await this.departmentsRepository.get(this.user.activeUser.userCode)
     } catch (err) {
-      this.logger.error('DepartmentsPage.load() error', err)
+      logger.error('DepartmentsPage.load() error', err)
     } finally {
       this.loading = false
       this.ref.markForCheck()
@@ -73,7 +74,7 @@ export class DepartmentsPage implements OnInit {
       }
       console.log(res)
     } catch (err) {
-      this.logger.error('DepartmentsPage.create() error', err)
+      logger.error('DepartmentsPage.create() error', err)
     } finally {
       this.loading = false
       this.ref.markForCheck()

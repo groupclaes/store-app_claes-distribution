@@ -83,9 +83,9 @@
   </ion-text>
 
   <ion-list inset="true">
-    <div *ngIf="loading" padding>
+    <div *ngIf="loading">
       <div style="text-align:center">
-        <ion-spinner mode="ios"></ion-spinner>
+        <ion-spinner></ion-spinner>
       </div>
     </div>
     <ion-item button *ngFor="let report of reports" [attr.disabled]="!menuItemActive" tappable

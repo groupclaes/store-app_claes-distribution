@@ -52,7 +52,7 @@ export class WebRecipesPage implements OnInit {
       )
 
       // if (result.length === 0) {
-      //   this.logger.error('no rows!')
+      //   logger.error('no rows!')
       // }
 
       if (result.length <= 49) {

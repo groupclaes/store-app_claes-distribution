@@ -12,12 +12,13 @@ import { StorageProvider } from 'src/app/core/storage-provider.service'
 import { CartsRepositoryService } from 'src/app/core/repositories/carts.repository.service'
 import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/current-exceptions.repository.service'
 import { FormBuilder, FormGroup, Validators } from '@angular/forms'
-import { SettingsService } from 'src/app/core/settings.service'
-import { take } from 'rxjs/operators'
+import { ISyncSettings, SettingsService } from 'src/app/core/settings.service'
 import { CartService } from 'src/app/core/cart.service'
 import { firstValueFrom } from 'rxjs'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('LoginPage')
 
 @Component({
   selector: 'app-login',
@@ -48,7 +49,6 @@ export class LoginPage implements OnInit {
     private cartsRepository: CartsRepositoryService,
     private exceptionsRepository: CurrentExceptionsRepositoryService,
     private cart: CartService,
-    private log: LoggingProvider,
     public network: NetworkService
   ) {
     this.network.connected.subscribe(() => this.ref.markForCheck())
@@ -64,11 +64,12 @@ export class LoginPage implements OnInit {
         // Set a newly active customer
         this.cart.updateActive(_prev.id, _prev.address).then((): void => {
         })
-        return firstValueFrom(this.settings.DisplayDefaultPage.pipe<string>(take(1)))
+        return this.settings.defaultPage
       }
       return Promise.resolve('/customers')
     }
-    return firstValueFrom(this.settings.DisplayDefaultPage.pipe<string>(take(1)))
+
+    return this.settings.defaultPage
   }
 
   get backgroundImage(): SafeStyle {
@@ -150,7 +151,7 @@ export class LoginPage implements OnInit {
       if (customer) {
         // Check if we need to sync
         const syncRequired = await this.syncRequired(oldCredential)
-        this.log.debug('Sync required: ', syncRequired)
+        logger.debug('Sync required: ', syncRequired)
         if (syncRequired !== 'CACHE') {
           this._loading = await this.loadingCtrl.create({
             spinner: 'lines',
@@ -356,7 +357,7 @@ export class LoginPage implements OnInit {
     }
 
     // check if sync is needed
-    const syncInterval: number = this.storage.get(`app-syncinterval`)
+    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
     const result = await this.checksumRepository.get<any>('lastSync')
 
     if (!result) {
@@ -367,7 +368,7 @@ export class LoginPage implements OnInit {
     const lastSync: Date = (result && result.length >= 1)
       ? new Date(result[0].dateChanged) : new Date(1970, 0)
 
-    return new Date().getTime() - syncInterval > lastSync.getTime() ? 'SYNC' : 'CACHE'
+    return new Date().getTime() - syncSettings.interval > lastSync.getTime() ? 'SYNC' : 'CACHE'
   }
 
   private async toast(message: string, duration: number = 3000) {

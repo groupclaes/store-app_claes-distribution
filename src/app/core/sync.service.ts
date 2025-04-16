@@ -1,38 +1,44 @@
 import { environment } from '../../environments/environment'
 import { ApiService, trimParameters } from './api.service'
 import { Injectable } from '@angular/core'
-import { LoggingProvider } from '../@shared/logging/log.service'
 import { StorageProvider } from './storage-provider.service'
-import { capSQLiteSet, Changes, SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { capSQLiteSet, Changes, DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
 import { DatabaseService } from './database.service'
 import { AppCredential, Customer } from './user.service'
 import { timeout } from 'rxjs/operators'
-import { firstValueFrom } from 'rxjs'
+import { firstValueFrom, Subject } from 'rxjs'
 import { Directory, Filesystem } from '@capacitor/filesystem'
+import { IPCMAttachmentEntry } from './repositories/products.repository.service'
+import { NetworkService } from '../@shared/network.service'
+import { LoggerService } from '../@shared/logging/log.service'
 
 const TIMEOUT_INTERVAL = 240000
+
+const logger = new LoggerService('SyncService')
 
 @Injectable({
   providedIn: 'root'
 })
 export class SyncService {
   private _checksum: Array<Store> = []
+  public changes: Subject<void> = new Subject<void>()
+  public message: string
+  private _active_count: number = 0
 
   constructor(
     private api: ApiService,
     private storage: StorageProvider,
-    private logger: LoggingProvider,
-    private _db: DatabaseService
+    private _db: DatabaseService,
+    private network: NetworkService
   ) {
   }
-
 
   private get checksum(): Array<Store> {
     return this._checksum || new Array<Store>()
   }
 
   dropTables(): Promise<any> {
-    this.logger.info('Dropping all tables')
+    logger.info('Dropping all tables')
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       const tablesToDrop = [
         'images',
@@ -52,11 +58,11 @@ export class SyncService {
       ]
 
       for (const table of tablesToDrop) {
-        this.logger.debug('Dropping table', table)
+        logger.debug('Dropping table', table)
         try {
           await db.execute('DROP TABLE IF EXISTS ' + table)
         } catch (err) {
-          this.logger.error('Could not drop table', table, err.message)
+          logger.error('Could not drop table', table, err.message)
         }
       }
     })
@@ -74,35 +80,35 @@ export class SyncService {
         + 'CREATE UNIQUE INDEX IF NOT EXISTS idx_dataIntegrityChecksums_dataTable ON dataIntegrityChecksums(dataTable)')
 
       const version = this.storage.get('_db_version')
-      this.logger.log(`database ${environment.database_name} has been opened in CheckDB!`, version)
+      logger.debug(`database ${environment.database_name} has been opened in CheckDB!`, version)
     })
 
     return ok
   }
 
   async initialize(): Promise<boolean> {
-    this.logger.log(`SyncService.Initialize() -- start`)
-    const check = await this.checkDB()
-    this.logger.log(`SyncService.Initialize() -- after checkdb`)
-    const checksum = await this.loadIntegrity()
-    this.logger.log(`SyncService.Initialize() -- loaded integrity checksum: ${checksum}`)
+    logger.debug(`Initialize() -- start`)
+    const check: boolean = await this.checkDB()
+    logger.debug(`Initialize() -- after checkdb`)
+    const checksum: boolean = await this.loadIntegrity()
+    logger.debug(`Initialize() -- loaded integrity checksum: ${checksum}`)
 
     if (!checksum) {
       // this is first run or db issue, add loggin here in future versions
       return check
     }
 
-    this.logger.log(`SyncService.Initialize() -- end`)
+    logger.debug(`Initialize() -- end`)
     return checksum && check
   }
 
   public async loadIntegrity(): Promise<boolean> {
-    this.logger.log(`SyncService.loadIntegrity() -- start`)
+    logger.debug(`loadIntegrity() -- start`)
     const result = []
 
     await this._db.executeQuery(async (db: SQLiteDBConnection) => {
       const sqlResult = await db.query('SELECT * FROM dataIntegrityChecksums')
-      this.logger.log(`SyncService.loadIntegrity() -- after select`)
+      logger.debug(`loadIntegrity() -- after select`)
 
       if (!sqlResult.values || sqlResult.values.length <= 0)
         return false
@@ -115,7 +121,7 @@ export class SyncService {
 
     this._checksum = result
 
-    this.logger.log(`SyncService.loadIntegrity() -- end`)
+    logger.debug(`loadIntegrity() -- end`)
     return true
   }
 
@@ -129,26 +135,28 @@ export class SyncService {
    * @memberof SyncService
    */
   public async fullSync(credential: AppCredential, culture?: string, forceSync?: boolean, activeUser?: Customer, user_id?: number) {
-    this.logger.log(`SyncService.FullSync() -- start`)
+    logger.debug(`FullSync() -- start`)
     culture = culture || 'all'
+    this._active_count++
+    this.changes.next()
 
     return new Promise<boolean>(async (resolve, reject) => {
       const timertje = setTimeout(() => reject('timeout_err'), TIMEOUT_INTERVAL)
 
-      this.logger.log('SyncService.FullSync() -- await promises')
+      logger.debug('SyncService.FullSync() -- await promises')
 
       // We used to do a single full sync (running all calls at the same time)
       // But this concurrency is not handled well in the 'new' Capacitor SQLite library, so we changed this to be in 4 steps
 
       await this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-        this.logger.log('CREATE TABLE IF NOT EXISTS customers')
+        logger.debug('CREATE TABLE IF NOT EXISTS customers')
         await db.execute('CREATE TABLE IF NOT EXISTS customers '
           + '(id INTEGER, addressId INTEGER, addressGroupId INTEGER, userCode INTEGER, userType INTEGER, name STRING, '
           + 'address STRING, streetNum STRING, zipCode STRING, city STRING, country STRING, phoneNum STRING, vatNum STRING, '
           + 'language STRING, promo BOOLEAN, fostplus BOOLEAN, bonusPercentage REAL, addressName STRING, delvAddress STRING, '
           + 'delvStreetNum STRING, delvZipCode STRING, delvCity STRING, delvCountry STRING, delvPhoneNum STRING, '
           + 'delvLanguage STRING, PRIMARY KEY (id, addressId))', false)
-        this.logger.log('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
+        logger.debug('CREATE TABLE IF NOT EXISTS productDescriptionCustomers')
         await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)', false)
 
         await this.updateDataIntegrityChecksum(db, 'lastSync', 'distribution-checksum-sha')
@@ -156,7 +164,12 @@ export class SyncService {
 
       let results: any[]
 
+      // SyncProvider.syncProducts -- took  - Extra Info: 2631 => 952 from api
+      // SyncProvider.syncPrices() -- took  - Extra Info: 929 => 450 from api
+      // SyncProvider.syncRecipesModule() -- took  - Extra Info: 1068 => 940 from api
+
       if (user_id) {
+        console.time('FullSync')
         const step1 = await Promise.all([
           this.syncProducts(user_id, culture, forceSync),
           this.syncPackingUnits(user_id, culture, forceSync),
@@ -196,7 +209,9 @@ export class SyncService {
         await this.validateLeaflet(user_id, culture)
 
         results = step1.concat(step2, step3, step4)
+        console.timeEnd('FullSync')
       } else {
+        console.time('FullSync')
         const step1 = await Promise.all([
           this.syncProducts(user_id, culture, forceSync),
           this.syncPackingUnits(user_id, culture, forceSync),
@@ -211,25 +226,30 @@ export class SyncService {
         ])
 
         results = step1.concat(step2)
+        console.timeEnd('FullSync')
       }
 
-      this.logger.log('SyncService.FullSync() -- promises completed')
+      logger.debug('SyncService.FullSync() -- promises completed')
 
       window.clearTimeout(timertje)
       if (results.some(e => e === 'timeout_err')) {
+        this._active_count--
         return reject('timeout_err')
       }
 
-      const checksum = await this.loadIntegrity()
+      const checksum: boolean = await this.loadIntegrity()
 
-      this.logger.log(`SyncProvider.FullSync() -- end`)
+      logger.debug(`FullSync() -- end`)
+      this._active_count--
+      this.changes.next()
       return resolve(checksum)
     })
   }
 
   async syncProducts(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncProducts()`)
+      logger.debug(`syncProducts()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -265,13 +285,9 @@ export class SyncService {
             + '(attribute INTEGER, product INTEGER, PRIMARY KEY (attribute, product))')
           await db.execute('CREATE TABLE IF NOT EXISTS productAllergens '
             + '(product INTEGER, code STRING, value STRING, PRIMARY KEY (product, code))')
-          await db.execute('DROP INDEX IF EXISTS products_category_ids')
-          await db.execute('CREATE INDEX IF NOT EXISTS products_category_ids ON products (c1, c2, c3, c4, c5, c6)')
-          await db.execute('DROP INDEX IF EXISTS products_itemnum')
-          await db.execute('CREATE INDEX IF NOT EXISTS products_itemnum ON products (id, itemnum)')
 
           const sqlStatements: capSQLiteSet[] = []
-          response.data.products.forEach(async (product: any) => {
+          for (const product of response.data.products) {
             const nameNl: string = (product.name && product.name.nl) ? product.name.nl : null
             const nameFr: string = (product.name && product.name.fr) ? product.name.fr : null
             const descriptionNl: string = (product.description && product.description.nl) ? product.description.nl : null
@@ -333,49 +349,72 @@ export class SyncService {
             ]
             sqlStatements.push({ statement: query, values: param })
             sqlStatements.push({ statement: textQuery, values: textParam })
-            product.attributes?.forEach((attribute: { id: number }) => {
+
+            if (product.attributes) {
+              let attrQuery: string = undefined
+              let attrParam: any[] = []
+              for (const attribute of product.attributes) {
+                if (attrQuery === undefined)
+                  attrQuery = `INSERT INTO productAttributes
+                               VALUES (${product.id}, ?)`
+                else
+                  attrQuery += `,(${product.id}, ?)`
+
+                attrParam.push(attribute.id)
+              }
               sqlStatements.push({
-                statement: 'INSERT INTO productAttributes VALUES (?, ?)', values: [
-                  attribute.id,
-                  product.id
-                ]
-              })
-            })
-            if (product.allergens) {
-              product.allergens.forEach((allergen: { code: any, value: any }) => {
-                sqlStatements.push({
-                  statement: 'INSERT INTO productAllergens VALUES (?, ?, ?)', values: [
-                    product.id,
-                    allergen.code,
-                    allergen.value
-                  ]
-                })
+                statement: attrQuery,
+                values: attrParam
               })
             }
-          })
-          this.logger.debug(`Inserting ${sqlStatements.length} records into various product tables`)
+
+            if (product.allergens) {
+              let gensQuery: string = undefined
+              let gensParam: any[] = []
+              for (const allergen of product.allergens) {
+                if (gensQuery === undefined)
+                  gensQuery = `INSERT INTO productAllergens
+                               VALUES (${product.id}, ?, ?)`
+                else
+                  gensQuery += `,(${product.id}, ?, ?)`
+                gensParam.push(allergen.code, allergen.value)
+              }
+              sqlStatements.push({
+                statement: gensQuery,
+                values: gensParam
+              })
+            }
+          }
+          logger.debug(`Inserting ${sqlStatements.length} records into various product tables`)
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted products; checksum', response.data.checksum)
+
+          await db.execute('DROP INDEX IF EXISTS products_category_ids')
+          await db.execute('CREATE INDEX IF NOT EXISTS products_category_ids ON products (c1, c2, c3, c4, c5, c6)')
+          await db.execute('DROP INDEX IF EXISTS products_itemnum')
+          await db.execute('CREATE INDEX IF NOT EXISTS products_itemnum ON products (id, itemnum)')
+
+          logger.debug('inserted products; checksum', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'products', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncProducts() -- no changes`)
+        logger.debug(`syncProducts() -- no changes`)
       }
+      logger.info('syncProducts() -- took ', performance.now() - start)
 
       return true
     } catch (err) {
-      if (err.status === 204) {
+      if (err.status === 204)
         return err
-      }
       return 'timeout_err'
     }
   }
 
   async syncPrices(user_id: number, culture?: string, force?: boolean,
                    customer_id?: number, address_id?: number) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncPrices() -- customer_id: ${customer_id}, address_id: ${address_id}`)
+      logger.debug(`syncPrices() -- customer_id: ${customer_id}, address_id: ${address_id}`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -398,58 +437,57 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS prices '
             + '(product INTEGER, price REAL, pricepromo REAL, stack INTEGER, promo BOOLEAN, discount REAL, '
             + 'customer INTEGER, address INTEGER, [group] INTEGER, PRIMARY KEY (product, customer, address, [group], stack))')
-          this.logger.log('dropped prices', 'inserts todo: ', response.data.length)
+          logger.debug('dropped prices', 'inserts todo: ', response.data.length)
 
           let sqlStatements: capSQLiteSet[] = []
-          if (response.data.length > 40000) {
-            const arrays: any[] = this.chunkArray(response.data.prices, 40000)
-            arrays.forEach(async (array: any[]): Promise<void> => {
-              sqlStatements = []
-              array.forEach(async (price: $TSFixMe) => {
-                sqlStatements.push({
-                  statement: 'INSERT INTO prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                  values: [
-                    price.product,
-                    price.price,
-                    price.pricepromo,
-                    price.stack,
-                    price.promo ? 1 : 0,
-                    price.discount,
-                    price.customer,
-                    price.address,
-                    price.group
-                  ]
-                })
-              })
-              await db.executeSet(sqlStatements)
-              this.logger.log('inserted', array.length, 'prices')
-            })
-          } else if (response.data.length > 0) {
-            response.data.prices.forEach((price: $TSFixMe) => {
-              sqlStatements.push({
-                statement: 'INSERT INTO prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                values: [
-                  price.product,
-                  price.price,
-                  price.pricepromo,
-                  price.stack,
-                  price.promo ? 1 : 0,
-                  price.discount,
-                  price.customer,
-                  price.address,
-                  price.group
-                ]
-              })
-            })
-            await db.executeSet(sqlStatements)
-          }
+          if (response.data.length > 100) {
+            const arrays: any[] = this.chunkArray(response.data.prices, 100)
+            logger.debug('arrays', arrays.length, 'length')
+            for (let array of arrays) {
+              let query: string = undefined
+              const values: any[] = []
 
-          this.logger.log('inserted prices', response.data.checksum)
+              array.forEach((price: $TSFixMe) => {
+                if (!query)
+                  query = 'INSERT INTO prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                else
+                  query += ',(?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                values.push(price.product, price.price, price.pricepromo, price.stack, price.promo ? 1 : 0, price.discount, price.customer, price.address, price.group)
+              })
+
+              sqlStatements.push({
+                statement: query,
+                values
+              })
+            }
+            await db.executeSet(sqlStatements, true)
+          } else if (response.data.length > 0) {
+            let query: string = undefined
+            const values: any[] = []
+
+            for (let price of response.data.prices) {
+              if (!query)
+                query = 'INSERT INTO prices VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+              else
+                query += ',(?, ?, ?, ?, ?, ?, ?, ?, ?)'
+              values.push(price.product, price.price, price.pricepromo, price.stack, price.promo ? 1 : 0, price.discount, price.customer, price.address, price.group)
+            }
+
+            sqlStatements.push({
+              statement: query,
+              values
+            })
+
+            logger.debug('inserted', sqlStatements.length, 'prices')
+            await db.executeSet(sqlStatements, true)
+          }
+          logger.debug('inserted prices', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'prices', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncPrices() -- no changes`)
+        logger.debug(`syncPrices() -- no changes`)
       }
+      logger.info('syncPrices() -- took ', performance.now() - start)
       return true
     } catch (err) {
 
@@ -457,8 +495,9 @@ export class SyncService {
   }
 
   async syncPackingUnits(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncPackingUnits()`)
+      logger.debug(`syncPackingUnits()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -494,12 +533,13 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted packing-units', response.data.checksum)
+          logger.debug('inserted packing-units', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'packingUnits', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncPackingUnits() -- no changes`)
+        logger.debug(`syncPackingUnits() -- no changes`)
       }
+      logger.info('syncPackingUnits() -- took ', performance.now() - start)
       return true
     } catch (err) {
 
@@ -507,8 +547,9 @@ export class SyncService {
   }
 
   async syncFavorites(user_id: number, culture?: string, force?: boolean, customer_id?: number, address_id?: number) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncFavorites()`)
+      logger.debug(`syncFavorites()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -532,7 +573,7 @@ export class SyncService {
             + '(id INTEGER, cu INTEGER, ad INTEGER, buy INTEGER, pro INTEGER, ret INTEGER, lastB DateTime, '
             + 'lastA INTEGER, hi BOOLEAN, PRIMARY KEY (id, cu, ad))')
 
-          this.logger.log('dropped favorites', 'inserts todo: ', response.data.length)
+          logger.debug('dropped favorites', 'inserts todo: ', response.data.length)
           let sqlStatements: capSQLiteSet[] = []
           if (response.data.favorites.length > 40000) {
             const arrays = this.chunkArray(response.data.favorites, 40000)
@@ -555,7 +596,7 @@ export class SyncService {
                 })
               })
               await db.executeSet(sqlStatements)
-              this.logger.log('inserted', array.length, 'favorites')
+              logger.debug('inserted', array.length, 'favorites')
             })
           } else if (response.data.length > 0) {
             response.data.favorites.forEach((favorite: $TSFixMe) => {
@@ -577,20 +618,22 @@ export class SyncService {
             await db.executeSet(sqlStatements)
           }
 
-          this.logger.log('inserted favorites', response.data.checksum)
+          logger.debug('inserted favorites', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'favorites', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncFavorites() -- no changes`)
+        logger.debug(`syncFavorites() -- no changes`)
       }
+      logger.info('syncFavorites() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncProductExceptions(user_id: number, culture?: string, customer?: Customer, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncProductExceptions()`)
+      logger.debug(`syncProductExceptions()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -614,10 +657,10 @@ export class SyncService {
             + '(customer INTEGER, address INTEGER, addressGroup INTEGER, deny BOOLEAN, list STRING)')
           await db.execute('CREATE TABLE IF NOT EXISTS currentExceptions (productId INTEGER PRIMARY KEY)')
 
-          this.logger.log('dropped productExceptions')
+          logger.debug('dropped productExceptions')
+
 
           const sqlStatements: capSQLiteSet[] = []
-
           response.data.product_exceptions.forEach((excecption: $TSFixMe) => {
             sqlStatements.push({
               statement: 'INSERT INTO productExceptions VALUES (?, ?, ?, ?, ?)',
@@ -633,7 +676,7 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted productExceptions', response.data.checksum)
+          logger.debug('inserted productExceptions', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'productExceptions', response.data.checksum)
 
           if (customer)
@@ -647,9 +690,9 @@ export class SyncService {
             localStorage.removeItem('active-user')
         })
       } else {
-        this.logger.log(`SyncProvider.syncProductExceptions() -- no changes`)
+        logger.debug(`syncProductExceptions() -- no changes`)
       }
-
+      logger.info('syncProductExceptions() -- took ', performance.now() - start)
       return true
     } catch (err) {
       if (err.status != 204)
@@ -658,8 +701,9 @@ export class SyncService {
   }
 
   async syncAttributes(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncAttributes()`)
+      logger.debug(`syncAttributes()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -680,7 +724,7 @@ export class SyncService {
             + '(id INTEGER PRIMARY KEY, attribute INTEGER, [group] INTEGER, nameNl STRING, '
             + 'nameFr STRING, groupNameNl STRING, groupNameFr STRING)')
 
-          this.logger.log('dropped attributes')
+          logger.debug('dropped attributes')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -705,21 +749,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted attributes', response.data.checksum)
+          logger.debug('inserted attributes', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'attributes', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncAttributes() -- no changes`)
+        logger.debug(`syncAttributes() -- no changes`)
       }
-
+      logger.info('syncAttributes() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncCategoryAttributes(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncCategoryAttributes()`)
+      logger.debug(`syncCategoryAttributes()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -738,7 +783,7 @@ export class SyncService {
 
           await db.execute('CREATE TABLE IF NOT EXISTS categoryAttributes (categoryId INTEGER, groupId INTEGER, PRIMARY KEY (categoryId, groupId))')
 
-          this.logger.log('dropped categoryAttributes')
+          logger.debug('dropped categoryAttributes')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -754,21 +799,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted categoryAttributes', response.data.checksum)
+          logger.debug('inserted categoryAttributes', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'categoryAttributes', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncCategoryAttributes() -- no changes`)
+        logger.debug(`syncCategoryAttributes() -- no changes`)
       }
-
+      logger.info('syncCategoryAttributes() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncProductRelations(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncProductRelations()`)
+      logger.debug(`syncProductRelations()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -789,38 +835,67 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS productRelations '
             + '(item INTEGER, product INTEGER, type INTEGER, PRIMARY KEY (item, product, type))')
 
-          this.logger.log('dropped productRelations')
+          logger.debug('dropped productRelations')
 
           const sqlStatements: capSQLiteSet[] = []
 
-          response.data.product_relations.forEach((productRelation: $TSFixMe) => {
+
+          if (response.data.length > 333) {
+            const arrays: any[] = this.chunkArray(response.data.product_relations, 333)
+
+            for (let array of arrays) {
+              let query: string = undefined
+              const values: any[] = []
+
+              array.forEach((productRelation: $TSFixMe) => {
+                if (!query)
+                  query = 'INSERT INTO productRelations VALUES (?, ?, ?)'
+                else
+                  query += ',(?, ?, ?)'
+                values.push(productRelation.item, productRelation.product, productRelation.type)
+              })
+
+              sqlStatements.push({
+                statement: query,
+                values
+              })
+            }
+          } else if (response.data.length > 0) {
+            let query: string = undefined
+            const values: any[] = []
+
+            for (let productRelation of response.data.product_relations) {
+              if (!query)
+                query = 'INSERT INTO productRelations VALUES (?, ?, ?)'
+              else
+                query += ',(?, ?, ?)'
+              values.push(productRelation.item, productRelation.product, productRelation.type)
+            }
+
             sqlStatements.push({
-              statement: 'INSERT INTO productRelations VALUES (?, ?, ?)',
-              values: [
-                productRelation.item,
-                productRelation.product,
-                productRelation.type
-              ]
+              statement: query,
+              values
             })
-          })
+          }
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted productRelations', response.data.checksum)
+          logger.debug('inserted productRelations', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'productRelations', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncProductRelations() -- no changes`)
+        logger.debug(`syncProductRelations() -- no changes`)
       }
-
+      logger.info('syncProductRelations() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncReports(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncReports()`)
+      logger.debug(`syncReports()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -860,22 +935,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted reports', response.data.checksum)
+          logger.debug('inserted reports', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'reports', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncReports() -- no changes`)
+        logger.debug(`syncReports() -- no changes`)
       }
-
-
+      logger.info('syncReports() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncPcmRecipes(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncPcmRecipes()`)
+      logger.debug(`syncPcmRecipes()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -895,7 +970,7 @@ export class SyncService {
 
           await db.execute('CREATE TABLE IF NOT EXISTS pcmRecipes (guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
 
-          this.logger.log('dropped pcmRecipes')
+          logger.debug('dropped pcmRecipes')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -913,21 +988,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted pcmRecipes', response.data.checksum)
+          logger.debug('inserted pcmRecipes', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'pcmRecipes', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncPcmRecipes() -- no changes`)
+        logger.debug(`syncPcmRecipes() -- no changes`)
       }
-
+      logger.info('syncPcmRecipes() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncDatasheets(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncDatasheets()`)
+      logger.debug(`syncDatasheets()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -948,7 +1024,7 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS datasheets '
             + '(guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
 
-          this.logger.log('dropped datasheets')
+          logger.debug('dropped datasheets')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -966,21 +1042,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted datasheets', response.data.checksum)
+          logger.debug('inserted datasheets', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'datasheets', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncDatasheets() -- no changes`)
+        logger.debug(`syncDatasheets() -- no changes`)
       }
-
+      logger.info('syncDatasheets() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncUsageManuals(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncUsageManuals()`)
+      logger.debug(`syncUsageManuals()`)
       if (culture === 'all') culture = undefined
       const params = trimParameters({
         culture,
@@ -1000,7 +1077,7 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS usageManuals '
             + '(guid STRING PRIMARY KEY, name STRING, languages STRING, products STRING)')
 
-          this.logger.log('dropped usageManuals')
+          logger.debug('dropped usageManuals')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1018,21 +1095,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted usageManuals', response.data.checksum)
+          logger.debug('inserted usageManuals', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'usageManuals', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncUsageManuals() -- no changes`)
+        logger.debug(`syncUsageManuals() -- no changes`)
       }
-
+      logger.info('syncUsageManuals() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncDepartments(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncDepartments()`)
+      logger.debug(`syncDepartments()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1078,21 +1156,22 @@ export class SyncService {
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
 
-          this.logger.warn('inserted departments', response.data.checksum)
+          logger.warn('inserted departments', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'departments', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncDepartments() -- no changes`)
+        logger.debug(`syncDepartments() -- no changes`)
       }
-
+      logger.info('syncDepartments() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncCategories(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.debug(`SyncProvider.syncCategories()`)
+      logger.debug(`syncCategories()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1113,7 +1192,7 @@ export class SyncService {
             + '(id INTEGER PRIMARY KEY, parentId INTEGER NULL, position INTEGER, nameNl STRING, '
             + 'nameFr STRING, descriptionNl STRING, descriptionFr STRING)')
 
-          this.logger.debug('dropped categories')
+          logger.debug('dropped categories')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1138,23 +1217,24 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements).catch(err => {
-              this.logger.error(err)
+              logger.error(err)
             })
-          this.logger.debug('inserted categories', response.data.length, response.data.checksum)
+          logger.debug('inserted categories', response.data.length, response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'categories', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncCategories() -- no changes`)
+        logger.debug(`syncCategories() -- no changes`)
       }
-
+      logger.info('syncCategories() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncNotes(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncNotes()`)
+      logger.debug(`syncNotes()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1175,7 +1255,7 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS unsentNotes ('
             + 'id INTEGER PRIMARY KEY AUTOINCREMENT, customer INTEGER, address INTEGER, date DATETIME, text STRING NULL,'
             + 'nextVisit DATETIME NULL, customerCloseFrom DATETIME NULL, customerOpenFrom DATETIME NULL, toSend BOOLEAN)')
-          this.logger.log('dropped notes')
+          logger.debug('dropped notes')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1194,22 +1274,23 @@ export class SyncService {
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
 
-          this.logger.log('inserted notes', response.data.checksum)
+          logger.debug('inserted notes', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'notes', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncNotes() -- no changes`)
+        logger.debug(`syncNotes() -- no changes`)
       }
-
+      logger.info('syncNotes() -- took ', performance.now() - start)
       return true
     } catch (err) {
-      this.logger.error('Couldn\'t sync notes', JSON.stringify(err))
+      logger.error('Couldn\'t sync notes', JSON.stringify(err))
     }
   }
 
   async syncProductTaxes(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncProductTaxes()`)
+      logger.debug(`syncProductTaxes()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1228,7 +1309,7 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS productTaxes')
           await db.execute('CREATE TABLE IF NOT EXISTS productTaxes (product INTEGER, description STRING, amount REAL, type STRING)')
 
-          this.logger.log('dropped productTaxes')
+          logger.debug('dropped productTaxes')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1246,21 +1327,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted productTaxes', response.data.checksum)
+          logger.debug('inserted productTaxes', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'productTaxes', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncProductTaxes() -- no changes`)
+        logger.debug(`syncProductTaxes() -- no changes`)
       }
-
+      logger.info('syncProductTaxes() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncShippingCosts(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncShippingCosts()`)
+      logger.debug(`syncShippingCosts()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1280,7 +1362,7 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS shippingCosts '
             + '(customerId INTEGER, addressId INTEGER, amount REAL, threshold INTEGER)')
 
-          this.logger.log('dropped shippingCosts')
+          logger.debug('dropped shippingCosts')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1299,21 +1381,22 @@ export class SyncService {
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
 
-          this.logger.log('inserted shippingCosts', response.data.checksum)
+          logger.debug('inserted shippingCosts', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'shippingCosts', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncShippingCosts() -- no changes`)
+        logger.debug(`syncShippingCosts() -- no changes`)
       }
-
+      logger.info('syncShippingCosts() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncContacts(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncContacts()`)
+      logger.debug(`syncContacts()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1335,7 +1418,7 @@ export class SyncService {
             + 'mailAddress STRING, mobileNr STRING, ordConf BOOLEAN, bonus BOOLEAN, invoice BOOLEAN, '
             + 'reminder BOOLEAN, domicilation BOOLEAN, comMailing BOOLEAN, PRIMARY KEY (id, customerId, addressId))')
 
-          this.logger.log('dropped contacts')
+          logger.debug('dropped contacts')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1362,21 +1445,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted contacts', response.data.checksum)
+          logger.debug('inserted contacts', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'contacts', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncContacts() -- no changes`)
+        logger.debug(`syncContacts() -- no changes`)
       }
-
+      logger.info('syncContacts() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncDeliverySchedules(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncDeliverySchedules()`)
+      logger.debug(`syncDeliverySchedules()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1399,7 +1483,7 @@ export class SyncService {
             + 'wedPMTo STRING, thuAMFr STRING, thuAMTo STRING, thuPMFr STRING, thuPMTo STRING, friAMFr STRING, friAMTo STRING, '
             + 'friPMFr STRING, friPMTo STRING, PRIMARY KEY (customerId, addressId))')
 
-          this.logger.log('dropped deliverySchedules')
+          logger.debug('dropped deliverySchedules')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1435,21 +1519,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted deliverySchedules', response.data.checksum)
+          logger.debug('inserted deliverySchedules', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'deliverySchedules', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncDeliverySchedules() -- no changes`)
+        logger.debug(`syncDeliverySchedules() -- no changes`)
       }
-
+      logger.info('syncDeliverySchedules() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncCustomers(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncCustomers()`)
+      logger.debug(`syncCustomers()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1473,7 +1558,7 @@ export class SyncService {
             + 'addressName STRING, delvAddress STRING, delvStreetNum STRING, delvZipCode STRING, delvCity STRING, '
             + 'delvCountry STRING, delvPhoneNum STRING, delvLanguage STRING, PRIMARY KEY (id, addressId))')
 
-          this.logger.log('dropped customers')
+          logger.debug('dropped customers')
 
 
           const sqlStatements: capSQLiteSet[] = []
@@ -1519,22 +1604,23 @@ export class SyncService {
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
 
-          this.logger.log('inserted customers', response.data.checksum)
+          logger.debug('inserted customers', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'customers', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncCustomers() -- no changes`)
+        logger.debug(`syncCustomers() -- no changes`)
       }
-
+      logger.info('syncCustomers() -- took ', performance.now() - start)
       return true
     } catch (err) {
-      this.logger.error(err.message, err)
+      logger.error(err.message, err)
     }
   }
 
   async syncProductDescriptionCustomers(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncProductDescriptionCustomers()`)
+      logger.debug(`syncProductDescriptionCustomers()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1553,7 +1639,7 @@ export class SyncService {
           await db.execute('DROP TABLE IF EXISTS productDescriptionCustomers')
           await db.execute('CREATE TABLE IF NOT EXISTS productDescriptionCustomers (id INTEGER PRIMARY KEY, description STRING)')
 
-          this.logger.log('dropped productDescriptionCustomers')
+          logger.debug('dropped productDescriptionCustomers')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1569,21 +1655,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements)
-          this.logger.log('inserted productDescriptionCustomers', response.data.checksum)
+          logger.debug('inserted productDescriptionCustomers', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'productDescriptionCustomers', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncProductDescriptionCustomers() -- no changes`)
+        logger.debug(`syncProductDescriptionCustomers() -- no changes`)
       }
-
+      logger.info('syncProductDescriptionCustomers() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncRecipesModule(user_id: number, culture?: string, force?: boolean) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncRecipesModule()`)
+      logger.debug(`syncRecipesModule()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1603,7 +1690,7 @@ export class SyncService {
           await db.execute('CREATE TABLE IF NOT EXISTS recipesModule '
             + '(id INTEGER, productId INTEGER, nameNl STRING, nameFr STRING, PRIMARY KEY (id, productId))')
 
-          this.logger.log('dropped recipesModule')
+          logger.debug('dropped recipesModule')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1624,21 +1711,22 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted recipesModule', response.data.checksum)
+          logger.debug('inserted recipesModule', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'recipesModule', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncRecipesModule() -- no changes`)
+        logger.debug(`syncRecipesModule() -- no changes`)
       }
-
+      logger.info('syncRecipesModule() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
   }
 
   async syncNews(user_id: number, culture?: string, force?: boolean, customer_id?: number, address_id?: number) {
+    const start: number = performance.now()
     try {
-      this.logger.log(`SyncProvider.syncNews()`)
+      logger.debug(`syncNews()`)
 
       if (culture === 'all') culture = undefined
       const params = trimParameters({
@@ -1661,7 +1749,7 @@ export class SyncService {
             + '(id INTEGER PRIMARY KEY, customerId INTEGER, addressId INTEGER, titleNl STRING, '
             + 'titleFr STRING, contentNl BLOB, contentFr BLOB, promo BOOLEAN, spotlight BOOLEAN, template TINYINT, date DATETIME)')
 
-          this.logger.log('dropped news')
+          logger.debug('dropped news')
 
           const sqlStatements: capSQLiteSet[] = []
 
@@ -1690,13 +1778,13 @@ export class SyncService {
 
           if (response.data.length > 0)
             await db.executeSet(sqlStatements, true)
-          this.logger.log('inserted news', response.data.checksum)
+          logger.debug('inserted news', response.data.checksum)
           await this.updateDataIntegrityChecksum(db, 'news', response.data.checksum)
         })
       } else {
-        this.logger.log(`SyncProvider.syncNews() -- no changes`)
+        logger.debug(`syncNews() -- no changes`)
       }
-
+      logger.info('syncNews() -- took ', performance.now() - start)
       return true
     } catch (err) {
     }
@@ -1712,17 +1800,17 @@ export class SyncService {
       // Check if all tables exist
       const tables = (await db.getTableList()).values
       if (!tables.find(e => e === 'currentExceptions')) {
-        this.logger.warn('Creating missing TABLE currentExceptions')
+        logger.warn('Creating missing TABLE currentExceptions')
         await db.execute('CREATE TABLE currentExceptions (productId INTEGER PRIMARY KEY)', true)
       }
 
       if (!tables.find(e => e === 'productExceptions')) {
-        this.logger.error('Product Exceptions TABLE does not exist!')
+        logger.error('Product Exceptions TABLE does not exist!')
         result = false
         return
       }
       if (!tables.find(e => e === 'products')) {
-        this.logger.error('Products TABLE does not exist!')
+        logger.error('Products TABLE does not exist!')
         result = false
         return
       }
@@ -1745,15 +1833,15 @@ export class SyncService {
       const products = (await db.query('SELECT id,itemnum FROM products')).values
 
       if (products.length <= 0) {
-        this.logger.error('No products found!')
+        logger.error('No products found!')
         return
       }
 
-      this.logger.info('We have found ' + products.length + ' products!')
-      this.logger.info('We have found ' + defaultExceptions.length + ' defaultExceptions!')
-      this.logger.info('We have found ' + customerExceptions.length + ' customerExceptions!')
-      this.logger.info('We have found ' + addressExceptions.length + ' addressExceptions!')
-      this.logger.info('We have found ' + addressGroupExceptions.length + ' addressGroupExceptions!')
+      logger.info('We have found ' + products.length + ' products!')
+      logger.info('We have found ' + defaultExceptions.length + ' defaultExceptions!')
+      logger.info('We have found ' + customerExceptions.length + ' customerExceptions!')
+      logger.info('We have found ' + addressExceptions.length + ' addressExceptions!')
+      logger.info('We have found ' + addressGroupExceptions.length + ' addressGroupExceptions!')
 
       const uniqBy = <T>(a, key): T[] => [
         ...new Map<T, T>(
@@ -1762,7 +1850,7 @@ export class SyncService {
       ]
 
       if (defaultExceptions.length <= 0) {
-        this.logger.error('No defaultExceptions found!')
+        logger.error('No defaultExceptions found!')
         return
       }
 
@@ -1777,61 +1865,61 @@ export class SyncService {
       let allowed: number[]
 
       if (!hasCustomerExceptions && !hasAddressExceptions && !hasAddressGroupExceptions) {
-        this.logger.warn('This user does not have any product exceptions!')
+        logger.warn('This user does not have any product exceptions!')
         exceptions = defaultExceptions[0].list.toString().split(',')
 
         allowed = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
       } else if (hasAddressExceptions && addressExceptions[0].deny === 'true') {
-        this.logger.warn('This user has adressExceptions with deny true')
+        logger.warn('This user has adressExceptions with deny true')
         exceptions = addressExceptions[0].list.toString().split(',')
 
         allowed = products.filter(e => exceptions.includes(e.itemnum.toString())).map(e => e.id)
       } else if (hasCustomerExceptions && customerExceptions[0].deny === 'true') {
-        this.logger.warn('This user has cusomerExceptions with deny true')
+        logger.warn('This user has cusomerExceptions with deny true')
         exceptions = customerExceptions[0].list.toString().split(',')
 
         if (hasAddressExceptions) {
-          this.logger.warn('This user has additional addressExceptions')
+          logger.warn('This user has additional addressExceptions')
           exceptions = exceptions.concat(addressExceptions[0].list.toString().split(','))
         }
 
         allowed = products.filter(e => exceptions.includes(e.itemnum.toString())).map(e => e.id)
       } else if (hasAddressGroupExceptions && addressGroupExceptions[0].deny === 'true') {
-        this.logger.warn('This user has addressGroupExceptions with deny true')
+        logger.warn('This user has addressGroupExceptions with deny true')
         exceptions = addressGroupExceptions[0].list.toString().split(',')
 
         if (hasAddressExceptions) {
-          this.logger.warn('This user has additional addressExceptions')
+          logger.warn('This user has additional addressExceptions')
           exceptions = exceptions.concat(addressExceptions[0].list.toString().split(','))
         }
         if (hasCustomerExceptions) {
-          this.logger.warn('This user has additional customerExceptions')
+          logger.warn('This user has additional customerExceptions')
           exceptions = exceptions.concat(customerExceptions[0].list.toString().split(','))
         }
 
         allowed = products.filter(e => exceptions.includes(e.itemnum.toString())).map(e => e.id)
       } else if (hasCustomerExceptions || hasAddressExceptions || hasAddressGroupExceptions) {
-        this.logger.warn('This user has any type of product exceptions')
+        logger.warn('This user has any type of product exceptions')
         exceptions = defaultExceptions[0].list.toString().split(',')
         const temp = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
 
         exceptions = []
         if (hasAddressExceptions) {
-          this.logger.warn('This user has additional addressExceptions')
+          logger.warn('This user has additional addressExceptions')
           exceptions = exceptions.concat(addressExceptions[0].list.toString().split(','))
         }
         if (hasCustomerExceptions) {
-          this.logger.warn('This user has additional customerExceptions')
+          logger.warn('This user has additional customerExceptions')
           exceptions = exceptions.concat(customerExceptions[0].list.toString().split(','))
         }
         if (hasAddressGroupExceptions) {
-          this.logger.warn('This user has additional addressGroupExceptions')
+          logger.warn('This user has additional addressGroupExceptions')
           exceptions = exceptions.concat(addressGroupExceptions[0].list.toString().split(','))
         }
         allowed = uniqBy<number>(temp.concat(products.filter(
           e => exceptions.includes(e.itemnum.toString())).map(e => e.id)), JSON.stringify)
       } else {
-        this.logger.warn('I dont know what is going on here but default will have to do!')
+        logger.warn('I dont know what is going on here but default will have to do!')
         exceptions = defaultExceptions[0].list.toString().split(',')
 
         allowed = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
@@ -1842,20 +1930,28 @@ export class SyncService {
         values: []
       }]
 
+      let query: string = undefined
+
       for (const product of allowed) {
         // Remove all existing exceptions and insert new ones
-        queries.push({
-          statement: 'INSERT OR REPLACE INTO currentExceptions VALUES (?)',
-          values: [product]
-        })
+        if (!query)
+          query = 'INSERT OR REPLACE INTO currentExceptions VALUES (?)'
+        else
+          query += ',(?)'
       }
+      if (query)
+        queries.push({
+          statement: query,
+          values: allowed
+        })
 
-      this.logger.info('Inserting ' + allowed.length + ' records into currentExceptions')
+      logger.info('Inserting ' + allowed.length + ' records into currentExceptions')
       await db.executeSet(queries, true)
 
       // eslint-disable-next-line no-console
       console.timeEnd('preparing')
     })
+    this.changes.next()
     return result
   }
 
@@ -1923,17 +2019,87 @@ export class SyncService {
       try {
         await Filesystem.stat({
           path: `${current_id}_${culture}.pdf`,
-          directory: Directory.Documents
+          directory: Directory.Data
         })
       } catch (err) {
         await Filesystem.downloadFile({
           url: `${environment.pcm_url}/content/dis/website/month-leaflet/${current_id}/${culture}?show`,
           path: `${current_id}_${culture}.pdf`,
-          directory: Directory.Documents,
+          directory: Directory.Data,
           recursive: true
         })
       }
     }
+    this.changes.next()
+  }
+
+  async cacheDatasheets(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
+    // only users of type single customers are allowed to sync datasheets at this time
+    // if (user.type !== 1)
+    //   return
+
+    this._active_count++
+
+    let datasheets: IPCMAttachmentEntry[]
+
+    switch (user.type) {
+      case 1:
+      case 4:
+        datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+          const query: string = 'SELECT [d].[name], [d].[guid] ' +
+            'FROM currentExceptions [c] ' +
+            'INNER JOIN products [p] ON [p].[id] = [c].[productId] ' +
+            'INNER JOIN [favorites] [f] ON [f].id = [p].[id] ' +
+            'INNER JOIN datasheets [d] ON [d].[products] LIKE \'%\' || [p].[itemnum] || \'%\' AND languages LIKE \'%"\' || ? || \'":true%\' ' +
+            'WHERE ( [f].[hi] = 0 OR [f].[hi] IS NULL ) AND [f].[lastB] IS NOT NULL '
+
+          const result: DBSQLiteValues = await db.query(query, [culture])
+          return result.values as IPCMAttachmentEntry[]
+        })
+        break
+
+      case 2:
+        datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+          const query: string = 'SELECT [d].[name], [d].[guid] ' +
+            'FROM products [p] ' +
+            'INNER JOIN datasheets [d] ON [d].[products] LIKE \'%\' || [p].[itemnum] || \'%\' AND languages LIKE \'%"\' || ? || \'":true%\''
+
+          const result: DBSQLiteValues = await db.query(query, [culture])
+          return result.values as IPCMAttachmentEntry[]
+        })
+        break
+
+      default:
+        datasheets = []
+        break
+    }
+
+    let success: number = 0
+    const total: number = datasheets.length
+
+    for (const datasheet of datasheets) {
+      try {
+        await Filesystem.stat({
+          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+          directory: Directory.Cache
+        })
+        success++
+      } catch {
+        if (!this.network.online)
+          return
+        await Filesystem.downloadFile({
+          url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+          directory: Directory.Cache,
+          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+          recursive: true
+        }).then((): number => success++)
+      } finally {
+        this.message = `Synchronising datasheets: ${success}/${total}`
+        this.changes.next()
+      }
+    }
+    this._active_count--
+    this.changes.next()
   }
 
   /**
@@ -1990,6 +2156,10 @@ export class SyncService {
       .replace(/(ú|ü|û|ù|ū|Ú|Ü|Û|Ù|Ū)/g, 'u')
       .replace(/(æ|Æ)/g, 'ae')
       .toLowerCase()
+  }
+
+  public get busy(): boolean {
+    return this._active_count > 0
   }
 }
 

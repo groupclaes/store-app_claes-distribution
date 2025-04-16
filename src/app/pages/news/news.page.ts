@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { INewsT, NewsRepositoryService } from 'src/app/core/repositories/news.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('NewsPage')
 
 @Component({
   selector: 'app-news',
@@ -23,13 +25,13 @@ export class NewsPage implements OnInit {
     private user: UserService,
     private sanitizer: DomSanitizer,
     private translate: TranslateService,
-    private logger: LoggingProvider,
     private newsRepository: NewsRepositoryService,
     private cart: CartService,
     settings: SettingsService
   ) {
-    settings.DisplayThumbnail.subscribe((displayThumbnail: boolean): void => {
-      this.displayThumbnail = displayThumbnail
+    settings.showThumbnail.then((value: boolean): void => {
+      this.displayThumbnail = value
+      this.ref.markForCheck()
     })
     // this.statistics.newsPageView(this.user.userinfo.userId)
   }
@@ -52,16 +54,16 @@ export class NewsPage implements OnInit {
 
       for (let newsItem of news) {
         newsItem.content = this.b64DecodeUnicode(newsItem.content)
-        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button folder.txt']`, `<img style="max-height:180px" src='/assets/img/eShop_button_NL_ClaesDistribution_Promofolder_Outlines_BG_240x240.svg'></img>`)
-        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button nieuwigheden.txt']`, `<img style="max-height:180px" src='/assets/img/eShop_button_NL_ClaesDistribution_Nieuwigheden_Outlines_BG_240x240.svg'></img>`)
-        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button folder mensuel.txt']`, `<img style="max-height:180px" src='/assets/img/eShop_button_FR_ClaesDistribution_Promofolder_Outlines_BG_240x240.svg'></img>`)
-        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button nouveautes.txt']`, `<img style="max-height:180px" src='/assets/img/eShop_button_FR_ClaesDistribution_Nieuwigheden_Outlines_BG_240x240.svg'></img>`)
+        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button folder.txt']`, `<img alt="promo button nl" style="max-height:180px" src='/assets/img/eShop_button_NL_ClaesDistribution_Promofolder_Outlines_BG_240x240.svg' />`)
+        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button nieuwigheden.txt']`, `<img alt="nieuwigheden button nl" style="max-height:180px" src='/assets/img/eShop_button_NL_ClaesDistribution_Nieuwigheden_Outlines_BG_240x240.svg' />`)
+        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button folder mensuel.txt']`, `<img alt="promo button fr" style="max-height:180px" src='/assets/img/eShop_button_FR_ClaesDistribution_Promofolder_Outlines_BG_240x240.svg' />`)
+        newsItem.content = newsItem.content.replace(`[file='c:\\inetpub\\base64content\\button nouveautes.txt']`, `<img alt="nieuwigheden button fr" style="max-height:180px" src='/assets/img/eShop_button_FR_ClaesDistribution_Nieuwigheden_Outlines_BG_240x240.svg' />`)
         newsItem.content = this.cleanBody(newsItem.content)
       }
       this.news = news
 
     } catch (err) {
-      this.logger.error(err)
+      logger.error(err)
     } finally {
       this.loading = false
       this.ref.markForCheck()

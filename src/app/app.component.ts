@@ -1,23 +1,22 @@
 import { UserService } from './core/user.service'
-import { environment } from './../environments/environment.prod'
+import { environment } from '../environments/environment.prod'
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild } from '@angular/core'
 
 import { registerLocaleData } from '@angular/common'
 import localeFrBE from '@angular/common/locales/fr-BE'
 import localeNlBE from '@angular/common/locales/nl-BE'
 import { IonMenu, LoadingController, NavController, Platform } from '@ionic/angular'
-import { LoggingProvider } from './@shared/logging/log.service'
+import { LoggerService } from './@shared/logging/log.service'
 import { TranslateService } from '@ngx-translate/core'
 import { StorageProvider } from './core/storage-provider.service'
 import { CartService } from './core/cart.service'
-import { BrowserService } from './core/browser.service'
 import { NetworkService } from './@shared/network.service'
-import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Directory, Filesystem, PermissionStatus } from '@capacitor/filesystem'
 
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
 
-const LS_LANGUAGE = 'CLAES_STORE_LANGUAGE'
+const logger = new LoggerService('AppComponent')
 
 @Component({
   selector: 'app-root',
@@ -30,8 +29,7 @@ export class AppComponent {
   databaseLoaded = false
 
   constructor(
-    platform: Platform,
-    logger: LoggingProvider,
+    private platform: Platform,
     private translate: TranslateService,
     private storage: StorageProvider,
     private navCtrl: NavController,
@@ -39,18 +37,35 @@ export class AppComponent {
     private ref: ChangeDetectorRef,
     private user: UserService,
     private cart: CartService,
-    private browser: BrowserService,
-    private store: StorageProvider,
     public network: NetworkService
   ) {
-    logger.log('MyApp.constructor() -- started.')
+    logger.info('MyApp.constructor() -- started.')
 
     platform.ready().then(() => {
-      logger.log('MyApp.constructor() -- Platform is ready')
+      logger.info('MyApp.constructor() -- Platform is ready')
 
-      Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Documents, recursive: true }).then(() => {
-        console.log('Old thumbs cleared!')
-      })
+      if (platform.is('android')) {
+        try {
+          Filesystem.checkPermissions().then((permStatus: PermissionStatus): void => {
+            if (permStatus.publicStorage !== 'granted') {
+              Filesystem.requestPermissions().then((permStatus: PermissionStatus): void => {
+                if (permStatus.publicStorage === 'granted') {
+                  Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Data, recursive: true }).then(() => {
+                    console.log('Old thumbs cleared!')
+                  })
+                }
+              })
+            }
+          })
+        } catch {
+
+        }
+      } else {
+        Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Data, recursive: true }).then(() => {
+          console.log('Old thumbs cleared!')
+        })
+      }
+
 
       this.navCtrl.navigateRoot('/account/login')
     })
@@ -60,10 +75,7 @@ export class AppComponent {
 
 
   get menuItemsActive(): boolean {
-    if (this.user && (!this.user.activeUser && this.user.userinfo && this.user.multiUser)) {
-      return false
-    }
-    return true
+    return !(this.user && (!this.user.activeUser && this.user.userinfo && this.user.multiUser))
   }
 
   get isGuest(): boolean {
@@ -108,23 +120,16 @@ export class AppComponent {
     return false
   }
 
+  get isAndroid(): boolean {
+    return this.platform.is('android')
+  }
+
   async initTranslate() {
     this.translate.setDefaultLang(environment.default_language)
-
     this.translate.addLangs(environment.supported_languages)
 
-    const storedLanguage = this.store.get<string>(LS_LANGUAGE)
-    if (this.translate.langs.findIndex(e => e === storedLanguage) > -1) {
-      this.translate.use(storedLanguage)
-    } else {
-      const browserLang = this.translate.getBrowserCultureLang()
-
-      if (browserLang && this.translate.langs.some(e => e === browserLang)) {
-        this.translate.use(browserLang)
-      } else {
-        this.translate.use(environment.default_language)
-      }
-    }
+    const browserLang: string = this.translate.langs.find((x: string): boolean => x.startsWith(this.translate.getBrowserLang())) || undefined
+    this.translate.use(browserLang ?? environment.default_language)
   }
 
   async open(componentName: string) {
@@ -142,12 +147,5 @@ export class AppComponent {
     if (await this.navCtrl.navigateRoot(componentName)) {
       await this.menu.close()
     }
-  }
-
-  openLeaflet(): void {
-    // this.statistics.leafletView(this.user.userinfo.userId)
-    this.browser.open(
-      `https://pcm.groupclaes.be/v4/content/dis/website/month-leaflet/100/${this.culture.split('-')[0]}?show`,
-      '_system', 'location=yes')
   }
 }

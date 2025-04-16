@@ -1,5 +1,10 @@
 package be.claesdistribution.storeapp;
 
 import com.getcapacitor.BridgeActivity;
+// import thhe class
+import com.ingageco.readnativesetting.CapacitorReadNativeSetting;
 
-public class MainActivity extends BridgeActivity {}
+// add class inside bridge activity:
+add(CapacitorReadNativeSetting.class);
+
+public class MainActivity extends BridgeActivity { }

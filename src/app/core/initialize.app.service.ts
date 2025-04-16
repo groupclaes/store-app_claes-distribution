@@ -1,25 +1,25 @@
 import { SQLiteService } from './sqlite.service'
 import { Injectable } from '@angular/core'
 import { environment } from 'src/environments/environment'
-import { LoggingProvider } from '../@shared/logging/log.service'
-//import { MigrationService } from './migrations.service'
+import { LoggerService } from '../@shared/logging/log.service'
+
+const logger = new LoggerService('InitializeAppService')
 
 @Injectable()
 export class InitializeAppService {
   constructor(
-    private sqliteService: SQLiteService,
-    private logger: LoggingProvider
+    private sqliteService: SQLiteService
   ) { }
 
   async initializeApp() {
-    await this.sqliteService.initializePlugin().then(async (ret) => {
+    await this.sqliteService.initializePlugin().then(async (): Promise<void> => {
       try {
-        this.logger.debug('InitializeAppService -- initializeApp() called')
+        logger.debug('initializeApp() called')
         //execute startup queries
         const db = await this.sqliteService.createConnection(environment.database_name, false, 'no-encryption', 1)
-        this.logger.debug('InitializeAppService -- Created Sqlite connection ' + environment.database_name)
+        logger.debug('Created Sqlite connection ' + environment.database_name)
         await db.open()
-        this.logger.debug('InitializeAppService -- Sqlite connection opened')
+        logger.debug('Sqlite connection opened')
         // await this.sqliteService.closeConnection(environment.database_name)
       } catch (err) {
         throw Error(`initializeAppError: ${err}`)

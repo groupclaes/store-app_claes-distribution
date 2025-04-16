@@ -10,6 +10,13 @@ export const environment = {
     'nl-BE',
     'fr-BE'
   ],
+  cardinal_settings: {
+    battery_thresholds: {
+      location: .2,
+      notifications: .1,
+      background_fetch: .01
+    }
+  },
   store_url: 'https://shop.claes-distribution.be/api/uat/store-app',
   shop_api: 'https://shop.claes-distribution.be/api/v1/ecommerce',
   // api_url: 'https://api.groupclaes.be/test/distribution',

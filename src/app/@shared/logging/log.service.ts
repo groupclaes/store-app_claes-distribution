@@ -1,128 +1,148 @@
-import { Injectable } from '@angular/core'
-import { LogPublishersService } from './log-publisher.service'
-import { LogPublisher } from './log-publishers'
+import { Subject } from 'rxjs'
+import { environment } from 'src/environments/environment'
 
-@Injectable({
-  providedIn: 'root'
-})
-export class LoggingProvider {
-  private publishers: LogPublisher[] = []
-  private _level: LogLevel = LogLevel.Info
-  logWithDate: boolean = true
-
-  constructor(private publishersService: LogPublishersService) {
-    // Set publishers
-    this.publishers = this.publishersService.publishers
-  }
-
-  log(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.All, optionalParams)
-  }
-
-  trace(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.Trace, optionalParams)
-  }
-
-  debug(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.Debug, optionalParams)
-  }
-
-  info(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.Info, optionalParams)
-  }
-
-  warn(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.Warn, optionalParams)
-  }
-
-  error(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.Error, optionalParams)
-  }
-
-  fatal(message?: string, ...optionalParams: any[]) {
-    this.writeToLog(message, LogLevel.Fatal, optionalParams)
-  }
-
-  private writeToLog(msg: string, level: LogLevel, params: any[]) {
-    // disable logging
-    // return
-    if (this.shouldLog(level)) {
-      let entry: LogEntry = new LogEntry()
-      entry.message = msg
-      entry.level = level
-      entry.extraInfo = params
-      entry.logWithDate = this.logWithDate
-
-      for (let logger of this.publishers) {
-        logger.log(entry).subscribe(response => {
-          if (!response) {
-            console.error('could not log entry; ', entry)
-          }
-        })
-      }
-    }
-  }
-
-  get Level(): LogLevel {
-    return this._level
-  }
-
-  set Level(value: LogLevel) {
-    this._level = value
-  }
-
-  private shouldLog(level: LogLevel): boolean {
-    return level <= this._level
-  }
-}
-
-export class LogEntry {
-  // Public Properties
-  entryDate: Date = new Date()
-  message: string = ""
-  level: LogLevel = LogLevel.Debug
-  extraInfo: any[] = []
-  logWithDate: boolean = true
-
-  buildLogString(): string {
-    let ret: string = ""
-
-    if (this.logWithDate) {
-      ret = new Date().toISOString() + " - "
-    }
-    ret += "Type: " + LogLevel[this.level]
-    ret += " - Message: " + this.message
-    if (this.extraInfo.length) {
-      ret += " - Extra Info: "
-        + this.formatParams(this.extraInfo)
-    }
-
-    return ret
-  }
-
-  private formatParams(params: any[]): string {
-    let ret: string = params.join(",")
-
-    // Is there at least one object in the array?
-    if (params.some(p => typeof p == "object")) {
-      ret = ""
-      // Build comma-delimited string
-      for (let item of params) {
-        ret += JSON.stringify(item) + ","
-      }
-    }
-
-    return ret
-  }
-}
-
+/**
+ * The possible log levels.
+ * LogLevel.Off is never emitted and only used with Logger.level property to disable logs.
+ * https://docs.oracle.com/en/industries/communications/session-border-controller/8.2.0/mibguide/log-levels-and-syslog-level-severities.html
+ */
 export enum LogLevel {
   Off = 0,
-  Fatal = 1,
-  Error = 3,
-  Warn = 4,
-  Info = 6,
-  Debug = 7,
+  Emergency = 1,
+  Critical = 2,
+  // Major = 3,
+  // Minor = 4,
+  Warning = 5,
+  Notice = 6,
+  Info = 7,
   Trace = 8,
-  All = 9
+  Debug = 9
+}
+
+/**
+ * Log output handler function.
+ */
+export type LogOutput = (source: string, level: LogLevel, ...objects: any[]) => void
+
+export class LoggerService {
+  static logKey = 'logs'
+
+  /**
+   * Current logging level.
+   * Set it to LogLevel.Off to disable logs completely.
+   */
+  static level = LogLevel.Debug
+
+  /**
+   * Additional log outputs.
+   */
+  static outputs: any[] = []
+
+  /**
+   * Enables production mode.
+   * Sets logging level to LogLevel.Warning.
+   */
+  static enableProductionMode() {
+    LoggerService.level = LogLevel.Warning
+  }
+
+  constructor(private source?: string) { }
+
+  static listen: Subject<any[]> = new Subject<any[]>
+
+  /**
+   * Logs messages or objects  with the trace level.
+   * Works the same as console.log().
+   */
+  trace(...objects: any[]) {
+    this.log(console.trace, LogLevel.Trace, objects)
+  }
+
+  /**
+   * Logs messages or objects  with the debug level.
+   * Works the same as console.log().
+   */
+  debug(...objects: any[]) {
+    this.log(console.debug, LogLevel.Debug, objects)
+  }
+
+  /**
+   * Logs messages or objects  with the info level.
+   * Works the same as console.log().
+   */
+  notice(...objects: any[]) {
+    this.log(console.log, LogLevel.Notice, objects)
+  }
+
+  /**
+   * Logs messages or objects  with the info level.
+   * Works the same as console.log().
+   */
+  info(...objects: any[]) {
+    this.log(console.info, LogLevel.Info, objects)
+  }
+
+  /**
+   * Logs messages or objects  with the warning level.
+   * Works the same as console.log().
+   */
+  warn(...objects: any[]) {
+    this.log(console.warn, LogLevel.Warning, objects)
+  }
+
+  /**
+   * Logs messages or objects  with the error level.
+   * Works the same as console.log().
+   */
+  error(...objects: any[]) {
+    this.log(console.error, LogLevel.Critical, objects)
+  }
+
+  /**
+   * Logs messages or objects  with the emergency level.
+   * Works the same as console.log().
+   */
+  emergency(...objects: any[]) {
+    this.log(console.error, LogLevel.Emergency, objects)
+  }
+
+  private log(func: Function, level: LogLevel, objects: any[]) {
+    let storage: any = sessionStorage.getItem(LoggerService.logKey)
+    if (!storage)
+      storage = []
+    else
+      storage = JSON.parse(storage)
+    if (level <= LoggerService.level) {
+      try {
+        const log = [new Date().toISOString(), level, this.source ?? 'unknown'].concat(objects)
+
+        // when testing use console loggin functionality
+        if (!environment.production)
+          func.apply(console, log)
+
+        LoggerService.outputs.forEach((output) => output(log))
+        storage.push(log)
+        sessionStorage.setItem(LoggerService.logKey, JSON.stringify(storage))
+        LoggerService.listen.next(log)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+  }
+
+  static get(): any[] {
+    let storage: any = sessionStorage.getItem(LoggerService.logKey)
+
+    if (!storage)
+      storage = []
+    else
+      storage = JSON.parse(storage)
+
+    return storage
+  }
+
+  static clear() {
+    sessionStorage.removeItem(LoggerService.logKey)
+    LoggerService.listen.next(undefined)
+  }
 }

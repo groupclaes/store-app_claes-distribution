@@ -1,11 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectorRef, Component } from '@angular/core'
 import { NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { LoggingProvider } from 'src/app/@shared/logging/log.service'
 import { CartService } from 'src/app/core/cart.service'
 import { ICartDetail } from 'src/app/core/repositories/carts.repository.service'
-import { SyncService } from 'src/app/core/sync.service'
 import { UserService } from 'src/app/core/user.service'
+import { LoggerService } from '../../../@shared/logging/log.service'
+
+const logger = new LoggerService('CartHistoryPage')
 
 @Component({
   selector: 'app-cart-history',
@@ -21,8 +22,6 @@ export class CartHistoryPage {
     public navCtrl: NavController,
     private user: UserService,
     private ref: ChangeDetectorRef,
-    private sync: SyncService,
-    private logger: LoggingProvider,
     private cartService: CartService,
     private translate: TranslateService) { }
 
@@ -85,15 +84,15 @@ export class CartHistoryPage {
   }
 
   async sendCart(cart: ICartDetail, reload: boolean = true) {
-    this.logger.info(`sendCart: ${cart.name} before cartService`)
+    logger.info(`sendCart: ${cart.name} before cartService`)
     const result = await this.cartService.sendCart(cart)
-    this.logger.info(`sendCart: ${cart.name} after cartService`)
+    logger.info(`sendCart: ${cart.name} after cartService`)
 
     if (result) {
-      this.logger.debug(`sendCart: ${cart.name} successfully sent cart`)
+      logger.debug(`sendCart: ${cart.name} successfully sent cart`)
       if (reload) await this.loadCartsInHistory()
     } else {
-      this.logger.error(`sendCart: ${cart.name} (${cart.id}) Failed to send cart`)
+      logger.error(`sendCart: ${cart.name} (${cart.id}) Failed to send cart`)
     }
   }
 
