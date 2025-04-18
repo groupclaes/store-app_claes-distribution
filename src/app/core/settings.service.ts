@@ -16,6 +16,8 @@ const DEFAULT_VALUES = {
   SYNC_INTERVAL: '43200000',
   SYNC_LEAFLETS: true,
   SYNC_DATASHEETS: false,
+  SYNC_RECIPES: false,
+  SYNC_USAGE_MANUALS: false,
   // DEFAULT FILTERS
   DEFAULT_FILTER_NEW: false,
   DEFAULT_FILTER_PROMO: false,
@@ -37,6 +39,8 @@ export class SettingsService {
     if (platform.is('desktop') || !environment.production) {
       // DEFAULT_VALUES.DEFAULT_FILTER_PROMO = true
       DEFAULT_VALUES.DEFAULT_FILTER_FAVORITE = true
+      DEFAULT_VALUES.SYNC_DATASHEETS = true
+      DEFAULT_VALUES.SYNC_USAGE_MANUALS = true
       DEFAULT_VALUES.DEFAULT_PAGE = '/products'
     }
   }
@@ -57,6 +61,10 @@ export class SettingsService {
 
   get defaultPage(): Promise<string> {
     return this.readFromSettings<string>('default_page', DEFAULT_VALUES.DEFAULT_PAGE)
+  }
+
+  get dataAutomaticDownloads(): Promise<boolean> {
+    return this.readFromSettings<boolean>('data_automatic_downloads', DEFAULT_VALUES.DATA_AUTOMATIC_DOWNLOADS)
   }
 
   async defaultFilters(): Promise<any> {
@@ -84,17 +92,26 @@ export class SettingsService {
     let interval: string = await this.readFromSettings<string>('sync_interval', DEFAULT_VALUES.SYNC_INTERVAL)
     let leaflets: boolean = await this.readFromSettings<boolean>('sync_leaflets', DEFAULT_VALUES.SYNC_LEAFLETS)
     let datasheets: boolean = await this.readFromSettings<boolean>('sync_datasheets', DEFAULT_VALUES.SYNC_DATASHEETS)
+    let recipes: boolean = await this.readFromSettings<boolean>('sync_recipes', DEFAULT_VALUES.SYNC_RECIPES)
+    let usageManuals: boolean = await this.readFromSettings<boolean>('sync_usage-manuals', DEFAULT_VALUES.SYNC_USAGE_MANUALS)
+
+    if (!environment.production)
+      interval = '120000'
 
     logger.notice('sync_values()', {
       interval: +interval,
       leaflets,
-      datasheets
+      datasheets,
+      recipes,
+      usageManuals
     })
 
     return {
       interval: +interval,
       leaflets,
-      datasheets
+      datasheets,
+      recipes,
+      usageManuals
     }
   }
 
@@ -108,4 +125,6 @@ export interface ISyncSettings {
   interval: number
   leaflets: boolean
   datasheets: boolean
+  recipes: boolean
+  usageManuals: boolean
 }

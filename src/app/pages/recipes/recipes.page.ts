@@ -4,6 +4,7 @@ import { IRecipe, RecipesRepositoryService } from 'src/app/core/repositories/rec
 import { NavController } from '@ionic/angular'
 import { CartService } from 'src/app/core/cart.service'
 import { NetworkService } from 'src/app/@shared/network.service'
+import { Directory, Filesystem } from '@capacitor/filesystem'
 
 @Component({
   selector: 'app-recipes',
@@ -30,12 +31,30 @@ export class RecipesPage implements OnInit {
   }
 
   ngOnInit() {
-    this.load()
+  }
+
+  ionViewDidEnter(): void {
+    setTimeout(async () => {
+      await this.load()
+    }, 120)
   }
 
   async load(additional?: boolean, force?: boolean) {
     if (this._recipes && !additional && !force) {
       this.ref.markForCheck()
+      for (let item of this._recipes.filter(i => !i['available'])) {
+        try {
+          await Filesystem.stat({
+            path: `recipes/${item.guid}/${item.name}`,
+            directory: Directory.Cache
+          })
+          item['available'] = true
+        } catch {
+          item['available'] = false
+        } finally {
+          this.ref.markForCheck()
+        }
+      }
       return
     } else if (!this._recipes) {
       this._recipes = []
@@ -70,6 +89,20 @@ export class RecipesPage implements OnInit {
     } finally {
       this.loading = false
       this.ref.markForCheck()
+
+      for (let recipe of this._recipes) {
+        try {
+          await Filesystem.stat({
+            path: `recipes/${recipe.guid}/${recipe.name}`,
+            directory: Directory.Cache
+          })
+          recipe['available'] = true
+        } catch {
+          recipe['available'] = false
+        } finally {
+          this.ref.markForCheck()
+        }
+      }
     }
   }
 

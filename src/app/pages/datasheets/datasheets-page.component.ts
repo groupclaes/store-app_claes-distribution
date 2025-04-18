@@ -137,15 +137,18 @@ export class DatasheetsPage implements OnInit {
       if (uri) {
         datasheet['available'] = true
         this.ref.markForCheck()
-        setTimeout((): void => {
-          FileOpener.open({
-            filePath: uri,
-            openWithDefault: true,
-            contentType: 'application/pdf'
-          })
-          // this.navCtrl.navigateForward(['datasheets', datasheet.guid], {
-          //   animated: true
-          // })
+        setTimeout(async (): Promise<void> => {
+          try {
+            await FileOpener.open({
+              filePath: uri,
+              openWithDefault: true,
+              contentType: 'application/pdf'
+            })
+          } catch {
+            this.navCtrl.navigateForward(['documents', 'datasheets', datasheet.guid, datasheet.name], {
+              animated: true
+            })
+          }
         }, 80)
       } else {
         datasheet['available'] = false

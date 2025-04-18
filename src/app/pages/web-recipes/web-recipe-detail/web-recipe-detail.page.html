@@ -99,7 +99,7 @@
       </ion-text>
 
       <ion-list inset="true">
-        <ion-item *ngFor="let relatedItem of recipe.relatedItems" [href]="relatedItem.url">
+        <ion-item *ngFor="let relatedItem of recipe.relatedItems" (click)="openRelated(relatedItem.url)">
           <ion-label>
             {{ relatedItem.text }}
           </ion-label>

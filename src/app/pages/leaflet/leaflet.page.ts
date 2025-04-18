@@ -4,6 +4,7 @@ import { Directory, Filesystem, ReadFileResult } from '@capacitor/filesystem'
 import { NavController } from '@ionic/angular'
 import { UserService } from '../../core/user.service'
 import { Share } from '@capacitor/share'
+import { environment } from '../../../environments/environment'
 
 const ZOOM_STEP: number = 0.125
 const DEFAULT_ZOOM: number = 1
@@ -71,7 +72,7 @@ export class LeafletPage {
   ) {
     this.culture = this.translate.currentLang.split('-')[0]
     this.loading = true
-    this.load().then()
+    this.load()
 
     Share.canShare().then(share => {
       this.canShare = share.value
@@ -83,31 +84,41 @@ export class LeafletPage {
     this.ref.markForCheck()
   }
 
-  async load(): Promise<void> {
+  load(): void {
     this.loading = true
     this.fileUrl = undefined
     const date: string = new Date().toISOString()
     const current_id: string = `${date.substring(0, 4)}${(date.substring(5, 7))}`
 
-    const result: ReadFileResult = await Filesystem.readFile({
+    Filesystem.readFile({
       path: `${current_id}_${this.culture}.pdf`,
       directory: Directory.Data
-    })
-
-    if (typeof result.data === 'string') {
-      this.fileUrl = 'data:application/pdf;base64,' + result.data
-    } else {
-      const reader = new FileReader()
-      reader.onload = (): void => {
-        if (typeof reader.result === 'string') {
-          this.fileUrl = reader.result
-          this.ref.markForCheck()
+    }).then((result: ReadFileResult): void => {
+      if (typeof result.data === 'string') {
+        this.fileUrl = 'data:application/pdf;base64,' + result.data
+        this.ref.markForCheck()
+      } else {
+        const reader = new FileReader()
+        reader.onload = (): void => {
+          if (typeof reader.result === 'string') {
+            this.fileUrl = reader.result
+            this.ref.markForCheck()
+          }
         }
+        reader.readAsDataURL(result.data)
       }
-      reader.readAsDataURL(result.data)
-    }
-
-    this.ref.markForCheck()
+    }).catch((): void => {
+      Filesystem.downloadFile({
+        url: `${environment.pcm_url}/content/dis/website/month-leaflet/${current_id}/${this.culture}?show`,
+        path: `${current_id}_${this.culture}.pdf`,
+        directory: Directory.Data,
+        recursive: true
+      }).then((): void => {
+        setTimeout((): void => {
+          this.load()
+        }, 100)
+      })
+    })
   }
 
   async share(): Promise<void> {

@@ -4,11 +4,14 @@ import { environment } from '../../environments/environment'
 import { Injectable } from '@angular/core'
 import { BackgroundFetch, BackgroundFetchStatus } from '@transistorsoft/capacitor-background-fetch'
 import { Platform } from '@ionic/angular'
-import { UserService } from './user.service'
+import { ServerCustomer, UserService } from './user.service'
 import { SyncService } from './sync.service'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggerService } from '../@shared/logging/log.service'
-import { SettingsService } from './settings.service'
+import { ISyncSettings, SettingsService } from './settings.service'
+import { ApiService } from './api.service'
+import { firstValueFrom } from 'rxjs'
+import { HttpErrorResponse } from '@angular/common/http'
 
 const logger = new LoggerService('CardinalService')
 
@@ -32,7 +35,8 @@ export class CardinalService {
     private sync: SyncService,
     private user: UserService,
     private translate: TranslateService,
-    private appSettings: SettingsService
+    private appSettings: SettingsService,
+    private api: ApiService
   ) {
     logger.debug('constructor() -- app_version; is_production', pack.version, environment.production)
     this.status = CardinalStatus.INITIALIZING
@@ -46,6 +50,7 @@ export class CardinalService {
 
     if (this.platform.is('ios')) {
       try {
+        BackgroundFetch.stop()
         const syncSettings = await this.appSettings.getSyncValues()
         const status: BackgroundFetchStatus = await BackgroundFetch.configure({
           // do check max once per hour, updating planning mainly utilizes location updates
@@ -105,14 +110,13 @@ export class CardinalService {
       else
         promise = this.sync.fullSync(this.user.credential, culture, false, undefined, this.user.userinfo.userId)
     } else
-      promise = new Promise<boolean>(r => {
-        r(true)
-      })
+      promise = new Promise<boolean>(r => r(true))
 
     logger.debug('evaluate_data_freshness() -- end')
     return promise
   }
 
+  // PCM
   private async evaluate_datsheet_cache(): Promise<boolean> {
     logger.debug('evaluate_datsheet_cache() -- start')
     try {
@@ -126,15 +130,83 @@ export class CardinalService {
     }
   }
 
-  private async backgroundTaskWork(source: string) {
-    localStorage.setItem('backgroundTaskWork', JSON.stringify([source, new Date()]))
-    if (this.status !== CardinalStatus.RUNNING) {
-      logger.info('backgroundTaskWork() -- CardinalService is not RUNNING, canceling work due to status; ', CardinalStatus[this.status])
-      return
+  private async evaluate_leaflet_cache(): Promise<boolean> {
+    logger.debug('evaluate_leaflet_cache() -- start')
+    try {
+      await this.sync.validateLeaflet(this.user.userinfo.userId, this.culture)
+      return true
+    } catch (err) {
+      logger.error('evaluate_leaflet_cache() error', err)
+      return false
+    } finally {
+      logger.debug('evaluate_leaflet_cache() -- end')
     }
+  }
+
+  private async evaluate_recieps_cache(): Promise<boolean> {
+    logger.debug('evaluate_recieps_cache() -- start')
+    try {
+      await this.sync.cacheRecipes(this.user.userinfo, this.culture, this.user.activeUser?.id, this.user.activeUser?.address)
+      return true
+    } catch (err) {
+      logger.error('evaluate_recieps_cache() error', err)
+      return false
+    } finally {
+      logger.debug('evaluate_recieps_cache() -- end')
+    }
+  }
+
+  private async evaluate_usageManuals_cache(): Promise<boolean> {
+    logger.debug('evaluate_usageManuals_cache() -- start')
+    try {
+      await this.sync.cacheUsageManuals(this.user.userinfo, this.culture, this.user.activeUser?.id, this.user.activeUser?.address)
+      return true
+    } catch (err) {
+      logger.error('evaluate_usageManuals_cache() error', err)
+      return false
+    } finally {
+      logger.debug('evaluate_usageManuals_cache() -- end')
+    }
+  }
+
+  private async evaluate_auth_status(): Promise<boolean> {
+    logger.debug('evaluate_auth_status() -- start')
+    try {
+      const res: ServerCustomer = await firstValueFrom(this.api.postLogin(this.user.storedCredential))
+      logger.debug('evaluate_auth_status() -- postLogin response ', res)
+      return true
+    } catch (err) {
+      if (err instanceof HttpErrorResponse) {
+        switch (err.status) {
+          case 401:
+            // user is not authorized
+            await this.user.logout()
+            throw new Error('Unauthenticated')
+
+          case 404:
+            // user is not found
+            await this.user.logout()
+            throw new Error('Unauthenticated')
+        }
+      }
+      logger.error('evaluate_auth_status() error', err)
+      return false
+    } finally {
+      logger.debug('evaluate_auth_status() -- end')
+    }
+  }
+
+  private async backgroundTaskWork(source: string): Promise<void> {
+    localStorage.setItem('backgroundTaskWork', JSON.stringify([source, new Date()]))
+    if (this.status !== CardinalStatus.RUNNING)
+      return logger.info('backgroundTaskWork() -- CardinalService is not RUNNING, canceling work due to status; ', CardinalStatus[this.status])
+
+    if (!this.user.userinfo?.userId)
+      return logger.info('backgroundTaskWork() -- CardinalService cannot run background work due to unauthenticated status!')
+
     this.status = CardinalStatus.WORKING
     logger.debug('backgroundTaskWork() -- start, source; ', source)
-    const syncSettings = await this.appSettings.getSyncValues()
+    const syncSettings: ISyncSettings = await this.appSettings.getSyncValues()
 
     // try {
     //   // send logs to server
@@ -157,18 +229,36 @@ export class CardinalService {
       // this.evaluate_technician_locations()
     ]
 
+    try {
+      await this.evaluate_auth_status()
+    } catch {
+      this.status = CardinalStatus.FAILED
+      return
+    }
+
     // await this.appSettings.refresh()
 
     // if (this.appSettings.automate_planning_refresh || source !== 'backgroundFetch')
     //   work.push(this.evaluate_calendar_updates())
+
+    if (source === 'post-login') {
+      if (syncSettings.datasheets)
+        work.push(this.evaluate_datsheet_cache())
+      if (syncSettings.leaflets)
+        work.push(this.evaluate_leaflet_cache())
+      if (syncSettings.recipes)
+        work.push(this.evaluate_recieps_cache())
+      if (syncSettings.usageManuals)
+        work.push(this.evaluate_usageManuals_cache())
+    }
 
     // this.appSettings.automate_data_refresh &&  || source !== 'backgroundFetch'
     logger.debug('backgroundTaskWork() -- automate_data_refresh, includes(source), source', ['backgroundFetch', 'interval'].includes(source), source) // , this.appSettings.automate_data_refresh
     if (['backgroundFetch', 'interval'].includes(source)) {
       if (syncSettings.datasheets)
         work.push(this.evaluate_datsheet_cache())
-      // if (syncSettings.leaflets)
-      //   work.push(this.evaluate_leaflet_cache())
+      if (syncSettings.leaflets)
+        work.push(this.evaluate_leaflet_cache())
       work.push(this.evaluate_data_freshness())
     }
 
@@ -180,6 +270,12 @@ export class CardinalService {
       this.status = CardinalStatus.RUNNING
       logger.debug('backgroundTaskWork() -- end')
     })
+  }
+
+  public async schedule(source: string, timeout: number = 10000): Promise<void> {
+    window.setTimeout(async () => {
+      await this.backgroundTaskWork(source)
+    }, timeout)
   }
 
   set status(value: CardinalStatus) {

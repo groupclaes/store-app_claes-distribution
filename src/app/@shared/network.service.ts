@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { BehaviorSubject } from 'rxjs'
-import { Network } from '@capacitor/network'
+import { ConnectionStatus, Network } from '@capacitor/network'
 import { TranslateService } from '@ngx-translate/core'
 import { ToastController } from '@ionic/angular'
 import { environment } from 'src/environments/environment'
@@ -13,6 +13,7 @@ const logger = new LoggerService('NetworkService')
 })
 export class NetworkService {
   private _connected?: boolean
+  private _cellular?: boolean
 
   connected: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false)
 
@@ -20,42 +21,44 @@ export class NetworkService {
     private translate: TranslateService,
     private toastCtrl: ToastController
   ) {
-    this.check()
+    this.check().then()
 
-    const t = setInterval(async () => {
-      const c = this.check()
+    const t: number = window.setInterval(async (): Promise<void> => {
+      const c: Promise<boolean> = this.check()
       if (c) clearInterval(t)
     }, 150)
 
-    Network.addListener('networkStatusChange', (ev) => {
+    Network.addListener('networkStatusChange', (ev: ConnectionStatus) => {
       logger.debug('networkStatusChange() -- ev', ev)
       if (this._connected !== undefined && this._connected !== ev.connected) {
         this.connected.next(ev.connected)
       }
       this._connected = ev.connected
+      this._cellular = ev.connectionType === 'cellular'
     })
   }
 
   async check(): Promise<boolean> {
     logger.debug('check() -- start')
-    const networkStatus = await Network.getStatus()
+    const networkStatus: ConnectionStatus = await Network.getStatus()
 
     if (this._connected !== undefined && this._connected != networkStatus.connected) {
       this.connected.next(networkStatus.connected)
     }
     this._connected = networkStatus.connected
+    this._cellular = networkStatus.connectionType === 'cellular'
 
     logger.debug('check() -- end', networkStatus.connected)
     return networkStatus.connected
   }
 
-  noop($event?: any) {
+  noop($event?: any): void {
     this.toast(this.translate.instant('offline-message'))
-      .then(_ => $event?.target.complete())
+      .then((): void => $event?.target.complete())
   }
 
-  private async toast(message: string, duration: number = 3000) {
-    const toast = await this.toastCtrl.create({
+  private async toast(message: string, duration: number = 3000): Promise<void> {
+    const toast: HTMLIonToastElement = await this.toastCtrl.create({
       message,
       duration,
       position: 'top'
@@ -69,5 +72,9 @@ export class NetworkService {
 
   get offline(): boolean {
     return !this.online
+  }
+
+  get isMobileData(): boolean {
+    return this._cellular
   }
 }

@@ -44,6 +44,20 @@
       </ion-note>
     </ion-item>
     <ion-item>
+      <ion-label translate>pages.sync.documents.usageManuals</ion-label>
+      <ion-spinner slot="end" *ngIf="usageManualsCount === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="usageManualsCount !== undefined">
+        {{ usageManualsCount }}
+      </ion-note>
+    </ion-item>
+    <ion-item>
+      <ion-label translate>pages.sync.documents.recipes</ion-label>
+      <ion-spinner slot="end" *ngIf="recipesCount === undefined"></ion-spinner>
+      <ion-note slot="end" *ngIf="recipesCount !== undefined">
+        {{ recipesCount }}
+      </ion-note>
+    </ion-item>
+    <ion-item>
       <ion-label translate>pages.sync.documents.reports</ion-label>
       <ion-spinner slot="end" *ngIf="reportCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="reportCount !== undefined">

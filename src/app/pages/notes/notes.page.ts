@@ -41,15 +41,11 @@ export class NotesPage {
     return this.translate.currentLang
   }
 
-  get debugging() {
+  get debugging(): boolean {
     return !environment.production
   }
 
-  ionViewWillEnter() {
-    return this.loadNotes()
-  }
-
-  async ionViewDidEnter() {
+  async ionViewDidEnter(): Promise<void> {
     if (!this.user.userinfo) {
       this.navCtrl.navigateRoot('LoginPage')
     } else {
@@ -57,13 +53,12 @@ export class NotesPage {
 
       // eslint-disable-next-line eqeqeq
       if (this.route.snapshot.queryParams.createNote === true) {
-        const lastUnsent = await this.notesRepository.getLastUnsentNote(this.user.activeUser.id, this.user.activeUser.address)
-        if (lastUnsent != null && lastUnsent.date.toLocaleDateString() === new Date().toLocaleDateString()) {
-          // Check if last note is made today, otherwise create new
+        const lastUnsent: IUnsentVisitNote = await this.notesRepository.getLastUnsentNote(this.user.activeUser.id, this.user.activeUser.address)
+        // Check if last note is made today, otherwise create new
+        if (lastUnsent && lastUnsent.date.toLocaleDateString() === new Date().toLocaleDateString())
           this.addNote(lastUnsent)
-        } else {
+        else
           this.addNote()
-        }
       }
 
       this.ref.markForCheck()
@@ -151,12 +146,10 @@ export class NotesPage {
     }).then(alert => alert.present())
   }
 
-
   async loadNotes() {
     try {
       const result = await this.notesRepository.getUnsentNotes(this.user.activeUser.id,
         this.user.activeUser.address) as IVisitNote[]
-      console.log(result)
 
       const notes = await this.notesRepository.getCustomerNotes(this.user.activeUser.id,
         this.user.activeUser.address)

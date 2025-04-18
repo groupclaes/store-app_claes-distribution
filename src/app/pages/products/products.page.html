@@ -51,7 +51,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" [scrollY]="false" color="light" (resize)="clampBuilder(320, 750, 0.375, 0.875)">
+<ion-content [fullscreen]="true" [scrollY]="false" color="light">
   <cdk-virtual-scroll-viewport itemSize="81" minBufferPx="1350" maxBufferPx="2350" class="ion-content-scroll-host">
     <ion-list>
       <ion-item [routerLink]="[product.id]" [color]="product.availableOn ? 'light' : undefined"

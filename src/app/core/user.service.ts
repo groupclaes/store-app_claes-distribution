@@ -6,6 +6,7 @@ import { ApiService } from './api.service'
 import { StorageProvider } from './storage-provider.service'
 import { SyncService } from './sync.service'
 import { Observable } from 'rxjs'
+import { NavController } from '@ionic/angular'
 
 const logger = new LoggerService('StorageProvider')
 
@@ -21,7 +22,8 @@ export class UserService {
     private translate: TranslateService,
     private storage: StorageProvider,
     private api: ApiService,
-    private sync: SyncService
+    private sync: SyncService,
+    private navCtrl: NavController
   ) {
     logger.debug('constructor()')
   }
@@ -38,8 +40,8 @@ export class UserService {
       },
       error: (err: any): void => {
         logger.error('signup ERROR', err)
-        const userResponse = this.storage.get<ServerCustomer>('user')
-        const storedCredential = this.storage.get<AppCredential>('credential')
+        const userResponse: ServerCustomer = this.storage.get<ServerCustomer>('user')
+        const storedCredential: AppCredential = this.storage.get<AppCredential>('credential')
         if (storedCredential && userResponse) {
           if (storedCredential.username == credential.username && storedCredential.password == credential.password) {
             this._loggedIn(userResponse, credential)
@@ -100,8 +102,10 @@ export class UserService {
     this._user = null
     this._credential.password = ''
     await this.sync.dropTables()
+    await this.sync.clearDocumentCaches()
     this.storage.set('credential', this._credential)
     localStorage.removeItem('active-user')
+    await this.navCtrl.navigateRoot('/account/login')
   }
 
   syncData(force: boolean = false): Promise<boolean> {
@@ -200,9 +204,7 @@ export interface AppCredential {
 
 export interface AppRegistrationCredential extends AppCredential {
   code: string
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   given_name: string
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   last_name: string
 }
 
@@ -281,7 +283,7 @@ export interface AppCustomerModel {
 }
 
 export type CustomerUserType = 0 /* Guest */ |
-  1 /*: norml user */ |
+  1 /*: normal user */ |
   2 /*: agent user */ |
   3 /*: super user */ |
   4 /*: multi user */ |

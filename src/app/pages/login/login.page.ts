@@ -8,7 +8,6 @@ import { SyncService } from 'src/app/core/sync.service'
 import {
   DataIntegrityChecksumsRepositoryService
 } from 'src/app/core/repositories/data-integrity-checksums.repository.service'
-import { StorageProvider } from 'src/app/core/storage-provider.service'
 import { CartsRepositoryService } from 'src/app/core/repositories/carts.repository.service'
 import { CurrentExceptionsRepositoryService } from 'src/app/core/repositories/current-exceptions.repository.service'
 import { FormBuilder, FormGroup, Validators } from '@angular/forms'
@@ -17,6 +16,7 @@ import { CartService } from 'src/app/core/cart.service'
 import { firstValueFrom } from 'rxjs'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { LoggerService } from '../../@shared/logging/log.service'
+import { CardinalService } from '../../core/cardinal.service'
 
 const logger = new LoggerService('LoginPage')
 
@@ -42,7 +42,7 @@ export class LoginPage implements OnInit {
     private fb: FormBuilder,
     private loadingCtrl: LoadingController,
     private sync: SyncService,
-    private storage: StorageProvider,
+    private cardinal: CardinalService,
     private settings: SettingsService,
     private platform: Platform,
     private checksumRepository: DataIntegrityChecksumsRepositoryService,
@@ -186,8 +186,7 @@ export class LoginPage implements OnInit {
 
             this._loading.dismiss()
             this.ref.markForCheck()
-            this.navCtrl.navigateRoot(page).then((): void => {
-            })
+            this.navCtrl.navigateRoot(page).then((): Promise<void> => this.cardinal.schedule('post-login'))
           }
         } else {
           // this.toast(this.translate.instant('localData'))
@@ -201,7 +200,7 @@ export class LoginPage implements OnInit {
           if (this.user.userinfo.type === 1)
             await this.prepareFlow()
           else
-            this.navCtrl.navigateRoot(await this.defaultPage)
+            this.navCtrl.navigateRoot(await this.defaultPage).then((): Promise<void> => this.cardinal.schedule('post-login'))
         }
       } else {
         this.toast(this.translate.instant('loginError'))
@@ -238,7 +237,7 @@ export class LoginPage implements OnInit {
     this.ref.markForCheck()
 
     if (prepare)
-      await this.navCtrl.navigateRoot(await this.defaultPage)
+      await this.navCtrl.navigateRoot(await this.defaultPage).then((): Promise<void> => this.cardinal.schedule('post-login'))
     else
       await this.toast(this.translate.instant('unknownError'))
   }
@@ -284,7 +283,7 @@ export class LoginPage implements OnInit {
     this.ref.markForCheck()
 
     if (prepare) {
-      this.navCtrl.navigateRoot(await this.defaultPage)
+      this.navCtrl.navigateRoot(await this.defaultPage).then((): Promise<void> => this.cardinal.schedule('post-login'))
     } else {
       this.toast(this.translate.instant('unknownError'))
     }
@@ -311,7 +310,7 @@ export class LoginPage implements OnInit {
             this._loading.dismiss()
             this.ref.markForCheck()
           }
-          this.navCtrl.navigateRoot(await this.defaultPage)
+          this.navCtrl.navigateRoot(await this.defaultPage).then((): Promise<void> => this.cardinal.schedule('post-login'))
         } else {
           this.toast(this.translate.instant('pages.login.offline-message'))
         }

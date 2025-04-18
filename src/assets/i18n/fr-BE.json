@@ -427,6 +427,32 @@
         "vatNum": "Numéro TVA",
         "language": "Langue"
       }
+    },
+    "sync": {
+      "title": "Synchronisatie",
+      "sync": "Bijwerken",
+      "synchronising": "Gegevens bijwerken",
+      "lastsync": "Gegevens laatst bijgewerkt op",
+      "neversynced": "Gegevens nog nooit bijgewerkt",
+      "sync_details": "Overzicht van Gegevens en Laatste Bijwerkingsdata",
+      "documents": {
+        "title": "Locale documenten",
+        "leaflets": "Dépliants",
+        "datasheets": "Fiches techniques",
+        "usageManuals": "Fiche d'utilisation",
+        "recipes": "Recettes",
+        "reports": "Rapports",
+        "thumbnails": "Thumbnails",
+        "cache": "Cache"
+      }
+    },
+    "web-recipe-detail": {
+      "ingredients": "Ingrediënten",
+      "preparationSteps": "Bereiding",
+      "relatedItems": "Hulpmiddel",
+      "tip": "Tip",
+      "tags": "Tags",
+      "other": "Andere recepten om te ontdekken"
     }
   },
   "languages": {

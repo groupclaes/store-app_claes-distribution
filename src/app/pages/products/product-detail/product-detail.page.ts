@@ -31,6 +31,9 @@ import { FileOpener } from '@capacitor-community/file-opener'
 const UNAVAILABLE_AFTER = new Date('2050-12-31')
 const logger = new LoggerService('ProductDetailPage')
 
+// Item numbers for testing
+// url in description: 1502024166
+
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.page.html',
@@ -240,22 +243,32 @@ export class ProductDetailPage {
         this.recipesModule = res.recipesModule
         this.usageManuals = res.usageManuals
 
-        for (let datasheet of this.datasheets) {
-          try {
-            await Filesystem.stat({
-              path: `datasheets/${datasheet.guid}/${datasheet.name}`,
-              directory: Directory.Cache
-            })
-            datasheet['available'] = true
-          } catch {
-            datasheet['available'] = false
-          } finally {
-            this.ref.markForCheck()
-          }
+        for (let item of this.datasheets) {
+          await this.checkDocumentAvailable(item, 'datasheets')
+        }
+        for (let item of this.recipes) {
+          await this.checkDocumentAvailable(item, 'recipes')
+        }
+        for (let item of this.usageManuals) {
+          await this.checkDocumentAvailable(item, 'usage-manuals')
         }
       }
     } catch (err) {
       logger.error(err)
+    } finally {
+      this.ref.markForCheck()
+    }
+  }
+
+  async checkDocumentAvailable(item: IPCMAttachmentEntry, path: string) {
+    try {
+      await Filesystem.stat({
+        path: `${path}/${item.guid}/${item.name}`,
+        directory: Directory.Cache
+      })
+      item['available'] = true
+    } catch {
+      item['available'] = false
     } finally {
       this.ref.markForCheck()
     }
@@ -304,43 +317,44 @@ export class ProductDetailPage {
     this.recipeModuleCount = 999
   }
 
-  async openDatasheet(datasheet: IPCMAttachmentEntry): Promise<void> {
+  async openAttachment(attachment: IPCMAttachmentEntry, path: string): Promise<void> {
     // check if file is available in cache
     let uri: string
     try {
       this.ref.markForCheck()
 
       const res: GetUriResult = await Filesystem.stat({
-        path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+        path: `${path}/${attachment.guid}/${attachment.name}`,
         directory: Directory.Cache
       })
       uri = res.uri
     } catch {
       if (!this.network.online)
         return this.network.noop()
-      datasheet['available'] = undefined
+      attachment['available'] = undefined
       this.ref.markForCheck()
       await Filesystem.downloadFile({
-        url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+        url: `${environment.pcm_url}/content/file/${attachment.guid}?show=true`,
         directory: Directory.Cache,
-        path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+        path: `${path}/${attachment.guid}/${attachment.name}`,
         recursive: true
       }).then((res: DownloadFileResult): string => uri = res.path)
       this.ref.markForCheck()
     } finally {
       if (uri) {
-        datasheet['available'] = true
+        attachment['available'] = true
         this.ref.markForCheck()
-        FileOpener.open({
-          filePath: uri,
-          openWithDefault: true,
-          contentType: 'application/pdf'
-        })
-        // this.navCtrl.navigateForward(['datasheets', datasheet.guid], {
-        //   animated: true
-        // })
+        try {
+          await FileOpener.open({
+            filePath: uri,
+            openWithDefault: true,
+            contentType: 'application/pdf'
+          })
+        } catch {
+          this.navCtrl.navigateForward(['documents', path, attachment.guid, attachment.name], { animated: true })
+        }
       } else {
-        datasheet['available'] = false
+        attachment['available'] = false
         this.ref.markForCheck()
       }
     }

@@ -336,7 +336,7 @@
           <ion-label class="ion-text-wrap" translate="noDatasheets"></ion-label>
         </ion-item>
         <ion-item *ngFor="let attachment of datasheets" tappable
-                  (click)="openDatasheet(attachment)">
+                  (click)="openAttachment(attachment, 'datasheets')">
           <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
@@ -358,11 +358,17 @@
 
       <ion-list inset="true">
         <ion-item *ngFor="let attachment of usageManuals" tappable
-                  (click)="network.online ? showDocumentActionSheet(attachment) : network.noop()">
+                  (click)="openAttachment(attachment, 'usage-manuals')">
           <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
+          <ion-text color="danger" slot="end" *ngIf="attachment['available'] === false">
+            <i class="fal fa-fw fa-cloud-download"></i>
+          </ion-text>
+          <ion-spinner slot="end" *ngIf="attachment['available'] === undefined">
+            <i class="fal fa-fw fa-cloud-download"></i>
+          </ion-spinner>
         </ion-item>
       </ion-list>
     </ng-container>
@@ -373,11 +379,17 @@
       </ion-text>
       <ion-list inset="true">
         <ion-item *ngFor="let attachment of recipes | slice:0:recipeCount" tappable
-                  (click)="network.online ? showRecipeActionSheet(attachment) : network.noop()">
+                  (click)="openAttachment(attachment, 'recipes')">
           <i slot="start" class='fal fa-fw fa-file-pdf'></i>
           <ion-label>
             {{ attachment.name }}
           </ion-label>
+          <ion-text color="danger" slot="end" *ngIf="attachment['available'] === false">
+            <i class="fal fa-fw fa-cloud-download"></i>
+          </ion-text>
+          <ion-spinner slot="end" *ngIf="attachment['available'] === undefined">
+            <i class="fal fa-fw fa-cloud-download"></i>
+          </ion-spinner>
         </ion-item>
         <ion-item *ngIf="recipes.length > recipeCount" tappable (click)="showAllRecipes()">
           {{ 'displayAllRecipes' | translate }}

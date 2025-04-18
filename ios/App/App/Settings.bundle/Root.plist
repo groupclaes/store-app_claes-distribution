@@ -76,11 +76,11 @@
 			<key>Key</key>
 			<string>sync_interval</string>
 			<key>DefaultValue</key>
-			<string>43200000</string>
+			<string>14400000</string>
 			<key>Titles</key>
 			<array>
 				<string>always</string>
-				<string>hourrly</string>
+				<string>hourly</string>
 				<string>4hours</string>
 				<string>12hours</string>
 				<string>daily</string>
@@ -115,6 +115,26 @@
 			<string>SyncDatasheets</string>
 			<key>Key</key>
 			<string>sync_datasheets</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>SyncRecipes</string>
+			<key>Key</key>
+			<string>sync_recipes</string>
+			<key>DefaultValue</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>Type</key>
+			<string>PSToggleSwitchSpecifier</string>
+			<key>Title</key>
+			<string>SyncUsageManuals</string>
+			<key>Key</key>
+			<string>sync_usage-manuals</string>
 			<key>DefaultValue</key>
 			<false/>
 		</dict>

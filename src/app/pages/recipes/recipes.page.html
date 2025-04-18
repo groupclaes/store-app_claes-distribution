@@ -11,7 +11,8 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000" [placeholder]="'searchInput' | translate" (ionInput)="filterRecipes($event)">
+    <ion-searchbar inputmode="search" show-clear-button="always" [debounce]="1000"
+                   [placeholder]="'searchInput' | translate" (ionInput)="filterRecipes($event)">
     </ion-searchbar>
   </ion-toolbar>
 </ion-header>
@@ -46,8 +47,14 @@
   </ion-text>
 
   <ion-list [inset]="true" *ngIf="!loading">
-    <ion-item button *ngFor="let recipe of recipes" [routerLink]="[recipe.guid]">
-      {{ recipe.name }}
+    <ion-item button *ngFor="let item of recipes" [routerLink]="[item.guid]">
+      <ion-label>{{ item.name }}</ion-label>
+      <ion-text color="danger" slot="end" *ngIf="item.available === false">
+        <i class="fal fa-fw fa-cloud-download"></i>
+      </ion-text>
+      <ion-spinner slot="end" *ngIf="item.available === undefined">
+        <i class="fal fa-fw fa-cloud-download"></i>
+      </ion-spinner>
     </ion-item>
   </ion-list>
 

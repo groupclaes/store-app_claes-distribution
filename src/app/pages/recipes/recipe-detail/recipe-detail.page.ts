@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute, Params } from '@angular/router'
-import { AlertController } from '@ionic/angular'
+import { AlertController, NavController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
-import { BrowserService } from 'src/app/core/browser.service'
 import { RecipesRepositoryService } from 'src/app/core/repositories/recipes.repository.service'
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
-import { Directory, DownloadFileResult, Filesystem } from '@capacitor/filesystem'
-import { Share } from '@capacitor/share'
+import { Directory, DownloadFileResult, Filesystem, GetUriResult } from '@capacitor/filesystem'
 import { LoggerService } from '../../../@shared/logging/log.service'
+import { environment } from '../../../../environments/environment'
+import { FileOpener } from '@capacitor-community/file-opener'
 
 const logger = new LoggerService('RecipeDetailPage')
 
@@ -34,7 +34,7 @@ export class RecipeDetailPage implements OnInit {
     private alertCtrl: AlertController,
     private api: ApiService,
     route: ActivatedRoute,
-    private browser: BrowserService,
+    private navCtrl: NavController,
     public network: NetworkService
   ) {
     this.settings.showThumbnail.then((value: boolean): void => {
@@ -64,32 +64,47 @@ export class RecipeDetailPage implements OnInit {
     }
   }
 
-  async share(): Promise<void> {
-    this.isDownloading = true
-    this.ref.markForCheck()
-
+  async open(item: any): Promise<void> {
+    let uri: string
     try {
-      const result: DownloadFileResult = await Filesystem.downloadFile({
-        path: this.recipe.name,
-        directory: Directory.Cache,
-        url: `https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`
+      const res: GetUriResult = await Filesystem.stat({
+        path: `recipes/${item.guid}/${item.name}`,
+        directory: Directory.Cache
       })
-      this.isDownloading = false
-      this.ref.markForCheck()
+      uri = res.uri
+    } catch {
+      if (!this.network.online)
+        return this.network.noop()
 
-      await Share.share({
-        title: this.recipe.name,
-        // text: 'Claes Distribution Recept',
-        url: result.path
-      })
+      this.isDownloading = true
+      this.ref.markForCheck()
+      await Filesystem.downloadFile({
+        url: `${environment.pcm_url}/content/file/${item.guid}?show=true`,
+        directory: Directory.Cache,
+        path: `recipes/${item.guid}/${item.name}`,
+        recursive: true
+      }).then((res: DownloadFileResult): string => uri = res.path)
+      this.ref.markForCheck()
     } finally {
+      if (uri) {
+        setTimeout(async (): Promise<void> => {
+          try {
+            await FileOpener.open({
+              filePath: uri,
+              openWithDefault: true,
+              contentType: 'application/pdf'
+            })
+          } catch {
+            this.navCtrl.navigateForward(['documents', 'recipes', item.guid, item.name], {
+              animated: true
+            })
+          }
+        }, 80)
+      }
       this.isDownloading = false
       this.ref.markForCheck()
     }
-  }
-
-  open(): void {
-    this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
+    // this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
   }
 
   async mail(): Promise<void> {

@@ -4,13 +4,13 @@
       <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ recipe.name }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable
-                  (click)="network.online ? share() : network.noop()">
-        {{ 'actions.share' | translate }}&nbsp;
-        <i color="primary" class="fal fa-fw fa-share-square"></i>
-      </ion-button>
-    </ion-buttons>
+<!--    <ion-buttons slot="end">-->
+<!--      <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable-->
+<!--                  (click)="network.online ? share() : network.noop()">-->
+<!--        {{ 'actions.share' | translate }}&nbsp;-->
+<!--        <i color="primary" class="fal fa-fw fa-share-square"></i>-->
+<!--      </ion-button>-->
+<!--    </ion-buttons>-->
     <ion-progress-bar type="indeterminate" *ngIf="isDownloading"></ion-progress-bar>
   </ion-toolbar>
 </ion-header>
@@ -36,7 +36,7 @@
   </ion-list>
 
   <ion-list inset="true">
-    <ion-item detail="false" button tappable (click)="open()" [disabled]="network.offline">
+    <ion-item detail="false" button tappable (click)="open(recipe)">
       <ion-label color="tertiary" style="text-align:center">{{ 'showRecipe' | translate }}</ion-label>
     </ion-item>
   </ion-list>

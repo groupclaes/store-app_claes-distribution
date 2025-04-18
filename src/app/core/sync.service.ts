@@ -11,6 +11,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem'
 import { IPCMAttachmentEntry } from './repositories/products.repository.service'
 import { NetworkService } from '../@shared/network.service'
 import { LoggerService } from '../@shared/logging/log.service'
+import { ISyncSettings, SettingsService } from './settings.service'
 
 const TIMEOUT_INTERVAL = 240000
 
@@ -29,7 +30,8 @@ export class SyncService {
     private api: ApiService,
     private storage: StorageProvider,
     private _db: DatabaseService,
-    private network: NetworkService
+    private network: NetworkService,
+    private settings: SettingsService
   ) {
   }
 
@@ -79,6 +81,7 @@ export class SyncService {
         + '(dataTable STRING PRIMARY KEY, checksum STRING, dateChanged DATETIME);'
         + 'CREATE UNIQUE INDEX IF NOT EXISTS idx_dataIntegrityChecksums_dataTable ON dataIntegrityChecksums(dataTable)')
 
+      await this.updateDataIntegrityChecksum(db, 'recipes')
       const version = this.storage.get('_db_version')
       logger.debug(`database ${environment.database_name} has been opened in CheckDB!`, version)
     })
@@ -206,7 +209,7 @@ export class SyncService {
         ])
 
         // check if the leaflet is up-to-date
-        await this.validateLeaflet(user_id, culture)
+        await this.validateLeaflet(user_id, culture, forceSync)
 
         results = step1.concat(step2, step3, step4)
         console.timeEnd('FullSync')
@@ -2001,7 +2004,11 @@ export class SyncService {
     await Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Cache, recursive: true })
   }
 
-  async validateLeaflet(user_id: number, language: string): Promise<void> {
+  async validateLeaflet(user_id: number, language: string, force?: boolean): Promise<void> {
+    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+    if (!syncSettings.leaflets && !force)
+      return logger.warn('validateLeaflet denied due to syncSettings.leaflets')
+
     // if language is set to all, all cultures should be fetched
     const cultures: string[] = []
     if (language === 'all')
@@ -2022,6 +2029,9 @@ export class SyncService {
           directory: Directory.Data
         })
       } catch (err) {
+        const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+        if (!allowMobile && this.network.isMobileData)
+          return logger.warn('validateLeaflet denied due to not allow Mobile Data')
         await Filesystem.downloadFile({
           url: `${environment.pcm_url}/content/dis/website/month-leaflet/${current_id}/${culture}?show`,
           path: `${current_id}_${culture}.pdf`,
@@ -2034,45 +2044,48 @@ export class SyncService {
   }
 
   async cacheDatasheets(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
+    logger.debug('cacheDatasheets() -- start', user)
     // only users of type single customers are allowed to sync datasheets at this time
     // if (user.type !== 1)
     //   return
 
+    const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+    if (!allowMobile && this.network.isMobileData)
+      return logger.warn('cacheDatasheets denied due to not allow Mobile Data')
+
+    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+    if (!syncSettings.datasheets)
+      return logger.warn('cacheDatasheets denied due to syncSettings.datasheets')
+
     this._active_count++
 
     let datasheets: IPCMAttachmentEntry[]
+    let allowedItems: number[] = await this.getAllowedItemNums(user, true)
 
-    switch (user.type) {
-      case 1:
-      case 4:
-        datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
-          const query: string = 'SELECT [d].[name], [d].[guid] ' +
-            'FROM currentExceptions [c] ' +
-            'INNER JOIN products [p] ON [p].[id] = [c].[productId] ' +
-            'INNER JOIN [favorites] [f] ON [f].id = [p].[id] ' +
-            'INNER JOIN datasheets [d] ON [d].[products] LIKE \'%\' || [p].[itemnum] || \'%\' AND languages LIKE \'%"\' || ? || \'":true%\' ' +
-            'WHERE ( [f].[hi] = 0 OR [f].[hi] IS NULL ) AND [f].[lastB] IS NOT NULL '
+    console.time('executeQuery')
+    datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+      const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
+        'FROM datasheets [d] ' +
+        'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
+        'GROUP BY [d].[name], [d].[guid]'
 
-          const result: DBSQLiteValues = await db.query(query, [culture])
-          return result.values as IPCMAttachmentEntry[]
+      try {
+        const result: DBSQLiteValues = await db.query(query, [culture])
+        for (let i of result.values) {
+          i.products = JSON.parse(i.products)
+        }
+        result.values = result.values.filter(e => {
+          return e.products.some(x => allowedItems.includes(x))
         })
-        break
-
-      case 2:
-        datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
-          const query: string = 'SELECT [d].[name], [d].[guid] ' +
-            'FROM products [p] ' +
-            'INNER JOIN datasheets [d] ON [d].[products] LIKE \'%\' || [p].[itemnum] || \'%\' AND languages LIKE \'%"\' || ? || \'":true%\''
-
-          const result: DBSQLiteValues = await db.query(query, [culture])
-          return result.values as IPCMAttachmentEntry[]
-        })
-        break
-
-      default:
-        datasheets = []
-        break
-    }
+        for (let i of result.values) {
+          delete i.products
+        }
+        console.timeEnd('executeQuery')
+        return result.values as IPCMAttachmentEntry[]
+      } catch (e) {
+        console.error(e)
+      }
+    })
 
     let success: number = 0
     const total: number = datasheets.length
@@ -2100,6 +2113,188 @@ export class SyncService {
     }
     this._active_count--
     this.changes.next()
+    logger.debug('cacheDatasheets() -- end', datasheets.length)
+  }
+
+  async cacheUsageManuals(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
+    logger.debug('cacheUsageManuals() -- start', user)
+    // only users of type single customers are allowed to sync datasheets at this time
+    // if (user.type !== 1)
+    //   return
+
+    const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+    if (!allowMobile && this.network.isMobileData)
+      return logger.warn('cacheUsageManuals denied due to not allow Mobile Data')
+
+    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+    if (!syncSettings.usageManuals)
+      return logger.warn('cacheUsageManuals denied due to syncSettings.datasheets')
+
+    this._active_count++
+
+    let datasheets: IPCMAttachmentEntry[]
+    let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+
+    console.time('executeQuery')
+    datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+      const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
+        'FROM usageManuals [d] ' +
+        'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
+        'GROUP BY [d].[name], [d].[guid]'
+
+      try {
+        const result: DBSQLiteValues = await db.query(query, [culture])
+        for (let i of result.values) {
+          i.products = JSON.parse(i.products)
+        }
+        result.values = result.values.filter(e => {
+          return e.products.some(x => allowedItems.includes(x))
+        })
+        for (let i of result.values) {
+          delete i.products
+        }
+        console.timeEnd('executeQuery')
+        return result.values as IPCMAttachmentEntry[]
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
+    let success: number = 0
+    const total: number = datasheets.length
+
+    for (const datasheet of datasheets) {
+      try {
+        await Filesystem.stat({
+          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+          directory: Directory.Cache
+        })
+        success++
+      } catch {
+        if (!this.network.online)
+          return
+        await Filesystem.downloadFile({
+          url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+          directory: Directory.Cache,
+          path: `usage-manuals/${datasheet.guid}/${datasheet.name}`,
+          recursive: true
+        }).then((): number => success++)
+      } finally {
+        this.message = `Synchronising usage manuals: ${success}/${total}`
+        this.changes.next()
+      }
+    }
+    this._active_count--
+    this.changes.next()
+    logger.debug('cacheUsageManuals() -- end', datasheets.length)
+  }
+
+  async cacheRecipes(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
+    logger.debug('cacheRecipes() -- start', user)
+    // only users of type single customers are allowed to sync datasheets at this time
+    // if (user.type !== 1)
+    //   return
+
+    const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+    if (!allowMobile && this.network.isMobileData)
+      return logger.warn('cacheRecipes denied due to not allow Mobile Data')
+
+    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+    if (!syncSettings.datasheets)
+      return logger.warn('cacheRecipes denied due to syncSettings.datasheets')
+
+    this._active_count++
+
+    let datasheets: IPCMAttachmentEntry[]
+    let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+
+    console.time('executeQuery')
+    datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+      const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
+        'FROM recipes [d] ' +
+        'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
+        'GROUP BY [d].[name], [d].[guid]'
+
+      try {
+        const result: DBSQLiteValues = await db.query(query, [culture])
+        for (let i of result.values) {
+          i.products = JSON.parse(i.products)
+        }
+        result.values = result.values.filter(e => {
+          return e.products.some(x => allowedItems.includes(x))
+        })
+        for (let i of result.values) {
+          delete i.products
+        }
+        console.timeEnd('executeQuery')
+        return result.values as IPCMAttachmentEntry[]
+      } catch (e) {
+        console.error(e)
+      }
+    })
+
+    let success: number = 0
+    const total: number = datasheets.length
+
+    for (const datasheet of datasheets) {
+      try {
+        await Filesystem.stat({
+          path: `recipes/${datasheet.guid}/${datasheet.name}`,
+          directory: Directory.Cache
+        })
+        success++
+      } catch {
+        if (!this.network.online)
+          return
+        await Filesystem.downloadFile({
+          url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+          directory: Directory.Cache,
+          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+          recursive: true
+        }).then((): number => success++)
+      } finally {
+        this.message = `Synchronising recipes: ${success}/${total}`
+        this.changes.next()
+      }
+    }
+    this._active_count--
+    this.changes.next()
+    logger.debug('cacheRecipes() -- end', datasheets.length)
+  }
+
+  async clearDocumentCaches(): Promise<void> {
+    try {
+      await Filesystem.rmdir({ path: `datasheets`, directory: Directory.Cache, recursive: true }).catch()
+      await Filesystem.rmdir({ path: `recipes`, directory: Directory.Cache, recursive: true }).catch()
+      await Filesystem.rmdir({ path: `reports`, directory: Directory.Data, recursive: true }).catch()
+      // await Filesystem.rmdir({ path: `thumbnails`, directory: Directory.Cache, recursive: true }).catch()
+    } catch {
+    }
+  }
+
+  private async getAllowedItemNums(user: Customer, onlyBought: boolean = false): Promise<number[]> {
+    switch (user.type) {
+      case 1:
+      case 4:
+        return this._db.executeQuery<Promise<number[]>>(async (db: SQLiteDBConnection): Promise<number[]> => {
+          const query: string = 'SELECT [p].[itemnum] AS i ' +
+            'FROM currentExceptions [c] ' +
+            'INNER JOIN products [p] ON [p].[id] = [c].[productId] ' +
+            'INNER JOIN [favorites] [f] ON [f].id = [p].[id] ' +
+            (onlyBought ? 'WHERE ( [f].[hi] = 0 OR [f].[hi] IS NULL ) AND [f].[lastB] IS NOT NULL' : '')
+
+          const result: DBSQLiteValues = await db.query(query)
+          return result.values.map((x: { i: number }): number => x.i)
+        })
+
+      case 2:
+      case 3:
+      case 5:
+        return this._db.executeQuery<Promise<number[]>>(async (db: SQLiteDBConnection): Promise<number[]> => {
+          const result: DBSQLiteValues = await db.query('SELECT [p].[itemnum] AS i FROM products [p]')
+          return result.values.map((x: { i: number }): number => x.i)
+        })
+    }
   }
 
   /**
@@ -2110,15 +2305,19 @@ export class SyncService {
    * @param checksum sha value of checksum
    * @memberof SyncService
    */
-  private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum: string): Promise<Changes> {
-    console.log(dataTable, checksum)
-    const res = await db.run(`INSERT
-    OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
-      dataTable,
-      checksum,
-      new Date().toJSON()
-    ])
-    return res.changes
+  private async updateDataIntegrityChecksum(db: SQLiteDBConnection, dataTable: string, checksum?: string): Promise<Changes> {
+    if (!checksum) {
+      const res = await db.run('DELETE FROM dataIntegrityChecksums WHERE dataTable = ?', [dataTable])
+      return res.changes
+    } else {
+      const res = await db.run(`INSERT
+      OR REPLACE INTO dataIntegrityChecksums (dataTable, checksum, dateChanged) VALUES (?, ?, ?)`, [
+        dataTable,
+        checksum,
+        new Date().toJSON()
+      ])
+      return res.changes
+    }
   }
 
   /**

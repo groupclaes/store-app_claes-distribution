@@ -13,7 +13,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true"  color="light">
+<ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large" translate="newsPage"></ion-title>
@@ -34,11 +34,8 @@
 
       <ion-card-content>
         <iframe class="news-body" [title]="newsItem.title" [srcdoc]="safe(newsItem.content)"
-          onload='(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";if(o.contentWindow.document.documentElement.innerHTML.includes("https://shop.claes-distribution.be/leaflet")){o.style.height="184px"}}(this))'></iframe>
+                onload='(function(o){o.contentWindow.document.documentElement.onclick=(e)=>{let l=e.target||e.srcElement;if(l?.href?.includes("shop.claes-distribution.be")){parent.window.postMessage({tagName:l?.tagName,target:l?.target,href:l?.href }, "*");e.stopPropagation();e.preventDefault()}};o.style.height=o.contentWindow.document.body.scrollHeight+"px";if(o.contentWindow.document.documentElement.innerHTML.includes("https://shop.claes-distribution.be/leaflet")){o.style.height="184px"}}(this))'></iframe>
       </ion-card-content>
-
-      <!-- <ion-button fill="clear">Action 1</ion-button>
-      <ion-button fill="clear">Action 2</ion-button> -->
     </ion-card>
     <!-- <div padding class="news-item news-block" *ngFor="let newsItem of news">
       <div class="news-title" [innerText]="newsItem.title"></div>

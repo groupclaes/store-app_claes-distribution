@@ -12,7 +12,7 @@ import { Store, SyncService } from 'src/app/core/sync.service'
 import { AppCustomerModel, UserService } from 'src/app/core/user.service'
 import { LoggerService } from '../../@shared/logging/log.service'
 
-const TASK_COUNT = 6
+const TASK_COUNT = 8
 const logger = new LoggerService('SyncService')
 
 @Component({
@@ -33,6 +33,8 @@ export class SyncPage implements OnInit {
   imageCount: number = undefined
   cacheSize: number = undefined
   reportCount: number = undefined
+  usageManualsCount: number = undefined
+  recipesCount: number = undefined
 
   constructor(
     private ref: ChangeDetectorRef,
@@ -140,6 +142,8 @@ export class SyncPage implements OnInit {
       this.cacheSize = undefined
       this.reportCount = undefined
       this.datasheetCount = undefined
+      this.usageManualsCount = undefined
+      this.recipesCount = undefined
       this.loading = true
       this.isLoading = true
       this.ref.markForCheck()
@@ -215,6 +219,36 @@ export class SyncPage implements OnInit {
         })
         .catch((): void => {
           this.datasheetCount = 0
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
+
+      this.getCount('usage-manuals', Directory.Cache)
+        .then((result: number): void => {
+          this.usageManualsCount = result
+          this.ref.markForCheck()
+        })
+        .catch((): void => {
+          this.usageManualsCount = 0
+          this.ref.markForCheck()
+        })
+        .finally((): void => {
+          tasks++
+          this.isLoading = !(tasks >= TASK_COUNT)
+          this.ref.markForCheck()
+        })
+
+      this.getCount('recipes', Directory.Cache)
+        .then((result: number): void => {
+          this.recipesCount = result
+          this.ref.markForCheck()
+        })
+        .catch((): void => {
+          this.recipesCount = 0
           this.ref.markForCheck()
         })
         .finally((): void => {

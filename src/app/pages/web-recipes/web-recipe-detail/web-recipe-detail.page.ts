@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core'
 import { ActivatedRoute, Params } from '@angular/router'
 import { TranslateService } from '@ngx-translate/core'
 import { LoggerService } from 'src/app/@shared/logging/log.service'
@@ -6,6 +6,8 @@ import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { Share } from '@capacitor/share'
 import { firstValueFrom } from 'rxjs'
+import { NavController } from '@ionic/angular'
+import { BrowserService } from '../../../core/browser.service'
 
 const logger = new LoggerService('WebRecipeDetailPage')
 
@@ -16,6 +18,53 @@ const logger = new LoggerService('WebRecipeDetailPage')
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WebRecipeDetailPage implements OnInit {
+  @HostListener('document:click', ['$event'])
+  clickout(_event: any): boolean {
+    const event: any = _event || window.event
+    const element: HTMLAnchorElement = event.target || event.srcElement
+    // check for links with target '_blank'
+    if ('A' === element.tagName) { //  && '_blank' === element.target
+      const url = new URL(element.href)
+
+      switch (url.hostname) {
+        case 'shop.claes-distribution.be':
+          const supportedRoutes: string[] = [
+            '/news'
+          ]
+
+          if (supportedRoutes.includes(url.pathname)) {
+            this.navCtrl.navigateRoot(url.pathname)
+            // prevent default action and stop event propagation
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          } else if (url.pathname.startsWith('/products')) {
+            const product_id: string = url.searchParams.get('productId')
+            const query: string = url.searchParams.get('query')
+            if (product_id && product_id != '0')
+              this.navCtrl.navigateForward(['/products', url.searchParams.get('productId')])
+            else if (query)
+              this.navCtrl.navigateForward(['/products'], { queryParams: { query } })
+            // prevent default action and stop event propagation
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          }
+          break
+        case 'www.claes-distribution.be':
+          if (url.pathname.startsWith('/recepten') || url.pathname.startsWith('/recettes')) {
+            const id = url.pathname.split('/')[2]
+            this.navCtrl.navigateForward(['/web-recipes', id, 'preview'])
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          }
+          break
+      }
+    }
+    return true
+  }
+
   loading: boolean = true
   isDownloading: boolean = false
   private _recipe: $TSFixMe = undefined
@@ -24,8 +73,10 @@ export class WebRecipeDetailPage implements OnInit {
     private translate: TranslateService,
     private ref: ChangeDetectorRef,
     private api: ApiService,
+    private navCtrl: NavController,
     route: ActivatedRoute,
-    public network: NetworkService
+    public network: NetworkService,
+    private browser: BrowserService
   ) {
     route.params.subscribe(async (params: Params): Promise<void> => {
       await this.load(params['id'])
@@ -73,6 +124,42 @@ export class WebRecipeDetailPage implements OnInit {
     } finally {
       this.ref.markForCheck()
     }
+  }
+
+  openRelated(uri: string): void {
+    const url = new URL(uri)
+
+    switch (url.hostname) {
+      case 'shop.claes-distribution.be':
+        const supportedRoutes: string[] = [
+          '/news'
+        ]
+
+        if (supportedRoutes.includes(url.pathname)) {
+          this.navCtrl.navigateRoot(url.pathname)
+          // prevent default action and stop event propagation
+          return
+        } else if (url.pathname.startsWith('/products')) {
+          const product_id: string = url.searchParams.get('productId')
+          const query: string = url.searchParams.get('query')
+          if (product_id && product_id != '0')
+            this.navCtrl.navigateForward(['/products', url.searchParams.get('productId')])
+          else if (query)
+            this.navCtrl.navigateForward(['/products'], { queryParams: { query } })
+          // prevent default action and stop event propagation
+          return
+        }
+        break
+      case 'www.claes-distribution.be':
+        if (url.pathname.startsWith('/recepten') || url.pathname.startsWith('/recettes')) {
+          const id: string = url.pathname.split('/')[2]
+          this.navCtrl.navigateForward(['/web-recipes', id, 'preview'])
+          return
+        }
+        break
+    }
+
+    return this.browser.open(uri, '_system', 'hidden=yes,location=yes')
   }
 
   get hasGroupings(): boolean {

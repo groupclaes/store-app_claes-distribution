@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
 import { IonicModule } from '@ionic/angular'
-import { DatasheetDetailPage } from './datasheet-detail.page'
+import { DocumentViewerPage } from './document-viewer.page'
 import { TranslateModule } from '@ngx-translate/core'
 import { RouterModule } from '@angular/router'
 import { CoreModule } from 'src/app/core/core.module'
@@ -16,10 +16,10 @@ import { PdfViewerModule } from 'ng2-pdf-viewer'
     CoreModule,
     TranslateModule.forChild({ extend: true }),
     RouterModule.forChild([{
-      path: '', component: DatasheetDetailPage
+      path: '', component: DocumentViewerPage
     }]),
     PdfViewerModule
   ],
-  declarations: [DatasheetDetailPage]
+  declarations: [DocumentViewerPage]
 })
-export class DatasheetDetailPageModule {}
+export class DocumentViewerPageModule {}

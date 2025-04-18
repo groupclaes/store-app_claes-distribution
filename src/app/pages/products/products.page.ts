@@ -41,12 +41,6 @@ export class ProductsPage implements OnDestroy {
   @ViewChild(IonContent) content: IonContent
   @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
 
-  // @HostListener('window:resize', ['$event'])
-  // onresize($event: Event): void {
-  //   this.clampBuilder()
-  // }
-
-  clamp: string = ''
   loading: boolean = true
   loadingAdditional: boolean = false
   noMoreProducts: boolean = false
@@ -112,13 +106,21 @@ export class ProductsPage implements OnDestroy {
       })
 
     this._subs.push(route.queryParams.subscribe(async (params: Params): Promise<void> => {
-      if (params.category) {
+      let cc: number | undefined = params.category ? +params.category : undefined
+      if (this.filter.query === (params.query ?? '') && cc === this._filters.category?.id)
+        return
+
+      if (params.category)
         this._filters.category = await categoriesRepository.find(+params.category, this.culture)
-        window.clearTimeout(fallback)
-        fallback = window.setTimeout(async (): Promise<void> => {
-          await this.load(true)
-        }, 180)
-      }
+      else if (this._filters.category !== undefined)
+        this._filters.category = undefined
+      if (params.query)
+        this.filter.query = params.query
+
+      window.clearTimeout(fallback)
+      fallback = window.setTimeout(async (): Promise<void> => {
+        await this.load(true)
+      }, 180)
     }))
 
     this.network.connected.subscribe((): void => {
@@ -368,7 +370,6 @@ export class ProductsPage implements OnDestroy {
       if (product.stackSize > 1) {
         if (productAmount > 0 && (productAmount % product.stackSize) != 0) {
           const i: number = Math.floor(productAmount / product.stackSize) + 1
-
           productAmount = i * product.stackSize
           product.amount = productAmount
           this.ref.markForCheck()
@@ -436,19 +437,6 @@ export class ProductsPage implements OnDestroy {
 
   productById(index: number, product: IProductT): number {
     return product.id
-  }
-
-  // 320, 750, 0.375, 0.875
-  clampBuilder(minWidthPx: number = 320, maxWidthPx: number = 750, minFontSize: number = 0.5, maxFontSize: number = 0.875): void {
-    const root: HTMLHtmlElement = document.querySelector('html')
-    const pixelsPerRem: number = Number(getComputedStyle(root).fontSize.slice(0, -2))
-
-    const minWidth: number = minWidthPx / pixelsPerRem
-    const maxWidth: number = maxWidthPx / pixelsPerRem
-
-    const slope: number = (maxFontSize - minFontSize) / (maxWidth - minWidth)
-    const yAxisIntersection: number = -minWidth * slope + minFontSize
-    this.clamp = `font-size: clamp(${minFontSize}rem, ${yAxisIntersection.toPrecision(5)}rem + ${(slope * 100).toPrecision(5)}vw, ${maxFontSize}rem);`
   }
 
   get isAgent(): boolean {

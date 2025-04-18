@@ -1,15 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
 import { ActivatedRoute, Params } from '@angular/router'
 import { TranslateService } from '@ngx-translate/core'
-import { NetworkService } from 'src/app/@shared/network.service'
 import { Directory, Filesystem, GetUriResult, ReadFileResult } from '@capacitor/filesystem'
 import { Share, ShareResult } from '@capacitor/share'
-import { IPCMAttachmentEntry } from '../../../core/repositories/products.repository.service'
-import { PcmRepositoryService } from '../../../core/repositories/pcm.repository'
 
 @Component({
   selector: 'app-datasheet-detail',
-  templateUrl: './datasheet-detail.page.html',
+  templateUrl: './document-viewer.page.html',
   styles: ['pdf-viewer {\n' +
   '    display: block;\n' +
   '    height: 100%;\n' +
@@ -17,62 +14,57 @@ import { PcmRepositoryService } from '../../../core/repositories/pcm.repository'
   '  }'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DatasheetDetailPage implements OnInit {
+export class DocumentViewerPage {
   public fileUrl: string = undefined
   public loading: boolean = true
-  public culture: string = undefined
+  public path?: string
   public uuid?: string
-  public datasheet?: IPCMAttachmentEntry
+  public name?: string
 
   constructor(
     private translate: TranslateService,
     private ref: ChangeDetectorRef,
-    private repo: PcmRepositoryService,
-    route: ActivatedRoute,
-    public network: NetworkService
+    route: ActivatedRoute
   ) {
     route.params.subscribe(async (params: Params): Promise<void> => {
-      this.uuid = params.uuid
-      this.load().then((): void => undefined)
+      const { path, uuid, name } = params
+      console.log(path, uuid, name, params)
+      this.load(path, uuid, name).then()
     })
-    this.network.connected.subscribe((): void => this.ref.markForCheck())
   }
 
-  ngOnInit(): void {
-    this.culture = this.translate.currentLang.split('-')[0]
-  }
-
-  async load(): Promise<void> {
-    if (!this.uuid)
+  async load(path: string, uuid: string, name: string): Promise<void> {
+    if (!uuid)
       return
+
+    this.name = name
+    this.uuid = uuid
+    this.name = name
 
     this.loading = true
     this.fileUrl = undefined
 
     try {
-      this.datasheet = await this.repo.getDatasheet(this.uuid)
-
       const result: ReadFileResult = await Filesystem.readFile({
-        path: `datasheets/${this.datasheet.guid}/${this.datasheet.name}`,
+        path: `${path}/${uuid}/${name}`,
         directory: Directory.Cache
       })
 
       if (typeof result.data === 'string') {
         this.fileUrl = 'data:application/pdf;base64,' + result.data
+        this.ref.markForCheck()
       } else {
         const reader = new FileReader()
         reader.onload = (): void => {
           if (typeof reader.result === 'string') {
             this.fileUrl = reader.result
-            this.ref.markForCheck()
+            setTimeout((): void => this.ref.markForCheck(), 80)
           }
         }
         reader.readAsDataURL(result.data)
       }
     } catch (err) {
       console.error(err)
-    } finally {
-      this.ref.markForCheck()
     }
   }
 
@@ -83,13 +75,13 @@ export class DatasheetDetailPage implements OnInit {
 
   async share(): Promise<ShareResult> {
     const result: GetUriResult = await Filesystem.getUri({
-      path: `datasheets/${this.datasheet.guid}/${this.datasheet.name}`,
+      path: `${this.path}/${this.uuid}/${this.name}`,
       directory: Directory.Cache
     })
 
     return Share.share({
-      title: this.datasheet.name,
-      text: 'Datasheet: ' + this.datasheet.name,
+      title: this.name,
+      text: this.path + ': ' + this.name,
       url: result.uri
     })
   }

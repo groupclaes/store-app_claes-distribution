@@ -5,16 +5,10 @@ import { Capacitor } from '@capacitor/core'
   providedIn: 'root'
 })
 export class BrowserService {
-
-  constructor() { }
-
   open(url: string, target: string = null, features: string = null) {
-    if (Capacitor.getPlatform() === 'electron') {
-      // Dikke pech
+    if (Capacitor.getPlatform() === 'electron')
       (<any>window).electron.shell.openExternal(url)
-    } else {
+    else
       window.open(url, target, features)
-    }
   }
 }
-

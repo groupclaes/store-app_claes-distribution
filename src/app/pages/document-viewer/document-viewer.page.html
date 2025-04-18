@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ datasheet?.name }}</ion-title>
+    <ion-title>{{ name }}</ion-title>
     <ion-buttons slot="end">
       <ion-button color="primary" class="icon-button" fill="clear" slot="end" tappable (click)="share()">
         {{ 'actions.share' | translate }}&nbsp;

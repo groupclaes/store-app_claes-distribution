@@ -25,13 +25,13 @@ export enum LogLevel {
 export type LogOutput = (source: string, level: LogLevel, ...objects: any[]) => void
 
 export class LoggerService {
-  static logKey = 'logs'
+  static logKey: string = 'logs-' + new Date().toISOString().substring(0, 10)
 
   /**
    * Current logging level.
    * Set it to LogLevel.Off to disable logs completely.
    */
-  static level = LogLevel.Debug
+  static level: LogLevel = LogLevel.Debug
 
   /**
    * Additional log outputs.
@@ -46,7 +46,8 @@ export class LoggerService {
     LoggerService.level = LogLevel.Warning
   }
 
-  constructor(private source?: string) { }
+  constructor(private source?: string) {
+  }
 
   static listen: Subject<any[]> = new Subject<any[]>
 
@@ -54,7 +55,7 @@ export class LoggerService {
    * Logs messages or objects  with the trace level.
    * Works the same as console.log().
    */
-  trace(...objects: any[]) {
+  trace(...objects: any[]): void {
     this.log(console.trace, LogLevel.Trace, objects)
   }
 
@@ -62,7 +63,7 @@ export class LoggerService {
    * Logs messages or objects  with the debug level.
    * Works the same as console.log().
    */
-  debug(...objects: any[]) {
+  debug(...objects: any[]): void {
     this.log(console.debug, LogLevel.Debug, objects)
   }
 
@@ -70,7 +71,7 @@ export class LoggerService {
    * Logs messages or objects  with the info level.
    * Works the same as console.log().
    */
-  notice(...objects: any[]) {
+  notice(...objects: any[]): void {
     this.log(console.log, LogLevel.Notice, objects)
   }
 
@@ -78,7 +79,7 @@ export class LoggerService {
    * Logs messages or objects  with the info level.
    * Works the same as console.log().
    */
-  info(...objects: any[]) {
+  info(...objects: any[]): void {
     this.log(console.info, LogLevel.Info, objects)
   }
 
@@ -86,7 +87,7 @@ export class LoggerService {
    * Logs messages or objects  with the warning level.
    * Works the same as console.log().
    */
-  warn(...objects: any[]) {
+  warn(...objects: any[]): void {
     this.log(console.warn, LogLevel.Warning, objects)
   }
 
@@ -94,7 +95,7 @@ export class LoggerService {
    * Logs messages or objects  with the error level.
    * Works the same as console.log().
    */
-  error(...objects: any[]) {
+  error(...objects: any[]): void {
     this.log(console.error, LogLevel.Critical, objects)
   }
 
@@ -102,27 +103,23 @@ export class LoggerService {
    * Logs messages or objects  with the emergency level.
    * Works the same as console.log().
    */
-  emergency(...objects: any[]) {
+  emergency(...objects: any[]): void {
     this.log(console.error, LogLevel.Emergency, objects)
   }
 
-  private log(func: Function, level: LogLevel, objects: any[]) {
-    let storage: any = sessionStorage.getItem(LoggerService.logKey)
-    if (!storage)
-      storage = []
-    else
-      storage = JSON.parse(storage)
+  private log(func: Function, level: LogLevel, objects: any[]): void {
     if (level <= LoggerService.level) {
+      let storage: any = LoggerService.get(this.storage)
       try {
-        const log = [new Date().toISOString(), level, this.source ?? 'unknown'].concat(objects)
+        const log: (string | LogLevel)[] = [new Date().toISOString(), level, this.source ?? 'unknown'].concat(objects)
 
-        // when testing use console loggin functionality
+        // when testing use console logging functionality
         if (!environment.production)
           func.apply(console, log)
 
-        LoggerService.outputs.forEach((output) => output(log))
+        LoggerService.outputs.forEach((output: any): any => output(log))
         storage.push(log)
-        sessionStorage.setItem(LoggerService.logKey, JSON.stringify(storage))
+        this.storage.setItem(LoggerService.logKey, JSON.stringify(storage))
         LoggerService.listen.next(log)
       } catch (err) {
         console.error(err)
@@ -130,8 +127,8 @@ export class LoggerService {
     }
   }
 
-  static get(): any[] {
-    let storage: any = sessionStorage.getItem(LoggerService.logKey)
+  static get(store: Storage = sessionStorage): any[] {
+    let storage: any = store.getItem(LoggerService.logKey)
 
     if (!storage)
       storage = []
@@ -141,8 +138,14 @@ export class LoggerService {
     return storage
   }
 
-  static clear() {
-    sessionStorage.removeItem(LoggerService.logKey)
+  static clear(store: Storage = sessionStorage): void {
+    store.removeItem(LoggerService.logKey)
     LoggerService.listen.next(undefined)
+  }
+
+  private get storage(): Storage {
+    if (environment.production)
+      return window.localStorage
+    return window.sessionStorage
   }
 }

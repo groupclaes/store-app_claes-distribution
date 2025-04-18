@@ -19,6 +19,10 @@
     </ion-toolbar>
   </ion-header>
 
+  <div style="display:flex;justify-content:center;align-items:center;align-content:center;height:calc(100% - 52px);width:100%;overflow:hidden;" *ngIf="notes && notes.length === 0">
+    <ion-note translate>noNotes</ion-note>
+  </div>
+
   <ng-container *ngIf="newNote">
     <ion-text class="list-header" style="display:flex;align-items:center;justify-content:space-between">
       <ion-note>{{ newNote.date | date : 'fullDate' : null : culture }}</ion-note>
@@ -130,31 +134,6 @@
       </ion-item>
     </ion-list>
   </ng-container>
-  <!--  <ion-list *ngFor="let note of notes">-->
-  <!--    <ion-list-header class="ion-padding">-->
-  <!--      <ion-label [innerText]="note.date | date : 'fullDate' : null : culture"></ion-label>-->
-  <!--      <ion-button (click)="addNote(note)">-->
-  <!--        <i class="fal fa-fw fa-lg fa-pencil" *ngIf="isUnsentNote(note);else copybutton"></i>-->
-  <!--        <ng-template #copybutton>-->
-  <!--          <i class="fal fa-fw fa-lg fa-copy"></i>-->
-  <!--        </ng-template>-->
-  <!--      </ion-button>-->
-  <!--    </ion-list-header>-->
-  <!--    <ion-item *ngIf="isUnsentNote(note)">-->
-  <!--      <span translate="pages.notes.saved"></span>-->
-  <!--    </ion-item>-->
-  <!--    <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend">-->
-  <!--      <span translate="pages.notes.to-be-sent"></span>-->
-  <!--    </ion-item>-->
-  <!--    <ion-item>-->
-  <!--      <div style="padding-top:12px;padding-bottom:12px;display:block;width:100%;text-align:left;white-space: pre-wrap;"-->
-  <!--           item-content [innerText]="note.text"></div>-->
-  <!--    </ion-item>-->
-  <!--    <ion-item *ngIf="debugging">-->
-  <!--      <ion-label>Debug</ion-label>-->
-  <!--      <ion-label>{{ note | json }}</ion-label>-->
-  <!--    </ion-item>-->
-  <!--  </ion-list>-->
 </ion-content>
 
 <app-offline-footer></app-offline-footer>

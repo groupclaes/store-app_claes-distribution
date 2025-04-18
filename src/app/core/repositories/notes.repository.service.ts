@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core'
 import { DatabaseService } from '../database.service'
 import { DBSQLiteValues, SQLiteDBConnection } from '@capacitor-community/sqlite'
+import { LoggerService } from '../../@shared/logging/log.service'
+
+const logger = new LoggerService('NotesRepositoryService')
 
 @Injectable({
   providedIn: 'root'
@@ -32,20 +35,23 @@ export class NotesRepositoryService {
    */
   getCustomerNotes(customerId: number, addressId: number,
                    limit: number = undefined): Promise<IVisitNote[]> {
-    if (customerId === null || addressId === null) {
+    if (customerId === null || addressId === null)
       return Promise.resolve([])
-    }
 
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result: DBSQLiteValues = await db.query(
-        'SELECT customer, address, date, text ' +
-        'FROM notes ' +
-        'WHERE customer = ? AND address = ? ' +
-        'ORDER BY date DESC` + ' +
-        limit != null ? ` LIMIT ${limit}` : '',
-        [customerId, addressId])
+      try {
+        const result: DBSQLiteValues = await db.query(
+          'SELECT customer, address, date, text ' +
+          'FROM notes ' +
+          'WHERE customer = ? AND address = ? ' +
+          'ORDER BY date DESC ' +
+          (limit ? ` LIMIT ${limit}` : ''),
+          [customerId, addressId])
 
-      return result.values as IVisitNote[]
+        return result.values as IVisitNote[]
+      } catch (error) {
+        logger.error('error getting customer notes', error)
+      }
     })
   }
 
@@ -57,9 +63,8 @@ export class NotesRepositoryService {
    * @returns The last unsent note, if any
    */
   getLastUnsentNote(customerId: number, addressId: number): Promise<IUnsentVisitNote> {
-    if (customerId == null || addressId == null) {
-      return Promise.resolve(null)
-    }
+    if (customerId == null || addressId == null)
+      return Promise.resolve(undefined)
 
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
       const result: DBSQLiteValues = await db.query(
@@ -70,14 +75,12 @@ export class NotesRepositoryService {
         'LIMIT 1',
         [customerId, addressId])
 
-      if (result.values?.length === 0) {
-        return null
-      }
+      if (result.values?.length === 0)
+        return undefined
 
       const unsentNote = result.values[0] as IUnsentVisitNote
-      if (unsentNote == null) {
-        return null
-      }
+      if (!unsentNote)
+        return undefined
 
       unsentNote.toSend = (unsentNote.toSend as unknown) === 1
       unsentNote.date = new Date(unsentNote.date as unknown as string)
@@ -89,33 +92,36 @@ export class NotesRepositoryService {
   /**
    * Get all unsent/saved notes for a specific customer
    *
-   * @param customerId Customer identifier
-   * @param addressId Customer address identifier
+   * @param customer_id Customer identifier
+   * @param address_id Customer address identifier
    * @param limit Only request a specific amount of unsent notes
    * @returns A list of all unsent visit notes
    */
-  getUnsentNotes(customerId: number, addressId: number,
+  getUnsentNotes(customer_id: number, address_id: number,
                  limit: number = undefined): Promise<IUnsentVisitNote[]> {
-    if (customerId === null || addressId === null) {
+    if (customer_id === null || address_id === null)
       return Promise.resolve([])
-    }
 
     return this.db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const result = await db.query(
-        'SELECT id, customer, address, date, text, nextVisit, customerCloseFrom, customerOpenFrom, toSend ' +
-        'FROM unsentNotes ' +
-        'WHERE customer = ? AND address = ? ' +
-        'ORDER BY date DESC ' +
-        limit != null ? ` LIMIT ${limit}` : '',
-        [customerId, addressId])
+      try {
+        const result = await db.query(
+          'SELECT id, customer, address, date, text, nextVisit, customerCloseFrom, customerOpenFrom, toSend ' +
+          'FROM unsentNotes ' +
+          'WHERE customer = ? AND address = ? ' +
+          'ORDER BY date DESC ' +
+          (limit ? ` LIMIT ${limit}` : ''),
+          [customer_id, address_id])
 
-      const resultList = result.values as IUnsentVisitNote[]
-      for (const note of resultList) {
-        note.toSend = (note.toSend as unknown) === 1
-        note.date = new Date(note.date as unknown as string)
+        const resultList = result.values as IUnsentVisitNote[]
+        for (const note of resultList) {
+          note.toSend = (note.toSend as unknown) === 1
+          note.date = new Date(note.date as unknown as string)
+        }
+
+        return result.values as IUnsentVisitNote[]
+      } catch (error) {
+        logger.error('error getting unsent notes', error)
       }
-
-      return result.values as IUnsentVisitNote[]
     })
   }
 

@@ -56,8 +56,8 @@ const routes: Routes = [
     loadChildren: () => import('./pages/datasheets/datasheets.module').then(m => m.DatashetsPageModule)
   },
   {
-    path: 'datasheets/:uuid',
-    loadChildren: () => import('./pages/datasheets/datasheet-detail/datasheet-detail.module').then(m => m.DatasheetDetailPageModule)
+    path: 'documents/:path/:uuid/:name',
+    loadChildren: () => import('./pages/document-viewer/document-viewer.module').then(m => m.DocumentViewerPageModule)
   },
   {
     path: 'news',

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core'
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { TranslateService } from '@ngx-translate/core'
 import { CartService } from 'src/app/core/cart.service'
@@ -6,6 +6,7 @@ import { INewsT, NewsRepositoryService } from 'src/app/core/repositories/news.re
 import { SettingsService } from 'src/app/core/settings.service'
 import { UserService } from 'src/app/core/user.service'
 import { LoggerService } from '../../@shared/logging/log.service'
+import { NavController } from '@ionic/angular'
 
 const logger = new LoggerService('NewsPage')
 
@@ -16,6 +17,92 @@ const logger = new LoggerService('NewsPage')
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewsPage implements OnInit {
+  @HostListener('document:click', ['$event'])
+  clickout(_event: any): boolean {
+    const event: any = _event || window.event
+    const element: HTMLAnchorElement = event.target || event.srcElement
+    // check for links with target '_blank'
+    if ('A' === element.tagName && '_blank' === element.target) {
+      const url = new URL(element.href)
+
+      switch (url.hostname) {
+        case 'shop.claes-distribution.be':
+          const supportedRoutes: string[] = [
+            '/news'
+          ]
+
+          if (supportedRoutes.includes(url.pathname)) {
+            this.navCtrl.navigateRoot(url.pathname)
+            // prevent default action and stop event propagation
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          } else if (url.pathname.startsWith('/products')) {
+            const product_id: string = url.searchParams.get('productId')
+            const query: string = url.searchParams.get('query')
+            if (product_id && product_id != '0')
+              this.navCtrl.navigateForward(['/products', url.searchParams.get('productId')])
+            else if (query)
+              this.navCtrl.navigateForward(['/products'], { queryParams: { query } })
+            // prevent default action and stop event propagation
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          }
+          break
+        case 'www.claes-distribution.be':
+          if (url.pathname.startsWith('/recepten') || url.pathname.startsWith('/recettes')) {
+            const id = url.pathname.split('/')[2]
+            this.navCtrl.navigateForward(['/web-recipes', id, 'preview'])
+            event.stopPropagation()
+            event.preventDefault()
+            return false
+          }
+          break
+      }
+    }
+    return true
+  }
+
+  @HostListener('window:message', ['$event'])
+  message(_event: any): boolean {
+    const element: any = _event.data
+    if ('A' === element.tagName && '_blank' === element.target) {
+      const url = new URL(element.href)
+
+      switch (url.hostname) {
+        case 'shop.claes-distribution.be':
+          const supportedRoutes: string[] = [
+            '/news'
+          ]
+
+          if (supportedRoutes.includes(url.pathname)) {
+            this.navCtrl.navigateRoot(url.pathname)
+            // prevent default action and stop event propagation
+            return false
+          } else if (url.pathname.startsWith('/products')) {
+            const product_id: string = url.searchParams.get('productId')
+            const query: string = url.searchParams.get('query')
+            if (product_id && product_id != '0')
+              this.navCtrl.navigateForward(['/products', url.searchParams.get('productId')])
+            else if (query)
+              this.navCtrl.navigateForward(['/products'], { queryParams: { query } })
+            // prevent default action and stop event propagation
+            return false
+          }
+          break
+        case 'www.claes-distribution.be':
+          if (url.pathname.startsWith('/recepten') || url.pathname.startsWith('/recettes')) {
+            const id = url.pathname.split('/')[2]
+            this.navCtrl.navigateForward(['/web-recipes', id, 'preview'])
+            return false
+          }
+          break
+      }
+    }
+    return true
+  }
+
   loading: boolean = true
   news: any[]
   displayThumbnail: boolean
@@ -27,6 +114,7 @@ export class NewsPage implements OnInit {
     private translate: TranslateService,
     private newsRepository: NewsRepositoryService,
     private cart: CartService,
+    private navCtrl: NavController,
     settings: SettingsService
   ) {
     settings.showThumbnail.then((value: boolean): void => {
