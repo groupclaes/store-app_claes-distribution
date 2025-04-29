@@ -31,7 +31,7 @@ const DEFAULT_VALUES = {
 export class SettingsService {
   // automate_data_refresh: boolean
 
-  constructor(platform: Platform) {
+  constructor(private platform: Platform) {
     // get automation values
     this.refresh().then()
 
@@ -40,6 +40,7 @@ export class SettingsService {
       // DEFAULT_VALUES.DEFAULT_FILTER_PROMO = true
       DEFAULT_VALUES.DEFAULT_FILTER_FAVORITE = true
       DEFAULT_VALUES.SYNC_DATASHEETS = true
+      DEFAULT_VALUES.SYNC_RECIPES = true
       DEFAULT_VALUES.SYNC_USAGE_MANUALS = true
       DEFAULT_VALUES.DEFAULT_PAGE = '/products'
     }
@@ -96,7 +97,7 @@ export class SettingsService {
     let usageManuals: boolean = await this.readFromSettings<boolean>('sync_usage-manuals', DEFAULT_VALUES.SYNC_USAGE_MANUALS)
 
     if (!environment.production)
-      interval = '120000'
+      interval = '1200000'
 
     logger.notice('sync_values()', {
       interval: +interval,
@@ -116,6 +117,8 @@ export class SettingsService {
   }
 
   async readFromSettings<T>(key: string, default_value: T): Promise<T> {
+    if (this.platform.is('android'))
+      return Promise.resolve(default_value)
     return CapacitorReadNativeSetting?.read({ key })
       .then((r: { value: T }) => r.value as T) ?? Promise.resolve(default_value)
   }

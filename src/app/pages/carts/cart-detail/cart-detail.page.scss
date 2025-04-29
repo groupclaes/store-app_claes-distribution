@@ -21,6 +21,13 @@
       justify-content: center;
       flex-direction: column;
 
+      div.flex {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+      }
+
       div.product-name {
         display: flex;
         flex-direction: column;

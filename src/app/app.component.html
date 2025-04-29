@@ -76,9 +76,13 @@
             <i slot="start" class='fal fa-fw fa-list'></i>
             <ion-label translate>categoriesPage</ion-label>
           </ion-item>
-          <ion-item [disabled]="!menuItemsActive" tappable button (click)="open('/products')">
+          <ion-item [disabled]="!menuItemsActive" tappable button lines="normal" (click)="open('/products')">
             <i slot="start" class='fal fa-fw fa-box-full'></i>
             <ion-label translate>productsPage</ion-label>
+          </ion-item>
+          <ion-item [disabled]="!menuItemsActive" tappable button  (click)="open('/recipes')">
+            <i slot="start" class='fal fa-fw fa-hat-chef'></i>
+            <ion-label translate>recipesPage</ion-label>
           </ion-item>
         </ng-container>
       </ion-list>

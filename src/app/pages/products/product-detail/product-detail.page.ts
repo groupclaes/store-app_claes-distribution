@@ -15,6 +15,7 @@ import {
 import { ProductsService } from 'src/app/core/products.service'
 import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
 import {
+  IAttachmentCollection,
   IPCMAttachmentEntry,
   IProductDetailT,
   IProductPrice,
@@ -28,7 +29,7 @@ import { Share, ShareOptions, ShareResult } from '@capacitor/share'
 import { Directory, DownloadFileResult, Filesystem, GetUriResult } from '@capacitor/filesystem'
 import { FileOpener } from '@capacitor-community/file-opener'
 
-const UNAVAILABLE_AFTER = new Date('2050-12-31')
+const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
 const logger = new LoggerService('ProductDetailPage')
 
 // Item numbers for testing
@@ -97,6 +98,10 @@ export class ProductDetailPage {
 
   get isGuest(): boolean {
     return this.user.isGuest
+  }
+
+  get isAgent(): boolean {
+    return this.user.hasAgentAccess
   }
 
   get productName(): string {
@@ -229,29 +234,29 @@ export class ProductDetailPage {
       this.loading = false
       this.ref.markForCheck()
     }
-
-    if (!this.user.isGuest)
-      await this.getAttachments()
+    await this.getAttachments()
   }
 
   async getAttachments(): Promise<void> {
     try {
-      const res = await this.repo.getAttachments(this._product.id, this._product.itemnum, this.culture)
+      const res: IAttachmentCollection = await this.repo.getAttachments(this._product.id, this._product.itemnum, this.culture, this.isGuest)
       if (res) {
         this.datasheets = res.datasheets
         this.recipes = res.recipes
         this.recipesModule = res.recipesModule
         this.usageManuals = res.usageManuals
 
-        for (let item of this.datasheets) {
-          await this.checkDocumentAvailable(item, 'datasheets')
-        }
-        for (let item of this.recipes) {
-          await this.checkDocumentAvailable(item, 'recipes')
-        }
-        for (let item of this.usageManuals) {
-          await this.checkDocumentAvailable(item, 'usage-manuals')
-        }
+        setTimeout(async (): Promise<void> => {
+          for (let item of this.datasheets) {
+            await this.checkDocumentAvailable(item, 'datasheets')
+          }
+          for (let item of this.recipes) {
+            await this.checkDocumentAvailable(item, 'recipes')
+          }
+          for (let item of this.usageManuals) {
+            await this.checkDocumentAvailable(item, 'usage-manuals')
+          }
+        }, 18)
       }
     } catch (err) {
       logger.error(err)

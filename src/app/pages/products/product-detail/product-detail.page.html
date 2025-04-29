@@ -52,7 +52,7 @@
           </ion-note>
         </ion-text>
 
-        <ion-list inset="true" style="margin-bottom: 8px !important">
+        <ion-list inset="true" style="margin-bottom:8px !important">
           <ion-item>
             <ion-label slot="start" position="fixed" translate>amount</ion-label>
             <ion-text translate>price</ion-text>
@@ -98,22 +98,24 @@
           </ion-note>
         </ion-text>
 
-        <ion-text class="list-header" *ngIf="!isUnavailable && !product.availableOn">
-          <ion-note>{{ amountLabel }}</ion-note>
-        </ion-text>
+        <ng-container *ngIf="(!isUnavailable && !product.availableOn) || isAgent">
+          <ion-text class="list-header">
+            <ion-note>{{ amountLabel }}</ion-note>
+          </ion-text>
 
-        <ion-list inset="true" *ngIf="!isUnavailable && !product.availableOn" style="margin-bottom: 8px !important">
-          <ion-item>
-            <ion-input type="number" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()"
-                       *ngIf="!product.availableOn" step="1" min="0"></ion-input>
-          </ion-item>
-        </ion-list>
+          <ion-list inset="true" style="margin-bottom:8px !important">
+            <ion-item>
+              <ion-input type="number" [(ngModel)]="product.amount" placeholder="0" (change)="changeProductAmount()"
+                         step="1" min="0"></ion-input>
+            </ion-item>
+          </ion-list>
 
-        <ion-text class="list-footer"
-                  *ngIf="product.prices.length > 0 && (product.contentQuantity !== null || product.contentQuantity > 1)"
-                  [style.visibility]="showContentUnit ? 'visible' : 'hidden'">
-          <ion-note translate>{{ 'piecepricedisclaimer' | translate }} {{ product.unit }}</ion-note>
-        </ion-text>
+          <ion-text class="list-footer"
+                    *ngIf="product.prices.length > 0 && (product.contentQuantity !== null || product.contentQuantity > 1)"
+                    [style.visibility]="showContentUnit ? 'visible' : 'hidden'">
+            <ion-note translate>{{ 'piecepricedisclaimer' | translate }} {{ product.unit }}</ion-note>
+          </ion-text>
+        </ng-container>
       </section>
     </div>
 

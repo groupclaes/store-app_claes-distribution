@@ -11,11 +11,15 @@
 </ion-footer>
 <ion-footer *ngIf="network.online && sync.busy" translucent="true">
   <ion-toolbar color="light">
-    <ion-text style="display:flex;justify-content:center;flex-direction:row">
+    <ion-text style="display:flex;justify-content:center;flex-direction:;align-items:center;column-gap:.5rem">
       <div style="text-align: center;white-space: pre;">
         <ion-spinner></ion-spinner>
       </div>
-      <span>{{ sync.message || '' }}</span>
+      <div>
+        <div *ngFor="let message of sync.message | keyvalue">
+          {{ message.value }}
+        </div>
+      </div>
     </ion-text>
   </ion-toolbar>
 </ion-footer>

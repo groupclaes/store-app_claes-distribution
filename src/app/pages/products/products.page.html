@@ -89,7 +89,7 @@
         </ion-label>
         <div *ngIf="!isGuest" slot="end" class="add-to-cart" (click)="$event.stopPropagation();$event.preventDefault()">
           <input [attr.id]="'product-' + product.id" [value]="product.amount ?? null"
-                 [disabled]="product.availableOn !== null" placeholder="0" class="control-color" type="tel"
+                 [disabled]="product.availableOn !== null && !isAgent" placeholder="0" class="control-color" type="tel"
                  (input)="changeProductAmount($event, product)"/>
         </div>
       </ion-item>

@@ -58,8 +58,13 @@
                  loading="lazy" [style]="'background-color:' + product.color" width="32" height="32">
           </ion-avatar>
           <ion-label class="ion-text-wrap">
-            <div class="product-name">
-              <span>{{ product.name }}</span>
+            <div class="flex">
+              <ion-text color="danger" *ngIf="product.availableOn">
+                {{ availableDescription(product) }}
+              </ion-text>
+              <div class="product-name">
+                <span>{{ product.name }}</span>
+              </div>
             </div>
             <ion-note>
               {{ product.unit | capitalize }}

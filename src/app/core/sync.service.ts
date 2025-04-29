@@ -23,7 +23,7 @@ const logger = new LoggerService('SyncService')
 export class SyncService {
   private _checksum: Array<Store> = []
   public changes: Subject<void> = new Subject<void>()
-  public message: string
+  public message: { [key: string]: string } = {}
   private _active_count: number = 0
 
   constructor(
@@ -144,7 +144,10 @@ export class SyncService {
     this.changes.next()
 
     return new Promise<boolean>(async (resolve, reject) => {
-      const timertje = setTimeout(() => reject('timeout_err'), TIMEOUT_INTERVAL)
+      const timertje: number = window.setTimeout(() => {
+        this._active_count--
+        reject('timeout_err')
+      }, TIMEOUT_INTERVAL)
 
       logger.debug('SyncService.FullSync() -- await promises')
 
@@ -228,7 +231,12 @@ export class SyncService {
           this.syncAttributes(user_id, culture, forceSync)
         ])
 
-        results = step1.concat(step2)
+        const step3 = await Promise.all([
+          this.syncPcmRecipes(user_id, culture, forceSync),
+          this.syncRecipesModule(user_id, culture, forceSync)
+        ])
+
+        results = step1.concat(step2, step3)
         console.timeEnd('FullSync')
       }
 
@@ -1860,15 +1868,15 @@ export class SyncService {
       // eslint-disable-next-line no-console
       console.time('preparing')
 
-      const hasCustomerExceptions = (customerExceptions && customerExceptions.length > 0)
-      const hasAddressExceptions = (addressExceptions && addressExceptions.length > 0)
-      const hasAddressGroupExceptions = (addressGroupExceptions && addressGroupExceptions.length > 0)
+      const hasCustomerExceptions: boolean = (customerExceptions && customerExceptions.length > 0)
+      const hasAddressExceptions: boolean = (addressExceptions && addressExceptions.length > 0)
+      const hasAddressGroupExceptions: boolean = (addressGroupExceptions && addressGroupExceptions.length > 0)
 
       let exceptions: string[]
       let allowed: number[]
 
       if (!hasCustomerExceptions && !hasAddressExceptions && !hasAddressGroupExceptions) {
-        logger.warn('This user does not have any product exceptions!')
+        logger.warn('This user does not have any product exceptions! amount of default exceptions; ', defaultExceptions[0].list.toString().split(',').length)
         exceptions = defaultExceptions[0].list.toString().split(',')
 
         allowed = products.filter(e => !exceptions.includes(e.itemnum.toString())).map(e => e.id)
@@ -1878,7 +1886,7 @@ export class SyncService {
 
         allowed = products.filter(e => exceptions.includes(e.itemnum.toString())).map(e => e.id)
       } else if (hasCustomerExceptions && customerExceptions[0].deny === 'true') {
-        logger.warn('This user has cusomerExceptions with deny true')
+        logger.warn('This user has customerExceptions with deny true')
         exceptions = customerExceptions[0].list.toString().split(',')
 
         if (hasAddressExceptions) {
@@ -2044,222 +2052,226 @@ export class SyncService {
   }
 
   async cacheDatasheets(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
-    logger.debug('cacheDatasheets() -- start', user)
-    // only users of type single customers are allowed to sync datasheets at this time
-    // if (user.type !== 1)
-    //   return
-
-    const allowMobile: boolean = await this.settings.dataAutomaticDownloads
-    if (!allowMobile && this.network.isMobileData)
-      return logger.warn('cacheDatasheets denied due to not allow Mobile Data')
-
-    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
-    if (!syncSettings.datasheets)
-      return logger.warn('cacheDatasheets denied due to syncSettings.datasheets')
-
     this._active_count++
-
+    logger.debug('cacheDatasheets() -- start', user)
     let datasheets: IPCMAttachmentEntry[]
-    let allowedItems: number[] = await this.getAllowedItemNums(user, true)
 
-    console.time('executeQuery')
-    datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
-      const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
-        'FROM datasheets [d] ' +
-        'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
-        'GROUP BY [d].[name], [d].[guid]'
+    try {
+      const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+      if (!allowMobile && this.network.isMobileData)
+        return logger.warn('cacheDatasheets denied due to not allow Mobile Data')
 
-      try {
-        const result: DBSQLiteValues = await db.query(query, [culture])
-        for (let i of result.values) {
-          i.products = JSON.parse(i.products)
+      const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+      if (!syncSettings.datasheets)
+        return logger.warn('cacheDatasheets denied due to syncSettings.datasheets')
+
+      let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+      datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+        const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
+          'FROM datasheets [d] ' +
+          'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
+          'GROUP BY [d].[name], [d].[guid]'
+
+        try {
+          const result: DBSQLiteValues = await db.query(query, [culture])
+          for (let i of result.values) {
+            i.products = JSON.parse(i.products)
+          }
+          result.values = result.values.filter(e => {
+            return e.products.some(x => allowedItems.includes(x))
+          })
+          for (let i of result.values) {
+            delete i.products
+          }
+          return result.values as IPCMAttachmentEntry[]
+        } catch (e) {
+          console.error(e)
         }
-        result.values = result.values.filter(e => {
-          return e.products.some(x => allowedItems.includes(x))
-        })
-        for (let i of result.values) {
-          delete i.products
+      })
+
+      let success: number = 0
+      const total: number = datasheets.length
+
+      for (const datasheet of datasheets) {
+        try {
+          await Filesystem.stat({
+            path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+            directory: Directory.Cache
+          })
+          success++
+        } catch {
+          if (!this.network.online)
+            return
+          await Filesystem.downloadFile({
+            url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+            directory: Directory.Cache,
+            path: `datasheets/${datasheet.guid}/${datasheet.name}`,
+            recursive: true
+          }).then((): number => success++)
+        } finally {
+          this.message.datasheets = `Synchronising datasheets: ${success}/${total}`
+          this.changes.next()
         }
-        console.timeEnd('executeQuery')
-        return result.values as IPCMAttachmentEntry[]
-      } catch (e) {
-        console.error(e)
       }
-    })
+    } catch (err) {
 
-    let success: number = 0
-    const total: number = datasheets.length
-
-    for (const datasheet of datasheets) {
-      try {
-        await Filesystem.stat({
-          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
-          directory: Directory.Cache
-        })
-        success++
-      } catch {
-        if (!this.network.online)
-          return
-        await Filesystem.downloadFile({
-          url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
-          directory: Directory.Cache,
-          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
-          recursive: true
-        }).then((): number => success++)
-      } finally {
-        this.message = `Synchronising datasheets: ${success}/${total}`
-        this.changes.next()
-      }
+    } finally {
+      delete this.message.datasheets
+      this._active_count--
+      this.changes.next()
+      logger.debug('cacheDatasheets() -- end', datasheets.length)
     }
-    this._active_count--
-    this.changes.next()
-    logger.debug('cacheDatasheets() -- end', datasheets.length)
   }
 
   async cacheUsageManuals(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
-    logger.debug('cacheUsageManuals() -- start', user)
-    // only users of type single customers are allowed to sync datasheets at this time
-    // if (user.type !== 1)
-    //   return
-
-    const allowMobile: boolean = await this.settings.dataAutomaticDownloads
-    if (!allowMobile && this.network.isMobileData)
-      return logger.warn('cacheUsageManuals denied due to not allow Mobile Data')
-
-    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
-    if (!syncSettings.usageManuals)
-      return logger.warn('cacheUsageManuals denied due to syncSettings.datasheets')
-
     this._active_count++
+    logger.debug('cacheUsageManuals() -- start', user)
+    let usageManuals: IPCMAttachmentEntry[]
 
-    let datasheets: IPCMAttachmentEntry[]
-    let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+    try {
+      const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+      if (!allowMobile && this.network.isMobileData)
+        return logger.warn('cacheUsageManuals denied due to not allow Mobile Data')
 
-    console.time('executeQuery')
-    datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
-      const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
-        'FROM usageManuals [d] ' +
-        'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
-        'GROUP BY [d].[name], [d].[guid]'
+      const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+      if (!syncSettings.usageManuals)
+        return logger.warn('cacheUsageManuals denied due to syncSettings.datasheets')
 
-      try {
-        const result: DBSQLiteValues = await db.query(query, [culture])
-        for (let i of result.values) {
-          i.products = JSON.parse(i.products)
+
+      let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+
+      usageManuals = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+        const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
+          'FROM usageManuals [d] ' +
+          'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
+          'GROUP BY [d].[name], [d].[guid]'
+
+        try {
+          const result: DBSQLiteValues = await db.query(query, [culture])
+          for (let i of result.values) {
+            i.products = JSON.parse(i.products)
+          }
+          result.values = result.values.filter(e => {
+            return e.products.some(x => allowedItems.includes(x))
+          })
+          for (let i of result.values) {
+            delete i.products
+          }
+          return result.values as IPCMAttachmentEntry[]
+        } catch (e) {
+          console.error(e)
         }
-        result.values = result.values.filter(e => {
-          return e.products.some(x => allowedItems.includes(x))
-        })
-        for (let i of result.values) {
-          delete i.products
+      })
+
+      let success: number = 0
+      const total: number = usageManuals.length
+
+      for (const file of usageManuals) {
+        try {
+          await Filesystem.stat({
+            path: `usage-manuals/${file.guid}/${file.name}`,
+            directory: Directory.Cache
+          })
+          success++
+        } catch {
+          if (!this.network.online)
+            return
+          try {
+            await Filesystem.downloadFile({
+              url: `${environment.pcm_url}/content/file/${file.guid}?show=true`,
+              directory: Directory.Cache,
+              path: `usage-manuals/${file.guid}/${file.name}`,
+              recursive: true
+            })
+          } finally {
+            success++
+          }
+        } finally {
+          this.message.usageManuals = `Synchronising usage manuals: ${success}/${total}`
+          this.changes.next()
         }
-        console.timeEnd('executeQuery')
-        return result.values as IPCMAttachmentEntry[]
-      } catch (e) {
-        console.error(e)
       }
-    })
+    } catch (err) {
 
-    let success: number = 0
-    const total: number = datasheets.length
-
-    for (const datasheet of datasheets) {
-      try {
-        await Filesystem.stat({
-          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
-          directory: Directory.Cache
-        })
-        success++
-      } catch {
-        if (!this.network.online)
-          return
-        await Filesystem.downloadFile({
-          url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
-          directory: Directory.Cache,
-          path: `usage-manuals/${datasheet.guid}/${datasheet.name}`,
-          recursive: true
-        }).then((): number => success++)
-      } finally {
-        this.message = `Synchronising usage manuals: ${success}/${total}`
-        this.changes.next()
-      }
+    } finally {
+      delete this.message.usageManuals
+      this._active_count--
+      this.changes.next()
+      logger.debug('cacheUsageManuals() -- end', usageManuals.length)
     }
-    this._active_count--
-    this.changes.next()
-    logger.debug('cacheUsageManuals() -- end', datasheets.length)
   }
 
   async cacheRecipes(user: Customer, culture: string = 'nl', customer_id?: number, address_id?: number): Promise<void> {
-    logger.debug('cacheRecipes() -- start', user)
-    // only users of type single customers are allowed to sync datasheets at this time
-    // if (user.type !== 1)
-    //   return
-
-    const allowMobile: boolean = await this.settings.dataAutomaticDownloads
-    if (!allowMobile && this.network.isMobileData)
-      return logger.warn('cacheRecipes denied due to not allow Mobile Data')
-
-    const syncSettings: ISyncSettings = await this.settings.getSyncValues()
-    if (!syncSettings.datasheets)
-      return logger.warn('cacheRecipes denied due to syncSettings.datasheets')
-
     this._active_count++
+    logger.debug('cacheRecipes() -- start', user)
+    let recipes: IPCMAttachmentEntry[]
 
-    let datasheets: IPCMAttachmentEntry[]
-    let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+    try {
+      const allowMobile: boolean = await this.settings.dataAutomaticDownloads
+      if (!allowMobile && this.network.isMobileData)
+        return logger.warn('cacheRecipes denied due to not allow Mobile Data')
 
-    console.time('executeQuery')
-    datasheets = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
-      const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
-        'FROM recipes [d] ' +
-        'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
-        'GROUP BY [d].[name], [d].[guid]'
+      const syncSettings: ISyncSettings = await this.settings.getSyncValues()
+      if (!syncSettings.datasheets)
+        return logger.warn('cacheRecipes denied due to syncSettings.datasheets')
 
-      try {
-        const result: DBSQLiteValues = await db.query(query, [culture])
-        for (let i of result.values) {
-          i.products = JSON.parse(i.products)
+      let allowedItems: number[] = await this.getAllowedItemNums(user, true)
+
+      recipes = await this._db.executeQuery<any>(async (db: SQLiteDBConnection): Promise<IPCMAttachmentEntry[]> => {
+        const query: string = 'SELECT [d].[name], [d].[guid], [d].[products] ' +
+          'FROM pcmRecipes [d] ' +
+          'WHERE languages LIKE \'%"\' || ? || \'":true%\' ' +
+          'GROUP BY [d].[name], [d].[guid]'
+
+        try {
+          const result: DBSQLiteValues = await db.query(query, [culture])
+          for (let i of result.values) {
+            i.products = JSON.parse(i.products)
+          }
+          result.values = result.values.filter(e => {
+            return e.products.some(x => allowedItems.includes(x))
+          })
+          for (let i of result.values) {
+            delete i.products
+          }
+          return result.values as IPCMAttachmentEntry[]
+        } catch (e) {
+          console.error(e)
         }
-        result.values = result.values.filter(e => {
-          return e.products.some(x => allowedItems.includes(x))
-        })
-        for (let i of result.values) {
-          delete i.products
+      })
+
+      let success: number = 0
+      const total: number = recipes.length
+
+      for (const datasheet of recipes) {
+        try {
+          await Filesystem.stat({
+            path: `recipes/${datasheet.guid}/${datasheet.name}`,
+            directory: Directory.Cache
+          })
+          success++
+        } catch {
+          if (!this.network.online)
+            return
+          await Filesystem.downloadFile({
+            url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+            directory: Directory.Cache,
+            path: `recipes/${datasheet.guid}/${datasheet.name}`,
+            recursive: true
+          }).then((): number => success++)
+        } finally {
+          this.message.recipes = `Synchronising recipes: ${success}/${total}`
+          this.changes.next()
         }
-        console.timeEnd('executeQuery')
-        return result.values as IPCMAttachmentEntry[]
-      } catch (e) {
-        console.error(e)
       }
-    })
+    } catch (err) {
 
-    let success: number = 0
-    const total: number = datasheets.length
-
-    for (const datasheet of datasheets) {
-      try {
-        await Filesystem.stat({
-          path: `recipes/${datasheet.guid}/${datasheet.name}`,
-          directory: Directory.Cache
-        })
-        success++
-      } catch {
-        if (!this.network.online)
-          return
-        await Filesystem.downloadFile({
-          url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
-          directory: Directory.Cache,
-          path: `datasheets/${datasheet.guid}/${datasheet.name}`,
-          recursive: true
-        }).then((): number => success++)
-      } finally {
-        this.message = `Synchronising recipes: ${success}/${total}`
-        this.changes.next()
-      }
+    } finally {
+      delete this.message.recipes
+      this._active_count--
+      this.changes.next()
+      logger.debug('cacheRecipes() -- end', recipes.length)
     }
-    this._active_count--
-    this.changes.next()
-    logger.debug('cacheRecipes() -- end', datasheets.length)
   }
 
   async clearDocumentCaches(): Promise<void> {
@@ -2267,6 +2279,7 @@ export class SyncService {
       await Filesystem.rmdir({ path: `datasheets`, directory: Directory.Cache, recursive: true }).catch()
       await Filesystem.rmdir({ path: `recipes`, directory: Directory.Cache, recursive: true }).catch()
       await Filesystem.rmdir({ path: `reports`, directory: Directory.Data, recursive: true }).catch()
+      await Filesystem.rmdir({ path: `usage-manuals`, directory: Directory.Cache, recursive: true }).catch()
       // await Filesystem.rmdir({ path: `thumbnails`, directory: Directory.Cache, recursive: true }).catch()
     } catch {
     }

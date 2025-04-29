@@ -31,22 +31,39 @@ export class LoggerService {
    * Current logging level.
    * Set it to LogLevel.Off to disable logs completely.
    */
-  static level: LogLevel = LogLevel.Debug
+  static level: LogLevel = environment.production ? LogLevel.Warning : LogLevel.Debug
 
   /**
    * Additional log outputs.
    */
   static outputs: any[] = []
 
-  /**
-   * Enables production mode.
-   * Sets logging level to LogLevel.Warning.
-   */
-  static enableProductionMode() {
-    LoggerService.level = LogLevel.Warning
-  }
-
   constructor(private source?: string) {
+    if (window.localStorage.getItem('logs') !== null) {
+      window.localStorage.removeItem('logs')
+    }
+
+    // only keep 3 days of logs
+    const date: Date = new Date()
+    const today: string = 'logs-' + date.toISOString().substring(0, 10)
+    date.setDate(date.getDate() - 1)
+    const yesterday: string = 'logs-' + date.toISOString().substring(0, 10)
+    date.setDate(date.getDate() - 1)
+    const beforeYesterday: string = 'logs-' + date.toISOString().substring(0, 10)
+
+    const keys: string[] = []
+
+    for (let i: number = 0; i < window.localStorage.length; i++) {
+      const key: string = window.localStorage.key(i)
+      keys.push(key)
+    }
+
+    for (let logKey of keys.filter(e => e.startsWith('logs'))) {
+      if (![today, yesterday, beforeYesterday].includes(logKey))
+        window.localStorage.removeItem(logKey)
+    }
+
+    console.log(keys)
   }
 
   static listen: Subject<any[]> = new Subject<any[]>

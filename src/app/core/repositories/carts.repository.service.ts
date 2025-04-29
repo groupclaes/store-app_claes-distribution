@@ -175,6 +175,7 @@ export class CartsRepositoryService {
           p.id,
           p.${nameString} as name,
           pu.${nameString} as unit,
+          p.availableOn as availableOn,
           ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
           p.color,
           p.minOrder,
@@ -316,6 +317,7 @@ export class CartsRepositoryService {
             p.id,
             p.${nameString} as name,
             pu.${nameString} as unit,
+            p.availableOn as availableOn,
             ('${environment.pcm_url}/product-images/' || p.itemnum || '?s=thumb') as url,
             p.color
           FROM cartProducts AS cp
@@ -475,6 +477,7 @@ export interface ICartDetailS extends ICartDetail {
 
 export interface ICartDetailProductT extends IProductInfoT {
   amount: number
+  availableOn: Date
 }
 
 export interface ICartDetailProductA extends ICartDetailProductT, IProductPricesOverview, IProductOrderInfo {

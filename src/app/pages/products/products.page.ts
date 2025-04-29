@@ -91,6 +91,7 @@ export class ProductsPage implements OnDestroy {
 
       if (this.user.activeUser) {
         fallback = window.setTimeout(async (): Promise<void> => {
+          console.log('this.user.activeUser')
           await this.load(true)
         }, 180)
       }
@@ -101,26 +102,41 @@ export class ProductsPage implements OnDestroy {
         window.clearTimeout(fallback)
         this._filters.category = undefined
         fallback = window.setTimeout(async (): Promise<void> => {
+          console.log('router.events.pipe')
           await this.load(true)
         }, 180)
       })
 
     this._subs.push(route.queryParams.subscribe(async (params: Params): Promise<void> => {
+      if (!params.category && !params.query)
+        return
+
       let cc: number | undefined = params.category ? +params.category : undefined
+      console.debug('debug', this.filter.query, params.query, cc, this._filters.category?.id)
       if (this.filter.query === (params.query ?? '') && cc === this._filters.category?.id)
         return
 
-      if (params.category)
-        this._filters.category = await categoriesRepository.find(+params.category, this.culture)
-      else if (this._filters.category !== undefined)
-        this._filters.category = undefined
-      if (params.query)
-        this.filter.query = params.query
 
-      window.clearTimeout(fallback)
-      fallback = window.setTimeout(async (): Promise<void> => {
-        await this.load(true)
-      }, 180)
+      let change: boolean = false
+      if (params.category && cc !== this._filters.category?.id) {
+        this._filters.category = await categoriesRepository.find(+params.category, this.culture)
+        change = true
+      } else if (this._filters.category !== undefined) {
+        this._filters.category = undefined
+        change = true
+      }
+      if (params.query) {
+        this.filter.query = params.query
+        change = true
+      }
+
+      if (change) {
+        window.clearTimeout(fallback)
+        fallback = window.setTimeout(async (): Promise<void> => {
+          console.log('queryParams')
+          await this.load(true)
+        }, 180)
+      }
     }))
 
     this.network.connected.subscribe((): void => {
@@ -410,6 +426,8 @@ export class ProductsPage implements OnDestroy {
       this._filters.favoriteState = (filters.filter_favorite === true) ? 'active' : (
         (filters.filter_favorite === false) ? 'default' : 'inactive'
       )
+
+      this._filters.query = ''
 
       if (this.user.activeUser)
         await this.load()

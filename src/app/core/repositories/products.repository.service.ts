@@ -606,11 +606,11 @@ export class ProductsRepositoryService {
     }
   }
 
-  async getAttachments(id: number, itemnum: string, culture: string = 'nl-BE'): Promise<IAttachmentCollection> {
+  async getAttachments(id: number, itemnum: string, culture: string = 'nl-BE', isGuest: boolean = true): Promise<IAttachmentCollection> {
     const nameString = culture === 'nl-BE' ? 'nameNl' : 'nameFr'
     culture = culture.split('-')[0]
     return this._db.executeQuery<any>(async (db: SQLiteDBConnection) => {
-      const datasheets = await db.query(
+      const datasheets = isGuest ? [] : await db.query(
         `SELECT guid, name
          FROM datasheets
          WHERE products LIKE '%${itemnum}%'
@@ -626,7 +626,7 @@ export class ProductsRepositoryService {
         []
       )
 
-      const usageManuals = await db.query(
+      const usageManuals = isGuest ? [] : await db.query(
         `SELECT guid, name, products
          FROM usageManuals
          WHERE products LIKE '%${itemnum}%'

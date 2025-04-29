@@ -1,5 +1,4 @@
 import { firstValueFrom } from 'rxjs'
-/* eslint-disable @typescript-eslint/dot-notation */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
 import { AlertController, LoadingController, NavController, ToastController } from '@ionic/angular'
@@ -18,6 +17,9 @@ import { UserService } from 'src/app/core/user.service'
 import { environment } from 'src/environments/environment'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { LoggerService } from '../../../@shared/logging/log.service'
+import { DatePipe } from '@angular/common'
+
+const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
 
 const logger = new LoggerService('CartDetailPage')
 
@@ -52,6 +54,7 @@ export class CartDetailPage implements OnInit {
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
+    private datePipe: DatePipe,
     private navCtrl: NavController,
     settings: SettingsService,
     private route: ActivatedRoute,
@@ -341,7 +344,8 @@ export class CartDetailPage implements OnInit {
           {
             text: this.translate.instant('actions.cancel'),
             role: 'cancel',
-            handler: () => { }
+            handler: () => {
+            }
           }, {
             text: this.translate.instant('yes'),
             role: 'destructive',
@@ -353,5 +357,16 @@ export class CartDetailPage implements OnInit {
     } catch (err) {
       logger.error('CartDetailPage.showDeleteConfirmation() error', err)
     }
+  }
+
+  availableDescription(product: ICartDetailProductA): string {
+    if (product.availableOn) {
+      if (new Date(product.availableOn).toISOString() === UNAVAILABLE_AFTER.toISOString()) {
+        return this.translate.instant('productUnavailable')
+      }
+      const availableOn: string = this.datePipe.transform(product.availableOn, 'dd/MM/yyyy', undefined, this.culture)
+      return `${this.translate.instant('availableOn')} ${availableOn}`
+    }
+    return ''
   }
 }

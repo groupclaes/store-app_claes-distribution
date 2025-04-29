@@ -264,7 +264,8 @@ export class CartService {
           name: null,
           unit: null,
           color: null,
-          url: null
+          url: null,
+          availableOn: null
         })
         await this.repo.addProduct(task.id, task.product_id, correctAmount)
       }

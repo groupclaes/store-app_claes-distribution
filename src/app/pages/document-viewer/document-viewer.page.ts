@@ -3,6 +3,7 @@ import { ActivatedRoute, Params } from '@angular/router'
 import { TranslateService } from '@ngx-translate/core'
 import { Directory, Filesystem, GetUriResult, ReadFileResult } from '@capacitor/filesystem'
 import { Share, ShareResult } from '@capacitor/share'
+import { firstValueFrom } from 'rxjs'
 
 @Component({
   selector: 'app-datasheet-detail',
@@ -26,9 +27,8 @@ export class DocumentViewerPage {
     private ref: ChangeDetectorRef,
     route: ActivatedRoute
   ) {
-    route.params.subscribe(async (params: Params): Promise<void> => {
+    firstValueFrom(route.params).then((params: Params): void => {
       const { path, uuid, name } = params
-      console.log(path, uuid, name, params)
       this.load(path, uuid, name).then()
     })
   }

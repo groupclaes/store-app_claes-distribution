@@ -86,20 +86,21 @@ export class CardinalService {
       } catch (err) {
         logger.error('[BackgroundFetch] ERROR:', err)
       }
-    } else if (emulate?.platform) {
-      const syncSettings = await this.appSettings.getSyncValues()
-      setInterval(async (): Promise<void> => {
-        logger.debug('setInterval() -- start, ext interval in %s minutes', syncSettings.interval > 0 ? (syncSettings.interval / 60000) : 60)
-        await this.backgroundTaskWork('interval')
-      }, (syncSettings.interval > 0 ? syncSettings.interval : 3600000) / 4)
     }
+    //else if (emulate?.platform) {
+    const syncSettings: ISyncSettings = await this.appSettings.getSyncValues()
+    setInterval(async (): Promise<void> => {
+      logger.debug('setInterval() -- start, ext interval in %s minutes', (syncSettings.interval > 0 ? (syncSettings.interval / 60000) : 60) / (emulate?.platform ? 4 : 1))
+      await this.backgroundTaskWork('interval')
+    }, (syncSettings.interval > 0 ? syncSettings.interval : 3600000) / (emulate?.platform ? 4 : 1))
+    // }
 
     // run all tasks manually
     this.status = CardinalStatus.RUNNING
     await this.backgroundTaskWork('init')
   }
 
-  private async evaluate_data_freshness() {
+  private async evaluate_data_freshness(): Promise<boolean> {
     logger.debug('evaluate_data_freshness() -- start')
     let promise: Promise<boolean>
     // check data readiness, if data is stale update in background
@@ -119,6 +120,10 @@ export class CardinalService {
   // PCM
   private async evaluate_datsheet_cache(): Promise<boolean> {
     logger.debug('evaluate_datsheet_cache() -- start')
+    if (!this.user.userinfo?.userId) {
+      logger.info('evaluate_datsheet_cache() -- Cannot run background work due to unauthenticated status!')
+      return false
+    }
     try {
       await this.sync.cacheDatasheets(this.user.userinfo, this.culture, this.user.activeUser?.id, this.user.activeUser?.address)
       return true
@@ -132,6 +137,10 @@ export class CardinalService {
 
   private async evaluate_leaflet_cache(): Promise<boolean> {
     logger.debug('evaluate_leaflet_cache() -- start')
+    if (!this.user.userinfo?.userId) {
+      logger.info('evaluate_leaflet_cache() -- Cannot run background work due to unauthenticated status!')
+      return false
+    }
     try {
       await this.sync.validateLeaflet(this.user.userinfo.userId, this.culture)
       return true
@@ -145,6 +154,10 @@ export class CardinalService {
 
   private async evaluate_recieps_cache(): Promise<boolean> {
     logger.debug('evaluate_recieps_cache() -- start')
+    if (!this.user.userinfo?.userId) {
+      logger.info('evaluate_recieps_cache() -- Cannot run background work due to unauthenticated status!')
+      return false
+    }
     try {
       await this.sync.cacheRecipes(this.user.userinfo, this.culture, this.user.activeUser?.id, this.user.activeUser?.address)
       return true
@@ -158,6 +171,10 @@ export class CardinalService {
 
   private async evaluate_usageManuals_cache(): Promise<boolean> {
     logger.debug('evaluate_usageManuals_cache() -- start')
+    if (!this.user.userinfo?.userId) {
+      logger.info('evaluate_usageManuals_cache() -- Cannot run background work due to unauthenticated status!')
+      return false
+    }
     try {
       await this.sync.cacheUsageManuals(this.user.userinfo, this.culture, this.user.activeUser?.id, this.user.activeUser?.address)
       return true
@@ -241,7 +258,8 @@ export class CardinalService {
     // if (this.appSettings.automate_planning_refresh || source !== 'backgroundFetch')
     //   work.push(this.evaluate_calendar_updates())
 
-    if (source === 'post-login') {
+
+    if (['post-login', 'interval'].includes(source)) {
       if (syncSettings.datasheets)
         work.push(this.evaluate_datsheet_cache())
       if (syncSettings.leaflets)
@@ -255,10 +273,6 @@ export class CardinalService {
     // this.appSettings.automate_data_refresh &&  || source !== 'backgroundFetch'
     logger.debug('backgroundTaskWork() -- automate_data_refresh, includes(source), source', ['backgroundFetch', 'interval'].includes(source), source) // , this.appSettings.automate_data_refresh
     if (['backgroundFetch', 'interval'].includes(source)) {
-      if (syncSettings.datasheets)
-        work.push(this.evaluate_datsheet_cache())
-      if (syncSettings.leaflets)
-        work.push(this.evaluate_leaflet_cache())
       work.push(this.evaluate_data_freshness())
     }
 

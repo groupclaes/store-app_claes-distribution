@@ -161,10 +161,14 @@ export class CustomersPage {
       userCode: customer.userCode
     }
 
-    const previous_user = localStorage.getItem('active-user')
-    if (previous_user) {
-      let _prev = JSON.parse(previous_user)
-      skip_prepare = _prev.id === new_user.id && _prev.address === new_user.address
+    try {
+      const previous_user = localStorage.getItem('active-user')
+      if (previous_user) {
+        let _prev = JSON.parse(previous_user)
+        skip_prepare = _prev.id === new_user.id && _prev.address === new_user.address
+      }
+    } catch {
+
     }
     localStorage.setItem('active-user', JSON.stringify(new_user))
     this.user.activeUser = new_user
