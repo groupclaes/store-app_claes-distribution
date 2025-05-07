@@ -1967,45 +1967,58 @@ export class SyncService {
   }
 
   async syncThumbnails(user: Customer, options: { force?: boolean, loader?: HTMLIonLoadingElement }) {
+    this._active_count++
+    logger.debug('syncThumbnails() -- start', user)
     let itemnums: number[]
-    await this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      if (user.id < 1000 && [2, 3].includes(user.type))
-        itemnums = (
-          await db.query('SELECT itemnum FROM products')
-        ).values.map(x => x.itemnum)
-      else
-        itemnums = (
-          await db.query('SELECT p.itemnum FROM currentExceptions c JOIN products p ON p.id = c.productId')
-        ).values.map(x => x.itemnum)
-    })
 
-    const runner = new SyncTaskRunner<void>(6)
-    for (let itemnum of itemnums) {
-      runner.push(() => new Promise<void>((x, y) => {
-        // check if file exists on disk, if so skip
-        Filesystem.stat({
-          path: 'thumbnails/' + itemnum + '.blob',
-          directory: Directory.Cache
-        }).then(file_info => {
-          x()
-        }).catch(err => {
-          firstValueFrom(this.api.pcmGet(`product-images/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
-        })
-      }))
+    try {
+      await this._db.executeQuery(async (db: SQLiteDBConnection) => {
+        if (user.id < 1000 && [2, 3].includes(user.type))
+          itemnums = (
+            await db.query('SELECT itemnum FROM products')
+          ).values.map(x => x.itemnum)
+        else
+          itemnums = (
+            await db.query('SELECT p.itemnum FROM currentExceptions c JOIN products p ON p.id = c.productId')
+          ).values.map(x => x.itemnum)
+      })
+
+      const runner = new SyncTaskRunner<void>(6)
+      for (let itemnum of itemnums) {
+        runner.push(() => new Promise<void>((x, y) => {
+          // check if file exists on disk, if so skip
+          Filesystem.stat({
+            path: 'thumbnails/' + itemnum + '.blob',
+            directory: Directory.Cache
+          }).then(file_info => {
+            x()
+          }).catch(err => {
+            firstValueFrom(this.api.pcmGet(`product-images/${itemnum}?s=thumb`)).then(_ => x()).catch(err => y())
+          })
+        }))
+      }
+
+      await new Promise<void>(res => {
+        const r = window.setInterval(() => {
+          if (!runner.busy) {
+            clearInterval(r)
+            res()
+          } else {
+            this.message.thumbnails = `Synchronising thumbnails: ${itemnums.length - runner.queue_length}/${itemnums.length}`
+            this.changes.next()
+            // if (options.loader)
+            //   options.loader.message = `${options.loader.message.toString().split(' ')[0]} ${itemnums.length - runner.queue_length}/${itemnums.length}`
+          }
+        }, 100)
+      })
+    } catch (err) {
+      logger.error('syncThumbnails() -- error', err)
+    } finally {
+      delete this.message.thumbnails
+      this._active_count--
+      this.changes.next()
+      logger.debug('syncThumbnails() -- end', itemnums.length)
     }
-
-    return new Promise<void>(res => {
-      const r = setInterval(() => {
-        if (!runner.busy) {
-          clearInterval(r)
-          res()
-        } else {
-          if (options.loader)
-            options.loader.message = `${options.loader.message.toString().split(' ')[0]} ${itemnums.length - runner.queue_length}/${itemnums.length}`
-          //console.log(`completed ${itemnums.length - runner.queue_length}/${itemnums.length}`, runner.busy)
-        }
-      }, 100)
-    })
   }
 
   async deleteThumbnailsFolder(): Promise<void> {
@@ -2114,7 +2127,7 @@ export class SyncService {
         }
       }
     } catch (err) {
-
+      logger.error('cacheDatasheets() -- error', err)
     } finally {
       delete this.message.datasheets
       this._active_count--
@@ -2192,7 +2205,7 @@ export class SyncService {
         }
       }
     } catch (err) {
-
+      logger.error('cacheUsageManuals() -- error', err)
     } finally {
       delete this.message.usageManuals
       this._active_count--
@@ -2253,19 +2266,23 @@ export class SyncService {
         } catch {
           if (!this.network.online)
             return
-          await Filesystem.downloadFile({
-            url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
-            directory: Directory.Cache,
-            path: `recipes/${datasheet.guid}/${datasheet.name}`,
-            recursive: true
-          }).then((): number => success++)
+          try {
+            await Filesystem.downloadFile({
+              url: `${environment.pcm_url}/content/file/${datasheet.guid}?show=true`,
+              directory: Directory.Cache,
+              path: `recipes/${datasheet.guid}/${datasheet.name}`,
+              recursive: true
+            })
+          } finally {
+            success++
+          }
         } finally {
           this.message.recipes = `Synchronising recipes: ${success}/${total}`
           this.changes.next()
         }
       }
     } catch (err) {
-
+      logger.error('cacheRecipes() -- error', err)
     } finally {
       delete this.message.recipes
       this._active_count--

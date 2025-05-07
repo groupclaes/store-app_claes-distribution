@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  version: '1.3.9-dev',
+  version: '2.0.1-dev',
   default_language: 'nl-BE',
   supported_languages: [
     'nl-BE',

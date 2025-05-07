@@ -39,9 +39,8 @@ export class LoggerService {
   static outputs: any[] = []
 
   constructor(private source?: string) {
-    if (window.localStorage.getItem('logs') !== null) {
+    if (window.localStorage.getItem('logs') !== null)
       window.localStorage.removeItem('logs')
-    }
 
     // only keep 3 days of logs
     const date: Date = new Date()
@@ -63,7 +62,7 @@ export class LoggerService {
         window.localStorage.removeItem(logKey)
     }
 
-    console.log(keys)
+    // console.log(keys)
   }
 
   static listen: Subject<any[]> = new Subject<any[]>
@@ -136,7 +135,12 @@ export class LoggerService {
 
         LoggerService.outputs.forEach((output: any): any => output(log))
         storage.push(log)
-        this.storage.setItem(LoggerService.logKey, JSON.stringify(storage))
+        try {
+          this.storage.setItem(LoggerService.logKey, JSON.stringify(storage))
+        } catch (error) {
+          // Quota is probably reached
+          console.trace('Quota is probably reached, skipping logging')
+        }
         LoggerService.listen.next(log)
       } catch (err) {
         console.error(err)

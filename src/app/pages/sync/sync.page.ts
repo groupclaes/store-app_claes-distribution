@@ -98,15 +98,15 @@ export class SyncPage implements OnInit {
   }
 
   async syncAllThumbnails(): Promise<void> {
-    this.loader = await this.loadingCtrl.create({
-      spinner: 'lines',
-      message: this.translate.instant('syncPage')
-    })
-
-    await this.loader.present()
+    // this.loader = await this.loadingCtrl.create({
+    //   spinner: 'lines',
+    //   message: this.translate.instant('syncPage')
+    // })
+    //
+    // await this.loader.present()
 
     this.sync.syncThumbnails(this.user.userinfo, { force: true, loader: this.loader })
-      .then((): Promise<boolean> => this.loader.dismiss())
+      // .then((): Promise<boolean> => this.loader.dismiss())
       .then((): Promise<void> => this.load())
   }
 

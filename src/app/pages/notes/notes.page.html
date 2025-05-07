@@ -19,7 +19,9 @@
     </ion-toolbar>
   </ion-header>
 
-  <div style="display:flex;justify-content:center;align-items:center;align-content:center;height:calc(100% - 52px);width:100%;overflow:hidden;" *ngIf="notes && notes.length === 0">
+  <div
+    style="display:flex;justify-content:center;align-items:center;align-content:center;height:calc(100% - 52px);width:100%;overflow:hidden;"
+    *ngIf="notes && notes.length === 0 && !newNote">
     <ion-note translate>noNotes</ion-note>
   </div>
 
@@ -42,8 +44,8 @@
 
     <ion-list inset="true">
       <ion-item>
-        <ion-textarea [label]="'pages.notes.fields.note' | translate" labelPlacement="fixed"
-                      type="text" auto-grow="true" rows="4" [(ngModel)]="newNote.text"></ion-textarea>
+        <ion-textarea [label]="'pages.notes.fields.note' | translate" labelPlacement="fixed" type="text"
+                      auto-grow="true" rows="4" [(ngModel)]="newNote.text"></ion-textarea>
       </ion-item>
       <ion-item>
         <ion-label [innerText]="'pages.notes.fields.next-visit' | translate"></ion-label>
