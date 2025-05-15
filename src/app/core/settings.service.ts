@@ -118,9 +118,11 @@ export class SettingsService {
 
   async readFromSettings<T>(key: string, default_value: T): Promise<T> {
     if (this.platform.is('android'))
-      return Promise.resolve(default_value)
-    return CapacitorReadNativeSetting?.read({ key })
-      .then((r: { value: T }) => r.value as T) ?? Promise.resolve(default_value)
+      return default_value
+
+    const settingValue = await CapacitorReadNativeSetting?.read({ key })
+    logger.debug('Fetching native setting: key, value, default -> ', key, settingValue, default_value)
+    return settingValue?.value ?? default_value
   }
 }
 
