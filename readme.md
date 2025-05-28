@@ -1,5 +1,17 @@
 # Store App - Claes Distribution
 
+## Incremental updates
+```sh
+# Bump the version to a new patch version
+bash ./tools/update_version.sh
+
+# Bump the version to a new minor version
+bash ./tools/update_version.sh minor
+
+# Bump to a new major version
+bash ./tools/update_version.sh major
+```
+
 
 ### iOS design Guidelines - iOS 18
 #### ion-list usage
@@ -26,6 +38,12 @@
 ```
 
 ### Settings plugin fix
+There is a script that will automatically patch the Plugin to use the current format:
+```sh
+bash ./tools/patch_modules.sh
+```
+
+
 Path: `node_modules/capacitor-read-native-setting\ios\Plugin\Plugin.swift`
 ```swift
 import Foundation
