@@ -196,7 +196,7 @@
 			<key>Title</key>
 			<string>Version</string>
 			<key>DefaultValue</key>
-			<string>v2.0.0</string>
+			<string>v2.0.4</string>
 			<key>Key</key>
 			<string>version</string>
 		</dict>
