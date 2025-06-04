@@ -295,13 +295,16 @@ export class CartDetailPage implements OnInit {
 
     try {
       for (let product of this._cart.products) {
-        const amount = product.amount || 0
-        let myStack = { quantity: 0, amount: 0 }
-        for (let price of product.prices) {
-          if (price.quantity <= amount && price.quantity > myStack.quantity)
-            myStack = price
+        try {
+          const amount = product.amount || 0
+          let myStack = { quantity: 0, amount: 0 }
+          for (let price of product.prices) {
+            if (price.quantity <= amount && price.quantity > myStack.quantity)
+              myStack = price
+          }
+          this.productsPrice += parseFloat((myStack.amount * amount).toFixed(2))
+        } catch {
         }
-        this.productsPrice += parseFloat((myStack.amount * amount).toFixed(2))
       }
 
       const shippingCosts = await this.shippingCostRepository.get(

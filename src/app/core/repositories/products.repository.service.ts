@@ -154,7 +154,7 @@ export class ProductsRepositoryService {
         SELECT attributes.${nameString}      as name,
                attributes.${groupNameString} as groupName
         FROM productAttributes
-               INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
+        INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
         WHERE productAttributes.product = ?`, [id])
 
       const similarProducts = await db.query(`SELECT products.${nameString}                                                       as name,

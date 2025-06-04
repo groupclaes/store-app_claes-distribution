@@ -31,7 +31,9 @@
         </div>
       </section>
       <section class="product-prices-wrapper" *ngIf="!isGuest && product.prices">
-        <ion-toolbar *ngIf="product.contentUnit && product.basePrice > 0" color="light">
+        <ion-toolbar
+          *ngIf="product.contentUnit && (product.contentUnit !== product.unit) && product.contentQuantity && product.basePrice > 0"
+          color="light">
           <ion-segment [(ngModel)]="showContentUnit">
             <ion-segment-button [value]="false">
               {{ product.unit }}

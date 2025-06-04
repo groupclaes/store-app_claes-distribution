@@ -293,7 +293,7 @@ export class SyncService {
             + '(id INTEGER PRIMARY KEY, descriptionNl STRING, descriptionFr STRING, groupNameNl STRING, '
             + 'groupNameFr STRING, PromoNl STRING, PromoFr STRING)')
           await db.execute('CREATE TABLE IF NOT EXISTS productAttributes '
-            + '(attribute INTEGER, product INTEGER, PRIMARY KEY (attribute, product))')
+            + '(product INTEGER, attribute INTEGER, PRIMARY KEY (product, attribute))')
           await db.execute('CREATE TABLE IF NOT EXISTS productAllergens '
             + '(product INTEGER, code STRING, value STRING, PRIMARY KEY (product, code))')
 
@@ -373,6 +373,8 @@ export class SyncService {
 
                 attrParam.push(attribute.id)
               }
+              if (product.id === 308)
+                console.log(attrQuery, attrParam)
               sqlStatements.push({
                 statement: attrQuery,
                 values: attrParam
