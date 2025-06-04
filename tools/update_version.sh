@@ -43,7 +43,7 @@ if [[ $OSTYPE == 'darwin'* ]]; then
   sed -i '' "s/CURRENT_PROJECT_VERSION = $CURRENT_IOS_VERSION;/CURRENT_PROJECT_VERSION = $NEW_IOS_VERSION;/" ios/App/App.xcodeproj/project.pbxproj
 
   # Update package version
-  sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\",/" package.json
+  sed -i '' "s/\"version\": \"$CURRENT_VERSION\",/\"version\": \"$NEW_VERSION\",/" package.json
 else
   sed -i "s/version\: \'$CURRENT_VERSION\'/version\: \'$NEW_VERSION\'/" src/environments/environment.prod.ts
   sed -i "s/version\: \'$CURRENT_VERSION-dev\'/version\: \'$NEW_VERSION-dev\'/" src/environments/environment.ts
