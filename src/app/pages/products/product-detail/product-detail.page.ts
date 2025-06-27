@@ -89,7 +89,7 @@ export class ProductDetailPage {
         await this.load(+params.id)
       }
     })
-    this.network.connected.subscribe((): void => this.ref.markForCheck())
+    this.network.connected.subscribe((): number => window.setTimeout(() => this.ref.markForCheck(), 80))
   }
 
   get canPromo(): boolean {

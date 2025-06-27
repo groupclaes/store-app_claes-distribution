@@ -73,7 +73,6 @@ export class CartDetailPage implements OnInit {
     return !environment.production
   }
 
-
   get step1Class(): string {
     switch (this.view) {
       case 'productsView':
@@ -158,14 +157,12 @@ export class CartDetailPage implements OnInit {
       this._cart = cart
 
       // Started editing, disable sending.
-      if (cart.send === true && !cart.sendOk) {
-        if (this.cart.cancelSend(cart)) {
+      if (cart.send === true && !cart.sendOk)
+        if (this.cart.cancelSend(cart))
           cart.send = false
-        }
-      }
 
       const deliveryTimes = await firstValueFrom(this.api.get<string[]>(
-        `order/deliverTimes/${this.user.activeUser.id}/${this.user.activeUser.address}`,
+        `order/deliverTimes/${this._cart.customer}/${this._cart.address}`,
         { userCode: this.user.userinfo.userCode }))
 
       if (deliveryTimes != null) {

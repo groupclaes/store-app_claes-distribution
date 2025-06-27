@@ -672,7 +672,6 @@ export class SyncService {
 
           logger.debug('dropped productExceptions')
 
-
           const sqlStatements: capSQLiteSet[] = []
           response.data.product_exceptions.forEach((excecption: $TSFixMe) => {
             sqlStatements.push({

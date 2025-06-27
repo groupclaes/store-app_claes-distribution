@@ -11,7 +11,6 @@ import { TranslateService } from '@ngx-translate/core'
 import { StorageProvider } from './core/storage-provider.service'
 import { CartService } from './core/cart.service'
 import { NetworkService } from './@shared/network.service'
-import { Directory, Filesystem, PermissionStatus } from '@capacitor/filesystem'
 
 registerLocaleData(localeFrBE)
 registerLocaleData(localeNlBE)
@@ -26,7 +25,6 @@ const logger = new LoggerService('AppComponent')
 })
 export class AppComponent {
   @ViewChild('menu') menu: IonMenu
-  databaseLoaded = false
 
   constructor(
     private platform: Platform,
@@ -44,35 +42,11 @@ export class AppComponent {
     platform.ready().then(() => {
       logger.info('MyApp.constructor() -- Platform is ready')
 
-      if (platform.is('android')) {
-        try {
-          Filesystem.checkPermissions().then((permStatus: PermissionStatus): void => {
-            if (permStatus.publicStorage !== 'granted') {
-              Filesystem.requestPermissions().then((permStatus: PermissionStatus): void => {
-                if (permStatus.publicStorage === 'granted') {
-                  Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Data, recursive: true }).then(() => {
-                    console.log('Old thumbs cleared!')
-                  })
-                }
-              })
-            }
-          })
-        } catch {
-
-        }
-      } else {
-        Filesystem.rmdir({ path: 'thumbnails', directory: Directory.Data, recursive: true }).then(() => {
-          console.log('Old thumbs cleared!')
-        })
-      }
-
-
       this.navCtrl.navigateRoot('/account/login')
     })
     this.network.connected.subscribe(() => this.ref.markForCheck())
     this.initTranslate()
   }
-
 
   get menuItemsActive(): boolean {
     return !(this.user && (!this.user.activeUser && this.user.userinfo && this.user.multiUser))

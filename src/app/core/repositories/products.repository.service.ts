@@ -675,20 +675,40 @@ export class ProductsRepositoryService {
     })
   }
 
-  addToFavourites(productId: number, userId: number, addressId: number) {
+  addToFavorites(productId: number, customer_id: number, address_id: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
       await db.query(`INSERT
-      OR REPLACE INTO favorites (id, cu, ad, hi) VALUES (?, ?, ?, 0)`, [productId, userId, addressId])
+      OR REPLACE INTO favorites (id, buy, cu, ad, hi, lastA, lastB, pro, ret) VALUES (?1, (select buy from favorites where id = ?1 and cu = ?2 and ad = ?3), ?2, ?3, 0, (select lastA from favorites where id = ?1 and cu = ?2 and ad = ?3), (select lastB from favorites where id = ?1 and cu = ?2 and ad = ?3), (select pro from favorites where id = ?1 and cu = ?2 and ad = ?3), (select ret from favorites where id = ?1 and cu = ?2 and ad = ?3))`, [productId, customer_id, address_id])
+
+      const prom = await db.query(`SELECT *
+                                   FROM favorites
+                                   WHERE id = ?
+                                     AND cu = ?
+                                     AND ad = ?`, [productId, customer_id, address_id])
+      console.log(prom.values)
     })
   }
 
-  removeFromFavourites(productId: number, userId: number, addressId: number) {
+  removeFromFavorites(productId: number, customer_id: number, address_id: number) {
     return this._db.executeQuery(async (db: SQLiteDBConnection) => {
-      await db.query(`DELETE
-                      FROM favorites
+      const prom = await db.query(`SELECT *
+                                   FROM favorites
+                                   WHERE id = ?
+                                     AND cu = ?
+                                     AND ad = ?`, [productId, customer_id, address_id])
+      console.log(prom.values)
+
+      await db.query(`UPDATE favorites
+                      SET hi = 1
                       WHERE id = ?
                         AND cu = ?
-                        AND ad = ?`, [productId, userId, addressId])
+                        AND ad = ?`, [productId, customer_id, address_id])
+      const prom1 = await db.query(`SELECT *
+                                    FROM favorites
+                                    WHERE id = ?
+                                      AND cu = ?
+                                      AND ad = ?`, [productId, customer_id, address_id])
+      console.log(prom1.values)
     })
   }
 

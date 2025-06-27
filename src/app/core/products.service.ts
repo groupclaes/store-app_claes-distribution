@@ -36,7 +36,7 @@ export class ProductsService {
       addressId: this.user.activeUser.address
     }))
 
-    await this.productRepo.addToFavourites(productId,
+    await this.productRepo.addToFavorites(productId,
       this.user.activeUser.id,
       this.user.activeUser.address)
   }
@@ -48,7 +48,7 @@ export class ProductsService {
       addressId: this.user.activeUser.address
     }))
 
-    await this.productRepo.removeFromFavourites(productId,
+    await this.productRepo.removeFromFavorites(productId,
       this.user.activeUser.id,
       this.user.activeUser.address)
   }
