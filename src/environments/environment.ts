@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  version: '2.0.7-dev',
+  version: '2.0.8-dev',
   default_language: 'nl-BE',
   supported_languages: [
     'nl-BE',
@@ -19,8 +19,8 @@ export const environment = {
   },
   store_url: 'https://shop.claes-distribution.be/api/uat/store-app',
   shop_api: 'https://shop.claes-distribution.be/api/v1/ecommerce',
-  // api_url: 'https://api.groupclaes.be/test/distribution',
-  api_url: 'https://api.groupclaes.be/distribution',
+  api_url: 'https://api.groupclaes.be/test/distribution',
+  // api_url: 'https://api.groupclaes.be/distribution',
   pcm_url: 'https://pcm.groupclaes.be/v4',
   database_name: 'distribution-test',
   mock_offline: false

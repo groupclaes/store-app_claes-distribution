@@ -179,7 +179,7 @@ export class CustomersPage {
     if (!skip_prepare) {
       await this.sync.prepareCurrentExceptions(customer)
       if (this.user.userinfo.type === 3) { // || this.user.userinfo.type === 2
-        logger.debug('Type 3 -- syncing prices and favourites', customer)
+        logger.debug('Type 3 -- syncing prices and favourites', this.user.userinfo, customer)
         await this.sync.syncPrices(this.user.userinfo.userId, 'all', true, customer.id, customer.addressId)
         await this.sync.syncFavorites(this.user.userinfo.userId, 'all', true, customer.id, customer.addressId)
       }

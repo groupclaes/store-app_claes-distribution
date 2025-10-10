@@ -374,12 +374,12 @@ export class ProductDetailPage {
             this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${doc.guid}?show=true`, '_system', 'location=yes')
           }
         },
-        {
-          text: this.translate.instant('actions.mail'),
-          handler: () => {
-            this.showMailTextInput(doc.guid, 0)
-          }
-        },
+        // {
+        //   text: this.translate.instant('actions.mail'),
+        //   handler: () => {
+        //     this.showMailTextInput(doc.guid, 0)
+        //   }
+        // },
         // {
         //   text: 'Downloaden', /* | translate */
         //   handler: () => { }
@@ -403,10 +403,10 @@ export class ProductDetailPage {
             this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${recipe.guid}?show=true`, '_system', 'location=yes')
           }
         },
-        {
-          text: this.translate.instant('actions.mail'),
-          handler: (): Promise<void> => this.showMailTextInput(recipe.guid, 1)
-        },
+        // {
+        //   text: this.translate.instant('actions.mail'),
+        //   handler: (): Promise<void> => this.showMailTextInput(recipe.guid, 1)
+        // },
         // {
         //   text: this.translate.instant('actions.show'),
         //   handler: () => this.navCtrl.navigateForward('/recipe/recipe-detail', { queryParams: { guid: recipe.guid } })

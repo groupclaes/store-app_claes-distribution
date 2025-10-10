@@ -18,9 +18,18 @@
       </ng-container>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable class="icon-only" [routerLink]="cartLink">
-        <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
-      </ion-button>
+      @switch (isAgent) {
+        @case (true) {
+          <ion-button tappable [routerLink]="['./customer-create']" translate>
+            actions.add
+          </ion-button>
+        }
+        @default {
+          <ion-button tappable class="icon-only" [routerLink]="cartLink">
+            <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
+          </ion-button>
+        }
+      }
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar *ngIf="isAgent">

@@ -267,6 +267,10 @@ ion-note:not([color]) {
   color: var(--ion-color-medium);
 }
 
+.segment-button-indicator-background {
+  background: white;
+}
+
 html.plt-desktop {
   body {
     app-root {

@@ -292,14 +292,14 @@ export class ReportsPage implements OnInit {
             this.handleReport(report, extension, 1)
             return resolveRunning(true)
           }
-        },
-        {
-          text: this.translate.instant('actions.mail'),
-          handler: (): void => {
-            this.handleReport(report, extension, 4)
-            return resolveRunning(true)
-          }
         }
+        // {
+        //   text: this.translate.instant('actions.mail'),
+        //   handler: (): void => {
+        //     this.handleReport(report, extension, 4)
+        //     return resolveRunning(true)
+        //   }
+        // }
       ]
     })
     await actionSheet.present()

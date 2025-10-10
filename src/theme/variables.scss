@@ -86,10 +86,14 @@ $font-path: "../assets/fonts";
   --ion-color-light-tint: #f5f6f9;
 }
 
+body {
+  --ion-item-background: white;
+}
+
 .ios body {
   --ion-background-color: #f2f2f7;
 
-  ion-item {
+  ion-item, .ion-item-bg {
     --ion-background-color: white;
   }
 }
