@@ -207,6 +207,10 @@ export class CustomerCreatePage {
     }
   }
 
+  updateSegment($event: any) {
+    this.currentSegment = $event.target.value
+  }
+
   validateOpeningHours(form: any) {
     // check that minimum 2 days are filled in and from time is greater than till time
 

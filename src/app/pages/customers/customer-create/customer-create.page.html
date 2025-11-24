@@ -103,7 +103,7 @@
       </ion-text>
 
       <div style="margin: 0 16px !important">
-        <ion-segment (ionChange)="currentSegment=$event.target.value">
+        <ion-segment (ionChange)="updateSegment($event)">
           <ion-segment-button value="invoicing" content-id="invoicing">
             <ion-label>Facturatie</ion-label>
           </ion-segment-button>
