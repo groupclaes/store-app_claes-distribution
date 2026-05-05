@@ -17,8 +17,11 @@ window.addEventListener('DOMContentLoaded', async () => {
   const platform = Capacitor.getPlatform()
   const sqlite: SQLiteConnection = new SQLiteConnection(CapacitorSQLite)
   try {
-    if (platform === "web") {
-      const jeepEl = document.createElement("jeep-sqlite")
+    console.log('platform: ', platform)
+    console.log('environment.production: ', environment.production)
+    console.log('Capacitor.getPlatform(): ', sqlite)
+    if (platform === 'web') {
+      const jeepEl = document.createElement('jeep-sqlite')
       document.body.appendChild(jeepEl)
       await customElements.whenDefined('jeep-sqlite')
       await sqlite.initWebStore()
