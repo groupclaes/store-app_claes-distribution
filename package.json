@@ -1,12 +1,12 @@
 {
   "name": "store-app",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "author": "Group Claes",
   "homepage": "https://www.claes-distribution.be",
   "scripts": {
     "ng": "ng",
     "start": "ionic serve -p=4200 -- --disable-host-check --host 0.0.0.0",
-    "build:ios": "bash patch_modules.sh && ionic capacitor build ios --prod --aot",
+    "build:ios": "bash tools/patch_modules.sh && ionic capacitor build ios --prod --aot",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",

@@ -4,10 +4,10 @@ import { ApiService } from './api.service'
 import { CartsRepositoryService, ICartDetail } from './repositories/carts.repository.service'
 import { AppCredential, Customer } from './user.service'
 import { CustomersRepositoryService } from './repositories/customers.repository.service'
-import { firstValueFrom } from 'rxjs'
 import { environment } from 'src/environments/environment'
 import { Queue } from './queue'
 import { LoggerService } from '../@shared/logging/log.service'
+import { firstValueFrom } from 'rxjs'
 
 const logger = new LoggerService('CartService')
 

@@ -100,7 +100,7 @@ export class LoginPage implements OnInit {
     })
   }
 
-  ionViewDidEnter() {
+  ionViewDidEnter(): void {
     try {
       const credential = this.user.storedCredential
       if (credential) {
@@ -163,12 +163,10 @@ export class LoginPage implements OnInit {
           try {
             await this.user.syncData(syncRequired === 'FORCE').catch(() => {
               this._loading.dismiss()
-              this.busy = false
               this.toast(this.translate.instant('syncError'))
             })
           } catch {
             this._loading.dismiss()
-            this.busy = false
             this.toast(this.translate.instant('syncError'))
           }
 
@@ -205,13 +203,12 @@ export class LoginPage implements OnInit {
       } else {
         this.toast(this.translate.instant('loginError'))
       }
-      this.busy = false
       this.ref.markForCheck()
     } catch (error: any) {
       await this.handleAuthError(error)
-      this.busy = false
       this.ref.markForCheck()
     } finally {
+      this.busy = false
       try {
         // dismiss loading if present
         if (this._loading) {

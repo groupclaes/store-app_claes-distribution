@@ -3,15 +3,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { ActivatedRoute, Params } from '@angular/router'
 import { ActionSheetController, AlertController, ModalController, NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
-import { firstValueFrom } from 'rxjs'
 import { LoggerService } from 'src/app/@shared/logging/log.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 import { ApiService } from 'src/app/core/api.service'
 import { BrowserService } from 'src/app/core/browser.service'
 import { CartService } from 'src/app/core/cart.service'
-import {
-  OptionalInputModalComponent
-} from 'src/app/core/components/optional-input-modal/optional-input-modal.component'
 import { ProductsService } from 'src/app/core/products.service'
 import { DepartmentsRepositoryService, IDepartmentT } from 'src/app/core/repositories/departments.repository.service'
 import {
@@ -646,81 +642,81 @@ export class ProductDetailPage {
     await prompt.present()
   }
 
-  async mailRecipe(guid: string, text: string): Promise<void> {
-    try {
-      const apiResult: any = await firstValueFrom(
-        this.api.post(`app/recipes/mail/${guid}`, this.user.credential, {
-          customer: this.user.activeUser.id,
-          address: this.user.activeUser.address,
-          message: text,
-          culture: this.culture,
-          test: environment.production ? undefined : true
-        }))
-      if (apiResult) {
-        this.alertCtrl.create({
-          header: this.translate.instant('recipeMailSend'),
-          message: this.translate.instant('recipeMailMessageSend')
-        }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
-        return
-      }
-    } catch (err) {
-    }
+  // async mailRecipe(guid: string, text: string): Promise<void> {
+  //   try {
+  //     const apiResult: any = await firstValueFrom(
+  //       this.api.post(`app/recipes/mail/${guid}`, this.user.credential, {
+  //         customer: this.user.activeUser.id,
+  //         address: this.user.activeUser.address,
+  //         message: text,
+  //         culture: this.culture,
+  //         test: environment.production ? undefined : true
+  //       }))
+  //     if (apiResult) {
+  //       this.alertCtrl.create({
+  //         header: this.translate.instant('recipeMailSend'),
+  //         message: this.translate.instant('recipeMailMessageSend')
+  //       }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
+  //       return
+  //     }
+  //   } catch (err) {
+  //   }
+  //
+  //   this.alertCtrl.create({
+  //     header: this.translate.instant('recipeMailError'),
+  //     message: this.translate.instant('recipeMailMessageError')
+  //   }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
+  // }
 
-    this.alertCtrl.create({
-      header: this.translate.instant('recipeMailError'),
-      message: this.translate.instant('recipeMailMessageError')
-    }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
-  }
+  // async mailDatasheet(guid: string, text: string): Promise<void> {
+  //   try {
+  //     const apiResult: any = await firstValueFrom(
+  //       this.api.post(`app/datasheets/mail/${guid}`, this.user.credential, {
+  //         customer: this.user.activeUser.id,
+  //         address: this.user.activeUser.address,
+  //         message: text,
+  //         culture: this.culture
+  //       }))
+  //     if (apiResult) {
+  //       this.alertCtrl.create({
+  //         header: this.translate.instant('datasheetMailSend'),
+  //         message: this.translate.instant('datasheetMailMessageSend')
+  //       }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
+  //       return
+  //     }
+  //   } catch (err) {
+  //   }
+  //
+  //   this.alertCtrl.create({
+  //     header: this.translate.instant('datasheetMailError'),
+  //     message: this.translate.instant('datasheetMailMessageError')
+  //   }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
+  // }
 
-  async mailDatasheet(guid: string, text: string): Promise<void> {
-    try {
-      const apiResult: any = await firstValueFrom(
-        this.api.post(`app/datasheets/mail/${guid}`, this.user.credential, {
-          customer: this.user.activeUser.id,
-          address: this.user.activeUser.address,
-          message: text,
-          culture: this.culture
-        }))
-      if (apiResult) {
-        this.alertCtrl.create({
-          header: this.translate.instant('datasheetMailSend'),
-          message: this.translate.instant('datasheetMailMessageSend')
-        }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
-        return
-      }
-    } catch (err) {
-    }
-
-    this.alertCtrl.create({
-      header: this.translate.instant('datasheetMailError'),
-      message: this.translate.instant('datasheetMailMessageError')
-    }).then((alert: HTMLIonAlertElement): Promise<void> => alert.present())
-  }
-
-  private async showMailTextInput(guid: string, type: number): Promise<void> {
-    const textModal: HTMLIonModalElement = await this.modalCtrl.create({
-      component: OptionalInputModalComponent,
-      componentProps: {
-        title: this.translate.instant('pages.product-detail.modals.mail.title'),
-        cancelButton: this.translate.instant('pages.product-detail.modals.mail.cancel'),
-        confirmButton: this.translate.instant('pages.product-detail.modals.mail.confirm'),
-        label: this.translate.instant('pages.product-detail.modals.mail.title'),
-        placeholder: this.translate.instant('pages.product-detail.modals.mail.placeholder')
-      }
-    })
-
-    await textModal.present()
-
-    const { data, role } = await textModal.onWillDismiss()
-
-    if (role === 'confirm') {
-      switch (type) {
-        case 0:
-          return await this.mailDatasheet(guid, data)
-
-        case 1:
-          return await this.mailRecipe(guid, data)
-      }
-    }
-  }
+  // private async showMailTextInput(guid: string, type: number): Promise<void> {
+  //   const textModal: HTMLIonModalElement = await this.modalCtrl.create({
+  //     component: OptionalInputModalComponent,
+  //     componentProps: {
+  //       title: this.translate.instant('pages.product-detail.modals.mail.title'),
+  //       cancelButton: this.translate.instant('pages.product-detail.modals.mail.cancel'),
+  //       confirmButton: this.translate.instant('pages.product-detail.modals.mail.confirm'),
+  //       label: this.translate.instant('pages.product-detail.modals.mail.title'),
+  //       placeholder: this.translate.instant('pages.product-detail.modals.mail.placeholder')
+  //     }
+  //   })
+  //
+  //   await textModal.present()
+  //
+  //   const { data, role } = await textModal.onWillDismiss()
+  //
+  //   if (role === 'confirm') {
+  //     switch (type) {
+  //       case 0:
+  //         return await this.mailDatasheet(guid, data)
+  //
+  //       case 1:
+  //         return await this.mailRecipe(guid, data)
+  //     }
+  //   }
+  // }
 }

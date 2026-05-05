@@ -107,32 +107,32 @@ export class RecipeDetailPage implements OnInit {
     // this.browser.open(`https://pcm.groupclaes.be/v4/content/file/${this.recipe.guid}?show=true`, '_system', 'location=yes')
   }
 
-  async mail(): Promise<void> {
-    try {
-      // create loader in future versions
-      const req: any = await this.api.post(`app/recipes/mail/${this.recipe.guid}`, this.user.credential, {
-        customer: this.user.activeUser.id,
-        address: this.user.activeUser.address,
-        message: '',
-        culture: this.culture
-      }).toPromise()
-      if (req) {
-        const alert = await this.alertCtrl.create({
-          header: this.translate.instant('recipeMailSend'),
-          message: this.translate.instant('recipeMailMessageSend')
-        })
-        alert.present()
-      }
-    } catch (err) {
-      const alert = await this.alertCtrl.create({
-        header: this.translate.instant('recipeMailError'),
-        message: this.translate.instant('recipeMailMessageError')
-      })
-      alert.present()
-    } finally {
-      // dismiss loader in future versions
-    }
-  }
+  // async mail(): Promise<void> {
+  //   try {
+  //     // create loader in future versions
+  //     const req: any = await this.api.post(`app/recipes/mail/${this.recipe.guid}`, this.user.credential, {
+  //       customer: this.user.activeUser.id,
+  //       address: this.user.activeUser.address,
+  //       message: '',
+  //       culture: this.culture
+  //     }).toPromise()
+  //     if (req) {
+  //       const alert = await this.alertCtrl.create({
+  //         header: this.translate.instant('recipeMailSend'),
+  //         message: this.translate.instant('recipeMailMessageSend')
+  //       })
+  //       alert.present()
+  //     }
+  //   } catch (err) {
+  //     const alert = await this.alertCtrl.create({
+  //       header: this.translate.instant('recipeMailError'),
+  //       message: this.translate.instant('recipeMailMessageError')
+  //     })
+  //     alert.present()
+  //   } finally {
+  //     // dismiss loader in future versions
+  //   }
+  // }
 
   get recipe() {
     if (this._recipe)
