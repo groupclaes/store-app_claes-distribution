@@ -25,54 +25,54 @@
   </ion-refresher>
 
   <ion-text class="list-header">
-    <ion-note translate>pages.sync.documents.title</ion-note>
+    <ion-note>{{ 'pages.sync.documents.title' | translate }}</ion-note>
   </ion-text>
 
   <ion-list inset="true">
     <ion-item>
-      <ion-label translate>pages.sync.documents.leaflets</ion-label>
+      <ion-label>{{ 'pages.sync.documents.leaflets' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="leafletCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="leafletCount !== undefined">
         {{ leafletCount }}
       </ion-note>
     </ion-item>
     <ion-item>
-      <ion-label translate>pages.sync.documents.datasheets</ion-label>
+      <ion-label>{{ 'pages.sync.documents.datasheets' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="datasheetCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="datasheetCount !== undefined">
         {{ datasheetCount }}
       </ion-note>
     </ion-item>
     <ion-item>
-      <ion-label translate>pages.sync.documents.usageManuals</ion-label>
+      <ion-label>{{ 'pages.sync.documents.usageManuals' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="usageManualsCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="usageManualsCount !== undefined">
         {{ usageManualsCount }}
       </ion-note>
     </ion-item>
     <ion-item>
-      <ion-label translate>pages.sync.documents.recipes</ion-label>
+      <ion-label>{{ 'pages.sync.documents.recipes' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="recipesCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="recipesCount !== undefined">
         {{ recipesCount }}
       </ion-note>
     </ion-item>
     <ion-item>
-      <ion-label translate>pages.sync.documents.reports</ion-label>
+      <ion-label>{{ 'pages.sync.documents.reports' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="reportCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="reportCount !== undefined">
         {{ reportCount }}
       </ion-note>
     </ion-item>
     <ion-item (click)="purgeThumbnails()">
-      <ion-label translate>pages.sync.documents.thumbnails</ion-label>
+      <ion-label>{{ 'pages.sync.documents.thumbnails' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="imageCount === undefined || productCount === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="imageCount !== undefined && productCount !== undefined">
         {{ imageCount }} / {{ productCount }}
       </ion-note>
     </ion-item>
     <ion-item (click)="purgeThumbnails()">
-      <ion-label translate>pages.sync.documents.cache</ion-label>
+      <ion-label>{{ 'pages.sync.documents.cache' | translate }}</ion-label>
       <ion-spinner slot="end" *ngIf="cacheSize === undefined"></ion-spinner>
       <ion-note slot="end" *ngIf="cacheSize !== undefined">
         {{ cacheSize | bytes:2 }}
@@ -92,7 +92,7 @@
 
   <ng-container *ngIf="internalUser">
     <ion-text class="list-header">
-      <ion-note translate>pages.sync.sync_details</ion-note>
+      <ion-note>{{ 'pages.sync.sync_details' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">

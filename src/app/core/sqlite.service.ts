@@ -2,12 +2,19 @@ import { Injectable } from '@angular/core'
 
 import { Capacitor } from '@capacitor/core'
 import {
-  CapacitorSQLite, SQLiteDBConnection, SQLiteConnection, capSQLiteSet,
-  capSQLiteChanges, capSQLiteValues, capEchoResult, capSQLiteResult,
-  capNCDatabasePathResult
+  CapacitorSQLite,
+  capEchoResult,
+  capNCDatabasePathResult,
+  capSQLiteChanges,
+  capSQLiteResult,
+  capSQLiteValues,
+  SQLiteConnection,
+  SQLiteDBConnection
 } from '@capacitor-community/sqlite'
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 
 export class SQLiteService {
   sqlite: SQLiteConnection
@@ -18,6 +25,7 @@ export class SQLiteService {
 
   constructor() {
   }
+
   /**
    * Plugin Initialization
    */
@@ -31,12 +39,14 @@ export class SQLiteService {
       resolve(true)
     })
   }
+
   getPlatform() {
     return this.platform
   }
+
   /**
    * Echo a value
-   * @param value 
+   * @param value
    */
   async echo(value: string): Promise<capEchoResult> {
     if (this.sqlite != null) {
@@ -47,9 +57,10 @@ export class SQLiteService {
         return Promise.reject(new Error(err))
       }
     } else {
-      return Promise.reject(new Error("no connection open"))
+      return Promise.reject(new Error('no connection open'))
     }
   }
+
   async isSecretStored(): Promise<capSQLiteResult> {
     if (!this.native) {
       return Promise.reject(new Error(`Not implemented for ${this.platform} platform`))
@@ -64,6 +75,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   async setEncryptionSecret(passphrase: string): Promise<void> {
     if (!this.native) {
       return Promise.reject(new Error(`Not implemented for ${this.platform} platform`))
@@ -98,16 +110,16 @@ export class SQLiteService {
 
   /**
    * addUpgradeStatement
-   * @param database 
-   * @param toVersion 
-   * @param statements 
+   * @param database
+   * @param toVersion
+   * @param statements
    */
   async addUpgradeStatement(database: string,
-    toVersion: number, statements: string[])
+                            toVersion: number, statements: string[])
     : Promise<void> {
     if (this.sqlite != null) {
       try {
-        await this.sqlite.addUpgradeStatement(database, [ { toVersion, statements } ])
+        await this.sqlite.addUpgradeStatement(database, [{ toVersion, statements }])
         return Promise.resolve()
       } catch (err) {
         return Promise.reject(new Error(err))
@@ -116,6 +128,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open for ${database}`))
     }
   }
+
   /**
    * get a non-conformed database path
    * @param path
@@ -137,6 +150,7 @@ export class SQLiteService {
     }
 
   }
+
   /**
    * Create a non-conformed database connection
    * @param databasePath
@@ -162,6 +176,7 @@ export class SQLiteService {
     }
 
   }
+
   /**
    * Close a non-conformed database connection
    * @param databasePath
@@ -180,6 +195,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open for ${databasePath}`))
     }
   }
+
   /**
    * Check if a non-conformed databaseconnection exists
    * @param databasePath
@@ -198,6 +214,7 @@ export class SQLiteService {
     }
 
   }
+
   /**
    * Retrieve a non-conformed database connection
    * @param databasePath
@@ -215,6 +232,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open for ${databasePath}`))
     }
   }
+
   /**
    * Check if a non conformed database exists
    * @param databasePath
@@ -232,15 +250,16 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Create a connection to a database
-   * @param database 
-   * @param encrypted 
-   * @param mode 
-   * @param version 
+   * @param database
+   * @param encrypted
+   * @param mode
+   * @param version
    */
   async createConnection(database: string, encrypted: boolean,
-    mode: string, version: number, readonly?: boolean
+                         mode: string, version: number, readonly?: boolean
   ): Promise<SQLiteDBConnection> {
     if (this.sqlite != null) {
       try {
@@ -259,9 +278,10 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open for ${database}`))
     }
   }
+
   /**
    * Close a connection to a database
-   * @param database 
+   * @param database
    */
   async closeConnection(database: string, readonly?: boolean): Promise<void> {
     if (this.sqlite != null) {
@@ -276,9 +296,10 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open for ${database}`))
     }
   }
+
   /**
    * Retrieve an existing connection to a database
-   * @param database 
+   * @param database
    */
   async retrieveConnection(database: string, readonly?: boolean):
     Promise<SQLiteDBConnection> {
@@ -293,6 +314,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open for ${database}`))
     }
   }
+
   /**
    * Retrieve all existing connections
    */
@@ -303,7 +325,7 @@ export class SQLiteService {
         const myConns = await this.sqlite.retrieveAllConnections()
         let keys = [...myConns.keys()]
         keys.forEach((value) => {
-          console.log("Connection: " + value)
+          console.log('Connection: ' + value)
         })
 
         return Promise.resolve(myConns)
@@ -314,6 +336,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Close all existing connections
    */
@@ -328,9 +351,10 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Check if connection exists
-   * @param database 
+   * @param database
    */
   async isConnection(database: string, readonly?: boolean): Promise<capSQLiteResult> {
     if (this.sqlite != null) {
@@ -344,9 +368,10 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Check Connections Consistency
-   * @returns 
+   * @returns
    */
   async checkConnectionsConsistency(): Promise<capSQLiteResult> {
     if (this.sqlite != null) {
@@ -360,9 +385,10 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Check if database exists
-   * @param database 
+   * @param database
    */
   async isDatabase(database: string): Promise<capSQLiteResult> {
     if (this.sqlite != null) {
@@ -375,6 +401,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Get the list of databases
    */
@@ -389,6 +416,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Get Migratable databases List
    */
@@ -419,7 +447,7 @@ export class SQLiteService {
     }
     if (this.sqlite != null) {
       try {
-        const path: string = folderPath ? folderPath : "default"
+        const path: string = folderPath ? folderPath : 'default'
         const dbList: string[] = dbNameList ? dbNameList : []
         return Promise.resolve(await this.sqlite.addSQLiteSuffix(path, dbList))
       } catch (err) {
@@ -429,6 +457,7 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Delete old databases
    */
@@ -438,7 +467,7 @@ export class SQLiteService {
     }
     if (this.sqlite != null) {
       try {
-        const path: string = folderPath ? folderPath : "default"
+        const path: string = folderPath ? folderPath : 'default'
         const dbList: string[] = dbNameList ? dbNameList : []
         return Promise.resolve(await this.sqlite.deleteOldDatabases(path, dbList))
       } catch (err) {
@@ -454,14 +483,14 @@ export class SQLiteService {
    * they can be read, it also changes their suffix.
    * @param folderPath the folder to move from
    * @param dbNameList the files to move, empty list means all the files
-   * @returns 
+   * @returns
    */
   async moveDatabasesAndAddSuffix(folderPath?: string, dbNameList?: string[]): Promise<void> {
     if (!this.native) {
       throw new Error(`Not implemented for ${this.platform} platform`)
     }
     if (this.sqlite != null) {
-      const path: string = folderPath ? folderPath : "default"
+      const path: string = folderPath ? folderPath : 'default'
       const dbList: string[] = dbNameList ? dbNameList : []
       return this.sqlite.moveDatabasesAndAddSuffix(path, dbList)
     } else {
@@ -471,7 +500,7 @@ export class SQLiteService {
 
   /**
    * Import from a Json Object
-   * @param jsonstring 
+   * @param jsonstring
    */
   async importFromJson(jsonstring: string): Promise<capSQLiteChanges> {
     if (this.sqlite != null) {
@@ -539,9 +568,10 @@ export class SQLiteService {
       return Promise.reject(new Error(`no connection open`))
     }
   }
+
   /**
    * Save a database to store
-   * @param database 
+   * @param database
    */
   async saveToStore(database: string): Promise<void> {
     if (this.platform !== 'web') {

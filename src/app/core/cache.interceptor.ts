@@ -1,10 +1,12 @@
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse } from '@angular/common/http'
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Observable, catchError, tap } from 'rxjs'
+import { catchError, Observable, tap } from 'rxjs'
 import { ThumbCacheService } from './thumb-cache.service'
 import { NetworkService } from '../@shared/network.service'
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class CachingInterceptor implements HttpInterceptor {
   constructor(private cache: ThumbCacheService, private network: NetworkService) {
   }

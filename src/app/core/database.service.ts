@@ -5,7 +5,9 @@ import { SQLiteService } from './sqlite.service'
 
 interface SQLiteDBConnectionCallback<T> { (myArguments: SQLiteDBConnection): T }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DatabaseService {
 
   constructor(private sqlite: SQLiteService) {

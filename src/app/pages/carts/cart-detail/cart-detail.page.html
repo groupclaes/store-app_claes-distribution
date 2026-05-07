@@ -215,7 +215,7 @@
 
   <ng-container *ngIf="!loading && view === 'summaryView'">
     <ion-text class="list-header">
-      <ion-note translate>summary</ion-note>
+      <ion-note>{{ 'summary' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
@@ -235,24 +235,24 @@
     </ion-list>
 
     <ion-text class="list-header">
-      <ion-note translate>subTotals</ion-note>
+      <ion-note>{{ 'subTotals' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
       <ion-item>
-        <ion-label translate>totalProducts</ion-label>
+        <ion-label>{{ 'totalProducts' | translate }}</ion-label>
         <div slot="end">
           {{ productsPrice > 0 ? (productsPrice | currency:'EUR':'symbol-narrow':'0.2-2':culture) : ('priceOnRequest' | translate) }}
         </div>
       </ion-item>
       <ion-item>
-        <ion-label translate>taxes</ion-label>
+        <ion-label>{{ 'taxes' | translate }}</ion-label>
         <div slot="end">
           {{ taxesPrice | currency:'EUR':'symbol-narrow':'0.2-2':culture }}
         </div>
       </ion-item>
       <ion-item>
-        <ion-label translate>delivery</ion-label>
+        <ion-label>{{ 'delivery' | translate }}</ion-label>
         <div slot="end">
           {{ deliveryPrice | currency:'EUR':'symbol-narrow':'0.2-2':culture }}
         </div>
@@ -260,12 +260,12 @@
     </ion-list>
 
     <ion-text class="list-header">
-      <ion-note translate>endTotal</ion-note>
+      <ion-note>{{ 'endTotal' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
       <ion-item>
-        <ion-label translate>total</ion-label>
+        <ion-label>{{ 'total' | translate }}</ion-label>
         <div slot="end">
           {{
             (productsPrice + taxesPrice + deliveryPrice) > 0 ?

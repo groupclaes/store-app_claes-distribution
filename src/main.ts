@@ -5,32 +5,40 @@ import { AppModule } from './app/app.module'
 import { environment } from './environments/environment'
 import { defineCustomElements as pwaElements } from '@ionic/pwa-elements/loader'
 import { defineCustomElements as jeepSqlite } from 'jeep-sqlite/loader'
-import { Capacitor } from '@capacitor/core'
 import { CapacitorSQLite, SQLiteConnection } from '@capacitor-community/sqlite'
+import { Capacitor } from '@capacitor/core'
 
 if (environment.production) {
   enableProdMode()
 }
-pwaElements(window)
-jeepSqlite(window)
+
+// Wait for DOMContentLoaded event
 window.addEventListener('DOMContentLoaded', async () => {
+  // Initialize Capacitor SQLite
   const platform = Capacitor.getPlatform()
   const sqlite: SQLiteConnection = new SQLiteConnection(CapacitorSQLite)
+
   try {
-    console.log('platform: ', platform)
-    console.log('environment.production: ', environment.production)
-    console.log('Capacitor.getPlatform(): ', sqlite)
     if (platform === 'web') {
-      const jeepEl = document.createElement('jeep-sqlite')
-      document.body.appendChild(jeepEl)
+      // Create the 'jeep-sqlite' Stencil component
+      const jeepSqliteElement = document.createElement('jeep-sqlite')
+      document.body.appendChild(jeepSqliteElement)
       await customElements.whenDefined('jeep-sqlite')
+
+      // Initialize the Web store
       await sqlite.initWebStore()
     }
-    await sqlite.checkConnectionsConsistency()
 
-    platformBrowserDynamic().bootstrapModule(AppModule)
+    platformBrowserDynamic()
+      .bootstrapModule(AppModule)
       .catch(err => console.log(err))
   } catch (err) {
+    console.log(`Error: ${err}`)
     throw new Error(`Error: ${err}`)
   }
 })
+
+
+pwaElements(window)
+jeepSqlite(window)
+

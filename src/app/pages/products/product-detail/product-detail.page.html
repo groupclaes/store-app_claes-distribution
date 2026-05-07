@@ -56,8 +56,8 @@
 
         <ion-list inset="true" style="margin-bottom:8px !important">
           <ion-item>
-            <ion-label slot="start" position="fixed" translate>amount</ion-label>
-            <ion-text translate>price</ion-text>
+            <ion-label slot="start" position="fixed">{{ 'amount' | translate }}</ion-label>
+            <ion-text>{{ 'price' | translate }}</ion-text>
           </ion-item>
           <ion-item *ngFor="let price of product.prices | reverse" [ngClass]="isCurrentStack(price)" tappable
                     (click)="setAmount(price.quantity)">
@@ -224,27 +224,27 @@
 
     <ion-list inset="true">
       <ion-item *ngIf="product.isFavorite && product.favLastB">
-        <ion-label translate="totalPurchased"></ion-label>
+        <ion-label>{{ 'totalPurchased' | translate }}</ion-label>
         <span [innerText]="product.favA"></span>
       </ion-item>
       <ion-item *ngIf="product.isFavorite && product.favLastB">
-        <ion-label translate="lastPurchaseAmount"></ion-label>
+        <ion-label>{{ 'lastPurchaseAmount' | translate }}</ion-label>
         <span [innerText]="product.favLastA"></span>
       </ion-item>
       <ion-item *ngIf="product.isFavorite && product.favLastB">
-        <ion-label translate="lastPurchaseDate"></ion-label>
+        <ion-label>{{ 'lastPurchaseDate' | translate }}</ion-label>
         <span [innerText]="product.favLastB | date:'mediumDate':undefined:culture"></span>
       </ion-item>
       <ion-item tappable (click)="copyMessage(product.itemnum)">
-        <ion-label translate="itemNum"></ion-label>
+        <ion-label>{{ 'itemNum' | translate }}</ion-label>
         <span [innerHtml]="product.itemnum"></span>
       </ion-item>
       <ion-item *ngIf="product.descriptionCustomer">
-        <ion-label translate="descriptionCustomer"></ion-label>
+        <ion-label>{{ 'descriptionCustomer' | translate }}</ion-label>
         <span [innerText]="product.descriptionCustomer"></span>
       </ion-item>
       <ion-item>
-        <ion-label translate="packingUnit"></ion-label>
+        <ion-label>{{ 'packingUnit' | translate }}</ion-label>
         {{ product.unit | capitalize }}
       </ion-item>
       <ion-item *ngFor="let tax of product.taxes">
@@ -252,7 +252,7 @@
         {{ tax.amount | currency:'EUR':'symbol-narrow':'0.2-2':culture }}
       </ion-item>
       <ion-item *ngIf="product.type === 'B'">
-        <ion-label translate="deliverTime"></ion-label>
+        <ion-label>{{ 'deliverTime' | translate }}</ion-label>
         {{ product.deliverTime }} {{ (product.deliverTime > 1 ? 'days' : 'day') | translate }}
       </ion-item>
       <ion-item *ngIf="product.ean && product.ean !== ''" tappable (click)="copyMessage(product.ean)">
@@ -260,15 +260,15 @@
         <span [innerText]="product.ean"></span>
       </ion-item>
       <ion-item *ngIf="product.minOrder > 1">
-        <ion-label translate="minorderQuantity"></ion-label>
+        <ion-label>{{ 'minorderQuantity' | translate }}</ion-label>
         <span [innerHtml]="product.minOrder"></span>
       </ion-item>
       <ion-item *ngIf="product.stackSize > 1">
-        <ion-label translate="minorderStack"></ion-label>
+        <ion-label>{{ 'minorderStack' | translate }}</ion-label>
         <span [innerHtml]="product.stackSize"></span>
       </ion-item>
       <ion-item *ngIf="product.supplierItemIdentifier && product.supplierItemIdentifier !== ''">
-        <ion-label translate="supplierItemId"></ion-label>
+        <ion-label>{{ 'supplierItemId' | translate }}</ion-label>
         <span [innerText]="product.supplierItemIdentifier"></span>
       </ion-item>
     </ion-list>

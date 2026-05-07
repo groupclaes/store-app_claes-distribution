@@ -11,14 +11,11 @@ import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromD
 import { TranslateHttpLoader } from '@ngx-translate/http-loader'
 import { SQLiteService } from './core/sqlite.service'
 import { InitializeAppService } from './core/initialize.app.service'
-import { DatabaseService } from './core/database.service'
 import { CachingInterceptor } from './core/cache.interceptor'
 import { PdfViewerModule } from 'ng2-pdf-viewer'
-import { CardinalService } from './core/cardinal.service'
 
 const createTranslateLoader =
   (http: HttpClient) => new TranslateHttpLoader(http, './assets/i18n/', '.json')
-
 const initializeFactory =
   (init: InitializeAppService) => () => init.initializeApp()
 
@@ -41,21 +38,21 @@ const initializeFactory =
     }),
     AppRoutingModule
   ], providers: [
-    SQLiteService,
-    DatabaseService,
-    InitializeAppService,
+    // SQLiteService,
+    // DatabaseService,
+    // InitializeAppService,
     {
       provide: APP_INITIALIZER,
       useFactory: initializeFactory,
-      deps: [InitializeAppService],
+      deps: [InitializeAppService, SQLiteService],
       multi: true
     },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (cardinal: CardinalService): () => CardinalService => (): CardinalService => cardinal,
-      deps: [CardinalService],
-      multi: true
-    },
+    // {
+    //   provide: APP_INITIALIZER,
+    //   useFactory: (cardinal: CardinalService): () => CardinalService => (): CardinalService => cardinal,
+    //   deps: [CardinalService],
+    //   multi: true
+    // },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: CachingInterceptor,

@@ -5,7 +5,9 @@ import { LoggerService } from '../@shared/logging/log.service'
 
 const logger = new LoggerService('InitializeAppService')
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class InitializeAppService {
   constructor(
     private sqliteService: SQLiteService

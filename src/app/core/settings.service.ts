@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core'
 import { environment } from 'src/environments/environment'
-import { Plugins } from '@capacitor/core'
 import { LoggerService } from '../@shared/logging/log.service'
 import { Platform } from '@ionic/angular'
-
-const { CapacitorReadNativeSetting } = Plugins
+import { CapacitorReadNativeSetting } from 'capacitor-read-native-setting'
 
 const logger = new LoggerService('SettingsService')
 
@@ -32,24 +30,14 @@ export class SettingsService {
   // automate_data_refresh: boolean
 
   constructor(private platform: Platform) {
-    // get automation values
-    this.refresh().then()
-
     // override settings in test / desktop
     if (platform.is('desktop') || !environment.production) {
-      // DEFAULT_VALUES.DEFAULT_FILTER_PROMO = true
       DEFAULT_VALUES.DEFAULT_FILTER_FAVORITE = true
       DEFAULT_VALUES.SYNC_DATASHEETS = true
       DEFAULT_VALUES.SYNC_RECIPES = true
       DEFAULT_VALUES.SYNC_USAGE_MANUALS = true
       DEFAULT_VALUES.DEFAULT_PAGE = '/products'
     }
-  }
-
-  async refresh(): Promise<void> {
-    // get automation values
-    // let values = await this.automation()
-    // this.automate_data_refresh = values.automate_data_refresh
   }
 
   get syncInterval(): Promise<string> {
