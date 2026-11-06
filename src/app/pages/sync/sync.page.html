@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title translate="syncPage"></ion-title>
+    <ion-title>{{ 'syncPage' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button class="icon-only" tappable (click)="network.online ? fullSync() : network.noop()">
         <i class='fal fa-fw fa-sync'></i>
@@ -16,7 +16,7 @@
 <ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
     <ion-toolbar color="light">
-      <ion-title size="large" translate="syncPage"></ion-title>
+      <ion-title size="large">{{ 'syncPage' | translate }}</ion-title>
     </ion-toolbar>
   </ion-header>
 

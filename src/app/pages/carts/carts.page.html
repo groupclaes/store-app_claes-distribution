@@ -4,11 +4,9 @@
       <ion-menu-button></ion-menu-button>
       <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
-    <ion-title translate="cartsPage"></ion-title>
+    <ion-title>{{ 'cartsPage' | translate }}</ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable color="primary" [routerLink]="['history']" translate>
-        showCartsHistory
-      </ion-button>
+      <ion-button tappable color="primary" [routerLink]="['history']">{{ 'showCartsHistory' | translate }}</ion-button>
       <ion-button class="icon-only" *ngIf="menuItemsActive && isAgent" tappable (click)="create()">
         <i class="fal fa-fw fa-lg fa-plus"></i>
       </ion-button>
@@ -25,7 +23,7 @@
 <ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
     <ion-toolbar color="light">
-      <ion-title size="large" translate="cartsPage"></ion-title>
+      <ion-title size="large">{{ 'cartsPage' | translate }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
@@ -38,7 +36,7 @@
   <div
     style="display:flex;justify-content:center;align-items:center;align-content:center;height:calc(100% - 52px);width:100%;overflow:hidden;"
     *ngIf="carts && carts.length === 0">
-    <ion-note translate>noCarts</ion-note>
+    <ion-note>{{ 'noCarts' | translate }}</ion-note>
   </div>
 
   <ion-list inset="true">

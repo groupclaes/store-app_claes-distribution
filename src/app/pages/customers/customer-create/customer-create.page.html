@@ -7,9 +7,7 @@
       {{ 'pages.customer-create.title' | translate }}
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button tappable (click)="doCreateCustomer()" translate>
-        actions.add
-      </ion-button>
+      <ion-button tappable (click)="doCreateCustomer()">{{ 'actions.add' | translate }}</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -18,14 +16,14 @@
 <ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
     <ion-toolbar color="light">
-      <ion-title size="large" translate="pages.customer-create.title"></ion-title>
+      <ion-title size="large">{{ 'pages.customer-create.title' | translate }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   @if (newCustomerForm) {
     <form [formGroup]="newCustomerForm" (submit)="doCreateCustomer()">
       <ion-text class="list-header">
-        <ion-note translate>Bezoekgegevens</ion-note>
+        <ion-note>{{ 'Bezoekgegevens' | translate }}</ion-note>
       </ion-text>
 
       <ion-list inset="true">
@@ -73,7 +71,7 @@
 
 
       <ion-text class="list-header">
-        <ion-note translate>remarks</ion-note>
+        <ion-note>{{ 'remarks' | translate }}</ion-note>
       </ion-text>
 
       <ion-list inset="true">
@@ -85,19 +83,19 @@
       <ion-text class="list-header">
         @switch (currentSegment) {
           @case ('invoicing') {
-            <ion-note translate>billingInformation</ion-note>
+            <ion-note>{{ 'billingInformation' | translate }}</ion-note>
           }
           @case ('address') {
-            <ion-note translate>adres gegevens</ion-note>
+            <ion-note>{{ 'adres gegevens' | translate }}</ion-note>
           }
           @case ('delivery') {
-            <ion-note translate>deliveryInformation</ion-note>
+            <ion-note>{{ 'deliveryInformation' | translate }}</ion-note>
           }
           @case ('deliverScheme') {
-            <ion-note translate>deliverySchedule</ion-note>
+            <ion-note>{{ 'deliverySchedule' | translate }}</ion-note>
           }
           @case ('contact') {
-            <ion-note translate>contactInformation</ion-note>
+            <ion-note>{{ 'contactInformation' | translate }}</ion-note>
           }
         }
       </ion-text>
@@ -291,19 +289,19 @@
               <ion-select formControlName="addressCountry"
                           labelPlacement="fixed" [label]="'addressCountry' | translate" interface="popover">
                 <ion-select-option value="be">
-                  <span translate="belgium"></span>
+                  <span>{{ 'belgium' | translate }}</span>
                 </ion-select-option>
                 <ion-select-option value="nl">
-                  <span translate="netherlands"></span>
+                  <span>{{ 'netherlands' | translate }}</span>
                 </ion-select-option>
                 <ion-select-option value="fr">
-                  <span translate="france"></span>
+                  <span>{{ 'france' | translate }}</span>
                 </ion-select-option>
                 <ion-select-option value="lu">
-                  <span translate="luxemburg"></span>
+                  <span>{{ 'luxemburg' | translate }}</span>
                 </ion-select-option>
                 <ion-select-option value="de">
-                  <span translate="germany"></span>
+                  <span>{{ 'germany' | translate }}</span>
                 </ion-select-option>
               </ion-select>
             </ion-item>
@@ -326,15 +324,15 @@
         </ion-segment-content>
         <ion-segment-content id="deliverScheme">
           <ion-text class="list-header">
-            <ion-note translate>monday</ion-note>
+            <ion-note>{{ 'monday' | translate }}</ion-note>
           </ion-text>
           <ion-list inset="true" style="display:flex;flex-direction:row;flex-wrap:wrap">
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>from</ion-label>
+              <ion-label>{{ 'from' | translate }}</ion-label>
               <ion-datetime-button datetime="moAMfr"></ion-datetime-button>
             </ion-item>
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>till</ion-label>
+              <ion-label>{{ 'till' | translate }}</ion-label>
               <ion-datetime-button datetime="moAMto"></ion-datetime-button>
             </ion-item>
             @if (!newCustomerForm.controls['moAMfr'].value.endsWith('00:00:00.000') && !newCustomerForm.controls['moAMto'].value.endsWith('00:00:00.000')) {
@@ -342,25 +340,25 @@
                 <div style="height:.5px;background-color:rgb(200, 199, 204)"></div>
               </div>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>from</ion-label>
+                <ion-label>{{ 'from' | translate }}</ion-label>
                 <ion-datetime-button datetime="moPMfr"></ion-datetime-button>
               </ion-item>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>till</ion-label>
+                <ion-label>{{ 'till' | translate }}</ion-label>
                 <ion-datetime-button datetime="moPMto"></ion-datetime-button>
               </ion-item>
             }
           </ion-list>
           <ion-text class="list-header" style="margin-top:16px">
-            <ion-note translate>tuesday</ion-note>
+            <ion-note>{{ 'tuesday' | translate }}</ion-note>
           </ion-text>
           <ion-list inset="true" style="display:flex;flex-direction:row;flex-wrap:wrap">
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>from</ion-label>
+              <ion-label>{{ 'from' | translate }}</ion-label>
               <ion-datetime-button datetime="tuAMfr"></ion-datetime-button>
             </ion-item>
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>till</ion-label>
+              <ion-label>{{ 'till' | translate }}</ion-label>
               <ion-datetime-button datetime="tuAMto"></ion-datetime-button>
             </ion-item>
             @if (!newCustomerForm.controls['tuAMfr'].value.endsWith('00:00:00.000') && !newCustomerForm.controls['tuAMto'].value.endsWith('00:00:00.000')) {
@@ -368,25 +366,25 @@
                 <div style="height:.5px;background-color:rgb(200, 199, 204)"></div>
               </div>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>from</ion-label>
+                <ion-label>{{ 'from' | translate }}</ion-label>
                 <ion-datetime-button datetime="tuPMfr"></ion-datetime-button>
               </ion-item>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>till</ion-label>
+                <ion-label>{{ 'till' | translate }}</ion-label>
                 <ion-datetime-button datetime="tuPMto"></ion-datetime-button>
               </ion-item>
             }
           </ion-list>
           <ion-text class="list-header" style="margin-top:16px">
-            <ion-note translate>wednesday</ion-note>
+            <ion-note>{{ 'wednesday' | translate }}</ion-note>
           </ion-text>
           <ion-list inset="true" style="display:flex;flex-direction:row;flex-wrap:wrap">
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>from</ion-label>
+              <ion-label>{{ 'from' | translate }}</ion-label>
               <ion-datetime-button datetime="weAMfr"></ion-datetime-button>
             </ion-item>
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>till</ion-label>
+              <ion-label>{{ 'till' | translate }}</ion-label>
               <ion-datetime-button datetime="weAMto"></ion-datetime-button>
             </ion-item>
             @if (!newCustomerForm.controls['weAMfr'].value.endsWith('00:00:00.000') && !newCustomerForm.controls['weAMto'].value.endsWith('00:00:00.000')) {
@@ -394,25 +392,25 @@
                 <div style="height:.5px;background-color:rgb(200, 199, 204)"></div>
               </div>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>from</ion-label>
+                <ion-label>{{ 'from' | translate }}</ion-label>
                 <ion-datetime-button datetime="wePMfr"></ion-datetime-button>
               </ion-item>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>till</ion-label>
+                <ion-label>{{ 'till' | translate }}</ion-label>
                 <ion-datetime-button datetime="wePMto"></ion-datetime-button>
               </ion-item>
             }
           </ion-list>
           <ion-text class="list-header" style="margin-top:16px">
-            <ion-note translate>thursday</ion-note>
+            <ion-note>{{ 'thursday' | translate }}</ion-note>
           </ion-text>
           <ion-list inset="true" style="display:flex;flex-direction:row;flex-wrap:wrap">
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>from</ion-label>
+              <ion-label>{{ 'from' | translate }}</ion-label>
               <ion-datetime-button datetime="thAMfr"></ion-datetime-button>
             </ion-item>
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>till</ion-label>
+              <ion-label>{{ 'till' | translate }}</ion-label>
               <ion-datetime-button datetime="thAMto"></ion-datetime-button>
             </ion-item>
             @if (!newCustomerForm.controls['thAMfr'].value.endsWith('00:00:00.000') && !newCustomerForm.controls['thAMto'].value.endsWith('00:00:00.000')) {
@@ -420,25 +418,25 @@
                 <div style="height:.5px;background-color:rgb(200, 199, 204)"></div>
               </div>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>from</ion-label>
+                <ion-label>{{ 'from' | translate }}</ion-label>
                 <ion-datetime-button datetime="thPMfr"></ion-datetime-button>
               </ion-item>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>till</ion-label>
+                <ion-label>{{ 'till' | translate }}</ion-label>
                 <ion-datetime-button datetime="thPMto"></ion-datetime-button>
               </ion-item>
             }
           </ion-list>
           <ion-text class="list-header" style="margin-top:16px">
-            <ion-note translate>friday</ion-note>
+            <ion-note>{{ 'friday' | translate }}</ion-note>
           </ion-text>
           <ion-list inset="true" style="display:flex;flex-direction:row;flex-wrap:wrap">
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>from</ion-label>
+              <ion-label>{{ 'from' | translate }}</ion-label>
               <ion-datetime-button datetime="frAMfr"></ion-datetime-button>
             </ion-item>
             <ion-item style="width: 50%" lines="none">
-              <ion-label translate>till</ion-label>
+              <ion-label>{{ 'till' | translate }}</ion-label>
               <ion-datetime-button datetime="frAMto"></ion-datetime-button>
             </ion-item>
             @if (!newCustomerForm.controls['frAMfr'].value.endsWith('00:00:00.000') && !newCustomerForm.controls['frAMto'].value.endsWith('00:00:00.000')) {
@@ -446,11 +444,11 @@
                 <div style="height:.5px;background-color:rgb(200, 199, 204)"></div>
               </div>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>from</ion-label>
+                <ion-label>{{ 'from' | translate }}</ion-label>
                 <ion-datetime-button datetime="frPMfr"></ion-datetime-button>
               </ion-item>
               <ion-item style="width:50%" lines="none">
-                <ion-label translate>till</ion-label>
+                <ion-label>{{ 'till' | translate }}</ion-label>
                 <ion-datetime-button datetime="frPMto"></ion-datetime-button>
               </ion-item>
             }

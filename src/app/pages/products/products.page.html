@@ -21,17 +21,17 @@
     <ng-container *ngIf="!isGuest">
       <div class="filters-toolbar">
         <div class="toggle-button new-toggle" tappable (click)="toggleNewFilter()" [attr.disabled]="loading">
-          <span [ngClass]="filter.newState" translate="newToggleButton"></span>
+          <span [ngClass]="filter.newState">{{ 'newToggleButton' | translate }}</span>
         </div>
         <div class="toggle-button promo-toggle" [attr.disabled]="!canPromo || loading" tappable
              (click)="togglePromoFilter()">
-          <span [ngClass]="filter.promoState" translate="promoToggleButton"></span>
+          <span [ngClass]="filter.promoState">{{ 'promoToggleButton' | translate }}</span>
         </div>
         <div class="toggle-button favorite-toggle" tappable (click)="toggleFavoriteFilter()" [attr.disabled]="loading">
-          <span [ngClass]="filter.favoriteState" translate="favoriteToggleButton"></span>
+          <span [ngClass]="filter.favoriteState">{{ 'favoriteToggleButton' | translate }}</span>
         </div>
         <div class="toggle-button order-toggle" tappable (click)="toggleOrderFilter()" [attr.disabled]="loading">
-          <span [ngClass]="filter.orderState" translate="orderToggleButton"></span>
+          <span [ngClass]="filter.orderState">{{ 'orderToggleButton' | translate }}</span>
         </div>
         <div class="search-query">
           <input [placeholder]="'searchInput' | translate" class="control-color" style="width:100%" type="text"
@@ -68,13 +68,13 @@
               {{ availableDescription(product) }}
             </ion-text>
             <div class="product-options" *ngIf="!isGuest">
-              <ion-badge color="secondary" *ngIf="product.isNew == true" translate="newItem"></ion-badge>
+              <ion-badge color="secondary" *ngIf="product.isNew == true">{{ 'newItem' | translate }}</ion-badge>
               <ion-badge color="danger"
                          *ngIf="this.canPromo && product.isPromo == true  && (filter.promoState !== 'active' || !isAgent)"
-                         translate="promoItem"></ion-badge>
+                        >{{ 'promoItem' | translate }}</ion-badge>
               <ion-badge color="warning" *ngIf="product.isFavorite && (filter.favoriteState !== 'active' || !isAgent)"
-                         translate="favoriteItem"></ion-badge>
-              <ion-badge color="success" *ngIf="product.type === 'B'" translate="orderToggleButton"></ion-badge>
+                        >{{ 'favoriteItem' | translate }}</ion-badge>
+              <ion-badge color="success" *ngIf="product.type === 'B'">{{ 'orderToggleButton' | translate }}</ion-badge>
               <!-- translate="orderItem"  -->
             </div>
             <!-- style="font-size:clamp(8px, 3vw, 16px)" [style]="clamp" -->

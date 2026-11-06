@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title translate="recipesPage"></ion-title>
+    <ion-title>{{ 'recipesPage' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
@@ -20,7 +20,7 @@
   <ion-header collapse="condense">
     <ion-toolbar color="light">
       <ion-title size="large">
-        <span translate>recipesPage</span>
+        <span>{{ 'recipesPage' | translate }}</span>
       </ion-title>
     </ion-toolbar>
   </ion-header>

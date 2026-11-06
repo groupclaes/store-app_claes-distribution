@@ -4,7 +4,7 @@
       <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
     <ion-title>
-      <span translate="cartHistoryPage"></span>
+      <span>{{ 'cartHistoryPage' | translate }}</span>
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -13,7 +13,7 @@
   <ng-container *ngIf="carts && carts.length === 0">
     <div id="container">
       <section class="no-service-orders">
-        <ion-note translate="noCarts"></ion-note>
+        <ion-note>{{ 'noCarts' | translate }}</ion-note>
       </section>
     </div>
   </ng-container>

@@ -20,9 +20,7 @@
     <ion-buttons slot="end">
       @switch (isAgent) {
         @case (true) {
-          <ion-button tappable [routerLink]="['./customer-create']" translate>
-            actions.add
-          </ion-button>
+          <ion-button tappable [routerLink]="['./customer-create']">{{ 'actions.add' | translate }}</ion-button>
         }
         @default {
           <ion-button tappable class="icon-only" [routerLink]="cartLink">

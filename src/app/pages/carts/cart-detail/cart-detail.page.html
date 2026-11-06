@@ -3,14 +3,12 @@
     <ion-buttons slot="start">
       <ion-back-button [text]="backButtonText"></ion-back-button>
     </ion-buttons>
-    <ion-title translate="cartDetailPage"></ion-title>
+    <ion-title>{{ 'cartDetailPage' | translate }}</ion-title>
     <ion-buttons slot="end">
       <!-- <ion-button tappable class="icon-only" (click)="showDeleteConfirmation()">
         <i class="fal fa-fw fa-trash"></i>
       </ion-button> -->
-      <ion-button tappable translate [disabled]="!allowSend" (click)="network.online ? send() : network.noop()">
-        actions.send
-      </ion-button>
+      <ion-button tappable [disabled]="!allowSend" (click)="network.online ? send() : network.noop()">{{ 'actions.send' | translate }}</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -25,17 +23,17 @@
   <div class="cart-progress px-8 py-4">
     <div class="step-1" [ngClass]="step1Class" tappable (click)="setView('productsView')">
       <span class="title">1</span>
-      <span class="label" style="font-size:.8rem" translate="products"></span>
+      <span class="label" style="font-size:.8rem">{{ 'products' | translate }}</span>
     </div>
     <div class="connector" [ngClass]="step2Class"></div>
     <div class="step-2" [ngClass]="step2Class" tappable (click)="setView('invoiceView')">
       <span class="title">2</span>
-      <span class="label" style="font-size:.8rem" translate="billing"></span>
+      <span class="label" style="font-size:.8rem">{{ 'billing' | translate }}</span>
     </div>
     <div class="connector" [ngClass]="step3Class"></div>
     <div class="step-3" [ngClass]="step3Class" tappable (click)="setView('summaryView')">
       <span class="title">3</span>
-      <span class="label" style="font-size:.8rem" translate="summary"></span>
+      <span class="label" style="font-size:.8rem">{{ 'summary' | translate }}</span>
     </div>
   </div>
 
@@ -94,7 +92,7 @@
 
   <div [hidden]="view !== 'invoiceView'" *ngIf="!loading && invoiceForm">
     <ion-text class="list-header">
-      <ion-note translate>commonInfo</ion-note>
+      <ion-note>{{ 'commonInfo' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
@@ -115,7 +113,7 @@
       <ion-item>
         <ion-select (ionChange)="onChange()" [(ngModel)]="invoiceForm.deliveryDate" interface="popover"
                     [disabled]="isHistory" [label]="'deliverDate' | translate">
-          <ion-select-option [value]="null" translate>asap</ion-select-option>
+          <ion-select-option [value]="null">{{ 'asap' | translate }}</ion-select-option>
           <ion-select-option [value]="date" *ngFor="let date of delvDates">
             {{ date | date:'EEEE d MMMM':undefined:culture }}
           </ion-select-option>
@@ -124,7 +122,7 @@
     </ion-list>
 
     <ion-text class="list-header">
-      <ion-note translate>deliverMethod</ion-note>
+      <ion-note>{{ 'deliverMethod' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
@@ -142,8 +140,8 @@
     <ion-text class="list-footer" *ngIf="invoiceForm.deliveryMethod === 'collect'">
       <ion-note>
         {{ 'openhoursstore' | translate }}:<br/>
-        <span translate>monday</span> - <span translate>thursday</span>: 08:00 - 18:00 <br/>
-        <span translate>friday</span>: 08:00 - 17:00
+        <span>{{ 'monday' | translate }}</span> - <span>{{ 'thursday' | translate }}</span>: 08:00 - 18:00 <br/>
+        <span>{{ 'friday' | translate }}</span>: 08:00 - 17:00
       </ion-note>
     </ion-text>
 
@@ -170,7 +168,7 @@
     </ng-container> -->
 
     <ion-text class="list-header">
-      <ion-note translate>deliverOption</ion-note>
+      <ion-note>{{ 'deliverOption' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
@@ -186,7 +184,7 @@
     </ion-list>
 
     <ion-text class="list-header">
-      <ion-note translate>comments</ion-note>
+      <ion-note>{{ 'comments' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">

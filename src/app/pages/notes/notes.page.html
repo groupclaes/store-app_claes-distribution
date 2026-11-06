@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title translate="pages.notes.title"></ion-title>
+    <ion-title>{{ 'pages.notes.title' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button class="icon-only" *ngIf="!showCreate" tappable (click)="addNote()">
         <i class="fal fa-lg fa-fw fa-plus"></i>
@@ -15,14 +15,14 @@
 <ion-content [fullscreen]="true" color="light">
   <ion-header collapse="condense">
     <ion-toolbar color="light">
-      <ion-title size="large" translate="pages.notes.title"></ion-title>
+      <ion-title size="large">{{ 'pages.notes.title' | translate }}</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <div
     style="display:flex;justify-content:center;align-items:center;align-content:center;height:calc(100% - 52px);width:100%;overflow:hidden;"
     *ngIf="notes && notes.length === 0 && !newNote">
-    <ion-note translate>noNotes</ion-note>
+    <ion-note>{{ 'noNotes' | translate }}</ion-note>
   </div>
 
   <ng-container *ngIf="newNote">
@@ -30,14 +30,14 @@
       <ion-note>{{ newNote.date | date : 'fullDate' : null : culture }}</ion-note>
       <div>
         <ion-button fill="clear" size="small" tappable (click)="send(newNote)" style="margin:0">
-          <span translate="actions.send"></span>&nbsp;<i class="fal fa-paper-plane"></i>
+          <span>{{ 'actions.send' | translate }}</span>&nbsp;<i class="fal fa-paper-plane"></i>
         </ion-button>
         <ion-button color="tertiary" fill="clear" size="small" tappable (click)="save(newNote)" style="margin:0">
-          <span translate="actions.save"></span>&nbsp;<i class="fal fa-save"></i>
+          <span>{{ 'actions.save' | translate }}</span>&nbsp;<i class="fal fa-save"></i>
         </ion-button>
         <ion-button color="danger" *ngIf="isUnsentNote(newNote)" fill="clear" size="small" tappable
                     (click)="deleteNote(newNote)" style="margin:0">
-          <span translate="actions.delete"></span>&nbsp;<i class="fal fa-trash"></i>
+          <span>{{ 'actions.delete' | translate }}</span>&nbsp;<i class="fal fa-trash"></i>
         </ion-button>
       </div>
     </ion-text>
@@ -109,10 +109,10 @@
       <ion-button fill="clear" size="small" tappable (click)="addNote(note)" style="margin:0">
         <ng-container [ngSwitch]="isUnsentNote(note)">
           <ng-template [ngSwitchCase]="true">
-            <span translate="actions.modify"></span>&nbsp;<i class="fal fa-pencil"></i>
+            <span>{{ 'actions.modify' | translate }}</span>&nbsp;<i class="fal fa-pencil"></i>
           </ng-template>
           <ng-template [ngSwitchCase]="false">
-            <span translate="actions.copy"></span>&nbsp;<i class="fal fa-copy"></i>
+            <span>{{ 'actions.copy' | translate }}</span>&nbsp;<i class="fal fa-copy"></i>
           </ng-template>
         </ng-container>
       </ion-button>
@@ -120,10 +120,10 @@
 
     <ion-list inset="true">
       <ion-item *ngIf="isUnsentNote(note)">
-        <ion-text color="danger" translate="pages.notes.saved"></ion-text>
+        <ion-text color="danger">{{ 'pages.notes.saved' | translate }}</ion-text>
       </ion-item>
       <ion-item *ngIf="debugging && $any(note).id && $any(note).toSend">
-        <span translate="pages.notes.to-be-sent"></span>
+        <span>{{ 'pages.notes.to-be-sent' | translate }}</span>
       </ion-item>
       <ion-item>
         <ion-label style="white-space:pre-wrap">

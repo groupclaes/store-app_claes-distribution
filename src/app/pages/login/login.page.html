@@ -25,7 +25,7 @@
         <ion-text class="list-footer">
           <ion-note>
             <p>
-              <span translate="version"></span>
+              <span>{{ 'version' | translate }}</span>
               <span>{{ appVersion }}</span>
             </p>
           </ion-note>
@@ -43,7 +43,7 @@
 
       <ion-text class="list-footer">
         <ion-note>
-          {{ 'continueAs' | translate }}<ion-text [style.cursor]="'pointer'" color="tertiary" (click)="network.online ? loginGuest() : network.noop()" translate="guest"></ion-text>.
+          {{ 'continueAs' | translate }}<ion-text [style.cursor]="'pointer'" color="tertiary" (click)="network.online ? loginGuest() : network.noop()">{{ 'guest' | translate }}</ion-text>.
         </ion-note>
       </ion-text>
     </div>

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title translate="customerInfoPage"></ion-title>
+    <ion-title>{{ 'customerInfoPage' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button tappable class="icon-only" [routerLink]="cartLink">
         <i class="fal fa-lg fa-fw fa-shopping-cart"></i>
@@ -21,88 +21,88 @@
 
   <ng-template [ngIf]="customer">
     <ion-text class="list-header">
-      <ion-note translate>customerInfoPage</ion-note>
+      <ion-note>{{ 'customerInfoPage' | translate }}</ion-note>
     </ion-text>
 
     <ion-list inset="true">
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.customer-id</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.customer-id' | translate }}</ion-label>
         <ion-note>{{ customer.id }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.customer-name</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.customer-name' | translate }}</ion-label>
         <ion-note>{{ customer.name }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.bonus</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.bonus' | translate }}</ion-label>
         <ion-note>{{ customer.bonusPercentage / 100 | percent:'1.1' }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.promo</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.promo' | translate }}</ion-label>
         <ion-note>{{ (customer.promo ? 'yes' : 'no') | translate }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.fostplus</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.fostplus' | translate }}</ion-label>
         <ion-note>{{ (customer.fostplus ? 'yes' : 'no') | translate }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.address</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.address' | translate }}</ion-label>
         <ion-note>{{ customer.address + ' ' + customer.streetNum }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.city</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.city' | translate }}</ion-label>
         <ion-note>{{ customer.zipCode + ' - ' + customer.city }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.country</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.country' | translate }}</ion-label>
         <ion-note>{{ customer.country }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.phoneNum</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.phoneNum' | translate }}</ion-label>
         <ion-note>{{ customer.phoneNum }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.vatNum</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.vatNum' | translate }}</ion-label>
         <ion-note>{{ displayVat }}</ion-note>
       </ion-item>
       <ion-item>
-        <ion-label translate>pages.customer-info.fields.language</ion-label>
+        <ion-label>{{ 'pages.customer-info.fields.language' | translate }}</ion-label>
         <ion-note>{{ 'languages.' + customer.language.toLowerCase() | translate }}</ion-note>
       </ion-item>
     </ion-list>
 
     <ng-container *ngIf="customer.addressId !== 0">
       <ion-text class="list-header">
-        <ion-note translate>addressInfoPage</ion-note>
+        <ion-note>{{ 'addressInfoPage' | translate }}</ion-note>
       </ion-text>
 
       <ion-list inset="true">
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.address-id</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.address-id' | translate }}</ion-label>
           <ion-note>{{ customer.addressId }}</ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.address-name</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.address-name' | translate }}</ion-label>
           <ion-note>{{ customer.addressName }}</ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.delivery-address</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.delivery-address' | translate }}</ion-label>
           <ion-note>{{ customer.delvAddress + ' ' + customer.delvStreetNum }}</ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.city</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.city' | translate }}</ion-label>
           <ion-note>{{ customer.delvZipCode + ' - ' + customer.delvCity }}</ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.country</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.country' | translate }}</ion-label>
           <ion-note>{{ customer.delvCountry }}</ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.phoneNum</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.phoneNum' | translate }}</ion-label>
           <ion-note>{{ customer.delvPhoneNum }}</ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>pages.customer-info.fields.language</ion-label>
+          <ion-label>{{ 'pages.customer-info.fields.language' | translate }}</ion-label>
           <ion-note>{{ 'languages.' + customer.delvLanguage.toLowerCase() | translate }}</ion-note>
         </ion-item>
       </ion-list>
@@ -110,14 +110,14 @@
 
     <ng-container *ngFor="let deliverySchedule of deliverySchedules">
       <ion-text class="list-header">
-        <ion-note translate>deliverySchedule</ion-note>
+        <ion-note>{{ 'deliverySchedule' | translate }}</ion-note>
       </ion-text>
 
       <ion-list inset="true">
         <ion-item>
-          <ion-label translate>monday</ion-label>
-          <ion-note color="danger" translate="closed"
-                    *ngIf="!deliverySchedule.monAMFr || !deliverySchedule.monAMTo"></ion-note>
+          <ion-label>{{ 'monday' | translate }}</ion-label>
+          <ion-note color="danger"
+                    *ngIf="!deliverySchedule.monAMFr || !deliverySchedule.monAMTo">{{ 'closed' | translate }}</ion-note>
           <ion-note *ngIf="deliverySchedule.monAMFr && deliverySchedule.monAMTo">
             {{
               (!deliverySchedule.monPMFr ? 'deliverFrom' : 'deliverFrom2') | translate:{
@@ -130,9 +130,9 @@
           </ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>tuesday</ion-label>
-          <ion-note color="danger" translate="closed"
-                    *ngIf="!deliverySchedule.tueAMFr || !deliverySchedule.tueAMTo"></ion-note>
+          <ion-label>{{ 'tuesday' | translate }}</ion-label>
+          <ion-note color="danger"
+                    *ngIf="!deliverySchedule.tueAMFr || !deliverySchedule.tueAMTo">{{ 'closed' | translate }}</ion-note>
           <ion-note *ngIf="deliverySchedule.tueAMFr && deliverySchedule.tueAMTo">
             {{
               (!deliverySchedule.tuePMFr ? 'deliverFrom' : 'deliverFrom2') | translate:{
@@ -145,9 +145,9 @@
           </ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>wednesday</ion-label>
-          <ion-note color="danger" translate="closed"
-                    *ngIf="!deliverySchedule.wedAMFr || !deliverySchedule.wedAMTo"></ion-note>
+          <ion-label>{{ 'wednesday' | translate }}</ion-label>
+          <ion-note color="danger"
+                    *ngIf="!deliverySchedule.wedAMFr || !deliverySchedule.wedAMTo">{{ 'closed' | translate }}</ion-note>
           <ion-note *ngIf="deliverySchedule.wedAMFr && deliverySchedule.wedAMTo">
             {{
               (!deliverySchedule.wedPMFr ? 'deliverFrom' : 'deliverFrom2') | translate:{
@@ -160,9 +160,9 @@
           </ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>thursday</ion-label>
-          <ion-note color="danger" translate="closed"
-                    *ngIf="!deliverySchedule.thuAMFr || !deliverySchedule.thuAMTo"></ion-note>
+          <ion-label>{{ 'thursday' | translate }}</ion-label>
+          <ion-note color="danger"
+                    *ngIf="!deliverySchedule.thuAMFr || !deliverySchedule.thuAMTo">{{ 'closed' | translate }}</ion-note>
           <ion-note *ngIf="deliverySchedule.thuAMFr && deliverySchedule.thuAMTo">
             {{
               (!deliverySchedule.thuPMFr ? 'deliverFrom' : 'deliverFrom2') | translate:{
@@ -175,9 +175,9 @@
           </ion-note>
         </ion-item>
         <ion-item>
-          <ion-label translate>friday</ion-label>
-          <ion-note color="danger" translate="closed"
-                    *ngIf="!deliverySchedule.friAMFr || !deliverySchedule.friAMTo"></ion-note>
+          <ion-label>{{ 'friday' | translate }}</ion-label>
+          <ion-note color="danger"
+                    *ngIf="!deliverySchedule.friAMFr || !deliverySchedule.friAMTo">{{ 'closed' | translate }}</ion-note>
           <ion-note *ngIf="deliverySchedule.friAMFr && deliverySchedule.friAMTo">
             {{
               (!deliverySchedule.tuePMFr ? 'deliverFrom' : 'deliverFrom2') | translate:{
@@ -194,7 +194,7 @@
 
     <ng-container *ngIf="contacts && contacts.length > 0">
       <ion-text class="list-header">
-        <ion-note translate>contactsPage</ion-note>
+        <ion-note>{{ 'contactsPage' | translate }}</ion-note>
       </ion-text>
 
       <ion-list inset="true">
@@ -212,28 +212,28 @@
             <div slot="content">
               <ion-list>
                 <ion-item class="border-t">
-                  <ion-toggle translate="contacts.ordConf"
-                              [checked]="item.ordConf" [disabled]="true"></ion-toggle>
+                  <ion-toggle
+                              [checked]="item.ordConf" [disabled]="true">{{ 'contacts.ordConf' | translate }}</ion-toggle>
                 </ion-item>
                 <ion-item>
-                  <ion-toggle translate="contacts.bonus"
-                              [checked]="item.bonus" [disabled]="true"></ion-toggle>
+                  <ion-toggle
+                              [checked]="item.bonus" [disabled]="true">{{ 'contacts.bonus' | translate }}</ion-toggle>
                 </ion-item>
                 <ion-item>
-                  <ion-toggle translate="contacts.invoice"
-                              [checked]="item.invoice" [disabled]="true"></ion-toggle>
+                  <ion-toggle
+                              [checked]="item.invoice" [disabled]="true">{{ 'contacts.invoice' | translate }}</ion-toggle>
                 </ion-item>
                 <ion-item>
-                  <ion-toggle translate="contacts.reminder"
-                              [checked]="item.reminder" disabled="true"></ion-toggle>
+                  <ion-toggle
+                              [checked]="item.reminder" disabled="true">{{ 'contacts.reminder' | translate }}</ion-toggle>
                 </ion-item>
                 <ion-item>
-                  <ion-toggle translate="contacts.domiciliation"
-                              [checked]="item.domiciliation" disabled="true"></ion-toggle>
+                  <ion-toggle
+                              [checked]="item.domiciliation" disabled="true">{{ 'contacts.domiciliation' | translate }}</ion-toggle>
                 </ion-item>
                 <ion-item>
-                  <ion-toggle translate="contacts.comMailing"
-                              [checked]="item.comMailing" disabled="true"></ion-toggle>
+                  <ion-toggle
+                              [checked]="item.comMailing" disabled="true">{{ 'contacts.comMailing' | translate }}</ion-toggle>
                 </ion-item>
                 <ion-item button tappable *ngIf="item.mailAddress"
                           (click)="goToMail(item.mailAddress)">
