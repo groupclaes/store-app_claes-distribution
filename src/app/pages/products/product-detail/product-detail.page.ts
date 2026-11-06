@@ -219,6 +219,8 @@ export class ProductDetailPage {
         this.culture
       )
 
+      console.error(this._product.allergens)
+
       const cart = (this.cart || this.cart.active) ? this.cart.active : null
       if (cart) {
         const pr = cart.products.find(x => x.id === this._product.id)

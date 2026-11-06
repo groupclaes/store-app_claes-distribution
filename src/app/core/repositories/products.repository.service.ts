@@ -154,7 +154,7 @@ export class ProductsRepositoryService {
         SELECT attributes.${nameString}      as name,
                attributes.${groupNameString} as groupName
         FROM productAttributes
-        INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
+               INNER JOIN attributes ON attributes.attribute = productAttributes.attribute
         WHERE productAttributes.product = ?`, [id])
 
       const similarProducts = await db.query(`SELECT products.${nameString}                                                       as name,
@@ -225,10 +225,9 @@ export class ProductsRepositoryService {
                                               AND products.id != ?`, [id, id])
 
       const allergens = await db.query(
-        'SELECT code, value ' +
-        'FROM productAllergens ' +
-        'WHERE product = ? ' +
-        'AND LENGTH(code) > 0',
+        `SELECT code, value
+         FROM productAllergens
+         WHERE product = ?`,
         [id]
       )
 
@@ -275,6 +274,10 @@ export class ProductsRepositoryService {
       product.relatedProducts = relatedProducts.values as IProductInfoT[]
       product.promoProducts = promoProducts.values as IProductInfoT[]
       product.allergens = allergens.values as IProductAllergen[]
+      if (product.allergens.length === 0)
+        product.allergens = null
+      else
+        product.allergens = product.allergens.filter(e => e.value !== null)
       product.departments = departments.values as IDepartmentT[]
       product.taxes = taxes.values as IProductTax[]
 
