@@ -15,10 +15,11 @@ import { environment } from '../../../environments/environment'
 const MAX_COUNT = 15
 
 @Component({
-  selector: 'app-reports',
-  templateUrl: './reports.page.html',
-  styleUrls: ['./reports.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-reports',
+    templateUrl: './reports.page.html',
+    styleUrls: ['./reports.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ReportsPage implements OnInit {
   loading: boolean = true

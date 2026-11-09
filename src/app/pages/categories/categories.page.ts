@@ -7,10 +7,11 @@ import { CategoriesRepositoryService, ICategoryT } from 'src/app/core/repositori
 import { UserService } from 'src/app/core/user.service'
 
 @Component({
-  selector: 'app-categories',
-  templateUrl: './categories.page.html',
-  styleUrls: ['./categories.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-categories',
+    templateUrl: './categories.page.html',
+    styleUrls: ['./categories.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CategoriesPage {
   loading = true

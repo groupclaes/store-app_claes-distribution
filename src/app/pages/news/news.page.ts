@@ -11,10 +11,11 @@ import { NavController } from '@ionic/angular'
 const logger = new LoggerService('NewsPage')
 
 @Component({
-  selector: 'app-news',
-  templateUrl: './news.page.html',
-  styleUrls: ['./news.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-news',
+    templateUrl: './news.page.html',
+    styleUrls: ['./news.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NewsPage implements OnInit {
   @HostListener('document:click', ['$event'])

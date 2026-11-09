@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, NgModule } from '@angular/core'
+import { inject, NgModule, provideAppInitializer } from '@angular/core'
 import { BrowserModule } from '@angular/platform-browser'
 import { RouteReuseStrategy } from '@angular/router'
 
@@ -38,21 +38,12 @@ const initializeFactory =
     }),
     AppRoutingModule
   ], providers: [
-    // SQLiteService,
-    // DatabaseService,
-    // InitializeAppService,
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeFactory,
-      deps: [InitializeAppService, SQLiteService],
-      multi: true
-    },
-    // {
-    //   provide: APP_INITIALIZER,
-    //   useFactory: (cardinal: CardinalService): () => CardinalService => (): CardinalService => cardinal,
-    //   deps: [CardinalService],
-    //   multi: true
-    // },
+    provideAppInitializer(() => {
+      const init = inject(InitializeAppService)
+      inject(SQLiteService)
+
+      return init.initializeApp()
+    }),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: CachingInterceptor,

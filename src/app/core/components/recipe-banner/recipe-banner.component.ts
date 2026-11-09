@@ -16,10 +16,11 @@ import { LoggerService } from 'src/app/@shared/logging/log.service'
 const logger = new LoggerService('RecipeBannerComponent')
 
 @Component({
-  selector: 'gro-recipe-banner',
-  templateUrl: './recipe-banner.component.html',
-  styleUrls: ['./recipe-banner.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'gro-recipe-banner',
+    templateUrl: './recipe-banner.component.html',
+    styleUrls: ['./recipe-banner.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RecipeBannerComponent implements OnInit, OnChanges {
   @Input() company: string = 'gro'

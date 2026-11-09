@@ -2,7 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core'
 import { ICartDetailProductA } from '../repositories/carts.repository.service'
 
 @Pipe({
-  name: 'productPrice'
+    name: 'productPrice',
+    standalone: false
 })
 export class ProductPricePipe implements PipeTransform {
   transform(value: ICartDetailProductA): number {

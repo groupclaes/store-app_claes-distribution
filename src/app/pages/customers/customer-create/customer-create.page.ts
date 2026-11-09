@@ -37,9 +37,10 @@ const _deliveryHours = [
 ]
 
 @Component({
-  selector: 'app-customer-create',
-  templateUrl: './customer-create.page.html',
-  styleUrls: ['./customer-create.page.scss']
+    selector: 'app-customer-create',
+    templateUrl: './customer-create.page.html',
+    styleUrls: ['./customer-create.page.scss'],
+    standalone: false
 })
 export class CustomerCreatePage {
   currentSegment: string = 'invoicing'

@@ -9,10 +9,11 @@ import { LoggerService } from '../../@shared/logging/log.service'
 const logger = new LoggerService('CartsPage')
 
 @Component({
-  selector: 'app-carts',
-  templateUrl: './carts.page.html',
-  styleUrls: ['./carts.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-carts',
+    templateUrl: './carts.page.html',
+    styleUrls: ['./carts.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CartsPage implements OnInit {
   loading = true

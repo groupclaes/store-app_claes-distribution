@@ -6,9 +6,10 @@ import { CartService } from 'src/app/core/cart.service'
 import { NetworkService } from 'src/app/@shared/network.service'
 
 @Component({
-  selector: 'app-web-recipes',
-  templateUrl: './web-recipes.page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-web-recipes',
+    templateUrl: './web-recipes.page.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WebRecipesPage implements OnInit {
   loading: boolean = true

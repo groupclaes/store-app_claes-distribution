@@ -6,14 +6,15 @@ import { Share, ShareResult } from '@capacitor/share'
 import { firstValueFrom } from 'rxjs'
 
 @Component({
-  selector: 'app-datasheet-detail',
-  templateUrl: './document-viewer.page.html',
-  styles: ['pdf-viewer {\n' +
-  '    display: block;\n' +
-  '    height: 100%;\n' +
-  '    overflow-y: auto;\n' +
-  '  }'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-datasheet-detail',
+    templateUrl: './document-viewer.page.html',
+    styles: ['pdf-viewer {\n' +
+            '    display: block;\n' +
+            '    height: 100%;\n' +
+            '    overflow-y: auto;\n' +
+            '  }'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DocumentViewerPage {
   public fileUrl: string = undefined

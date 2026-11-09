@@ -12,10 +12,11 @@ import { BrowserService } from '../../../core/browser.service'
 const logger = new LoggerService('WebRecipeDetailPage')
 
 @Component({
-  selector: 'app-web-recipe-detail',
-  templateUrl: './web-recipe-detail.page.html',
-  styleUrls: ['./web-recipe-detail.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-web-recipe-detail',
+    templateUrl: './web-recipe-detail.page.html',
+    styleUrls: ['./web-recipe-detail.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class WebRecipeDetailPage implements OnInit {
   @HostListener('document:click', ['$event'])

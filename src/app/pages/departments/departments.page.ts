@@ -11,10 +11,11 @@ import { LoggerService } from '../../@shared/logging/log.service'
 const logger = new LoggerService('DepartmentsPage')
 
 @Component({
-  selector: 'app-departments',
-  templateUrl: './departments.page.html',
-  styleUrls: ['./departments.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-departments',
+    templateUrl: './departments.page.html',
+    styleUrls: ['./departments.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DepartmentsPage implements OnInit {
   loading = true

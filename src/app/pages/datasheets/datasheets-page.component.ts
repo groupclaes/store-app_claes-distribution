@@ -11,14 +11,15 @@ import { Directory, DownloadFileResult, Filesystem, GetUriResult, ProgressStatus
 import { NavController } from '@ionic/angular'
 
 @Component({
-  selector: 'app-datasheets',
-  templateUrl: './datasheets-page.component.html',
-  styles: [
-    'ion-fab {\n' +
-    '  margin-bottom: var(--ion-safe-area-bottom, 0);\n' +
-    '}'
-  ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-datasheets',
+    templateUrl: './datasheets-page.component.html',
+    styles: [
+        'ion-fab {\n' +
+            '  margin-bottom: var(--ion-safe-area-bottom, 0);\n' +
+            '}'
+    ],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class DatasheetsPage implements OnInit {
   @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport

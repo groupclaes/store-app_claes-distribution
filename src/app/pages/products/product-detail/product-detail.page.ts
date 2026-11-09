@@ -32,10 +32,11 @@ const logger = new LoggerService('ProductDetailPage')
 // url in description: 1502024166
 
 @Component({
-  selector: 'app-product-detail',
-  templateUrl: './product-detail.page.html',
-  styleUrls: ['./product-detail.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-product-detail',
+    templateUrl: './product-detail.page.html',
+    styleUrls: ['./product-detail.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ProductDetailPage {
   loading: boolean = true

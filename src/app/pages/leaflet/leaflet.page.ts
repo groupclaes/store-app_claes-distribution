@@ -10,9 +10,10 @@ const ZOOM_STEP: number = 0.125
 const DEFAULT_ZOOM: number = 1
 
 @Component({
-  selector: 'app-leaflet',
-  templateUrl: 'leaflet.page.html',
-  styleUrls: ['leaflet.page.scss']
+    selector: 'app-leaflet',
+    templateUrl: 'leaflet.page.html',
+    styleUrls: ['leaflet.page.scss'],
+    standalone: false
 })
 export class LeafletPage {
   @HostListener('document:click', ['$event'])

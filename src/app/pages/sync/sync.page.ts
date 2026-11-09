@@ -16,9 +16,10 @@ const TASK_COUNT = 8
 const logger = new LoggerService('SyncService')
 
 @Component({
-  selector: 'app-sync',
-  templateUrl: './sync.page.html',
-  styleUrls: ['./sync.page.scss']
+    selector: 'app-sync',
+    templateUrl: './sync.page.html',
+    styleUrls: ['./sync.page.scss'],
+    standalone: false
 })
 export class SyncPage implements OnInit {
   loader: HTMLIonLoadingElement

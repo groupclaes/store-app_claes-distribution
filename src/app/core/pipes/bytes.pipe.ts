@@ -4,7 +4,8 @@ import { Pipe, PipeTransform } from '@angular/core'
 export type ByteUnit = 'B' | 'kB' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB'
 
 @Pipe({
-  name: 'bytes',
+    name: 'bytes',
+    standalone: false
 })
 export class BytesPipe implements PipeTransform {
   static formats: { [key: string]: { max: number; prev?: ByteUnit } } = {

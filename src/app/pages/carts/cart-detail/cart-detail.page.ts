@@ -24,10 +24,11 @@ const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
 const logger = new LoggerService('CartDetailPage')
 
 @Component({
-  selector: 'app-cart-detail',
-  templateUrl: './cart-detail.page.html',
-  styleUrls: ['./cart-detail.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-cart-detail',
+    templateUrl: './cart-detail.page.html',
+    styleUrls: ['./cart-detail.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CartDetailPage implements OnInit {
   displayThumbnail = false

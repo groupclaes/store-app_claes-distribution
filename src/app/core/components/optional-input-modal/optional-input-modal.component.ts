@@ -2,9 +2,10 @@ import { Component, Input } from '@angular/core'
 import { ModalController } from '@ionic/angular'
 
 @Component({
-  selector: 'app-optional-input-modal',
-  templateUrl: './optional-input-modal.component.html',
-  styleUrls: ['./optional-input-modal.component.scss'],
+    selector: 'app-optional-input-modal',
+    templateUrl: './optional-input-modal.component.html',
+    styleUrls: ['./optional-input-modal.component.scss'],
+    standalone: false
 })
 export class OptionalInputModalComponent {
   @Input()

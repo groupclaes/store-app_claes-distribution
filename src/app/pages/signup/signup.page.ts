@@ -1,5 +1,5 @@
 import { firstValueFrom } from 'rxjs'
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core'
 import { AppCredential, UserService } from 'src/app/core/user.service'
 import { NavController, ToastController } from '@ionic/angular'
 import { TranslateService } from '@ngx-translate/core'
@@ -8,10 +8,11 @@ import { StorageProvider } from 'src/app/core/storage-provider.service'
 import { BrowserService } from 'src/app/core/browser.service'
 
 @Component({
-  selector: 'app-signup',
-  templateUrl: './signup.page.html',
-  styleUrls: ['./signup.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-signup',
+    templateUrl: './signup.page.html',
+    styleUrls: ['./signup.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SignupPage {
   private _form: FormGroup

@@ -9,9 +9,10 @@ import { LoggerService } from '../../../@shared/logging/log.service'
 const logger = new LoggerService('CartHistoryPage')
 
 @Component({
-  selector: 'app-cart-history',
-  templateUrl: './cart-history.page.html',
-  styleUrls: ['./cart-history.page.scss'],
+    selector: 'app-cart-history',
+    templateUrl: './cart-history.page.html',
+    styleUrls: ['./cart-history.page.scss'],
+    standalone: false
 })
 export class CartHistoryPage {
   isloading = false

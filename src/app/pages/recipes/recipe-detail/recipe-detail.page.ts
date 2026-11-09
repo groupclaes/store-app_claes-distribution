@@ -15,9 +15,10 @@ import { FileOpener } from '@capacitor-community/file-opener'
 const logger = new LoggerService('RecipeDetailPage')
 
 @Component({
-  selector: 'app-detail',
-  templateUrl: './recipe-detail.page.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-detail',
+    templateUrl: './recipe-detail.page.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RecipeDetailPage implements OnInit {
   loading: boolean = true

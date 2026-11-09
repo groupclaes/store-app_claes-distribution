@@ -4,12 +4,11 @@ import { NetworkService } from 'src/app/@shared/network.service'
 import { SyncService } from '../../sync.service'
 
 @Component({
-  selector: 'app-offline-footer',
-  templateUrl: './offline-footer.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  host: {
-
-  }
+    selector: 'app-offline-footer',
+    templateUrl: './offline-footer.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    host: {},
+    standalone: false
 })
 export class OfflineFooterComponent implements OnChanges {
   @Input() lastSync: Date

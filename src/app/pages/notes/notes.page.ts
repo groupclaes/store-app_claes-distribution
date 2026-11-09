@@ -16,9 +16,10 @@ import { LoggerService } from '../../@shared/logging/log.service'
 const logger = new LoggerService('NotesPage')
 
 @Component({
-  selector: 'app-notes',
-  templateUrl: './notes.page.html',
-  styleUrls: ['./notes.page.scss']
+    selector: 'app-notes',
+    templateUrl: './notes.page.html',
+    styleUrls: ['./notes.page.scss'],
+    standalone: false
 })
 export class NotesPage {
   showCreate = false

@@ -7,10 +7,11 @@ import { NetworkService } from 'src/app/@shared/network.service'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 
 @Component({
-  selector: 'app-recipes',
-  templateUrl: './recipes.page.html',
-  // styleUrls: ['./recipes.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-recipes',
+    templateUrl: './recipes.page.html',
+    // styleUrls: ['./recipes.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class RecipesPage implements OnInit {
   loading = true

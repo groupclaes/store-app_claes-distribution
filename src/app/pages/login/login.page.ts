@@ -21,10 +21,11 @@ import { CardinalService } from '../../core/cardinal.service'
 const logger = new LoggerService('LoginPage')
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.page.html',
-  styleUrls: ['./login.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-login',
+    templateUrl: './login.page.html',
+    styleUrls: ['./login.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LoginPage implements OnInit {
   private _loading: HTMLIonLoadingElement

@@ -15,10 +15,11 @@ import { LoggerService } from '../../../@shared/logging/log.service'
 const logger = new LoggerService('CustomerInfoPage')
 
 @Component({
-  selector: 'app-customer-info',
-  templateUrl: './customer-info.page.html',
-  styleUrls: ['./customer-info.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-customer-info',
+    templateUrl: './customer-info.page.html',
+    styleUrls: ['./customer-info.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CustomerInfoPage {
   customer: AppCustomerModel

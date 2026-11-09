@@ -27,11 +27,13 @@ const UNAVAILABLE_AFTER = new Date(2050, 11, 31)
 const logger = new LoggerService('ProductsPage')
 
 @Component({
-  selector: 'app-products',
-  templateUrl: './products.page.html',
-  styleUrls: ['./products.page.scss'],
-  encapsulation: ViewEncapsulation.Emulated,
-  changeDetection: ChangeDetectionStrategy.OnPush // comment this if there are still un-updated input fields
+    selector: 'app-products',
+    templateUrl: './products.page.html',
+    styleUrls: ['./products.page.scss'],
+    encapsulation: ViewEncapsulation.Emulated,
+    changeDetection: ChangeDetectionStrategy.OnPush // comment this if there are still un-updated input fields
+    ,
+    standalone: false
 })
 export class ProductsPage implements OnDestroy {
   private _products: IProductT[]

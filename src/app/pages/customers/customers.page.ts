@@ -13,10 +13,11 @@ import { LoggerService } from '../../@shared/logging/log.service'
 const logger = new LoggerService('CustomersPage')
 
 @Component({
-  selector: 'app-customers',
-  templateUrl: './customers.page.html',
-  styleUrls: ['./customers.page.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-customers',
+    templateUrl: './customers.page.html',
+    styleUrls: ['./customers.page.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CustomersPage {
   @ViewChild(CdkVirtualScrollViewport) virtualScroll: CdkVirtualScrollViewport
